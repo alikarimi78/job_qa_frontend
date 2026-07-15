@@ -1,0 +1,8 @@
+# Add this service to the backend's docker-compose.yml (same level as db/api):
+#
+#  web:
+#    build: ./job_qa_frontend
+#    ports:
+#      - "3000:80"
+#    depends_on:
+#      - api
