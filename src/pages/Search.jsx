@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api, { errorMessage } from "../api.js";
 import { useAuth } from "../auth.jsx";
 import { stashDraft } from "../draft.js";
+import JobDetails from "../components/JobDetails.jsx";
 
 export default function Search() {
   const [question, setQuestion] = useState("");
@@ -10,6 +11,9 @@ export default function Search() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [declined, setDeclined] = useState(false);
+  // Counts searches so the detail boxes remount on each one: a box the user folded
+  // open last time must not stay that way against a new answer's intent.
+  const [runId, setRunId] = useState(0);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -20,6 +24,7 @@ export default function Search() {
     try {
       const { data } = await api.post("/search", { question });
       setResult(data);
+      setRunId((n) => n + 1);
     } catch (err) {
       setError(errorMessage(err));
     } finally {
@@ -38,6 +43,13 @@ export default function Search() {
   const offered = result?.mode === "job_generated" && result.job_draft;
   // related_jobs leads with the matched record itself; showing it twice reads as a bug
   const nearby = result?.related_jobs?.filter((t) => t !== result.job) ?? [];
+  // A proposal's boxes describe a record that does not exist yet — say so, or they
+  // read as a job the database already holds.
+  const detailsTitle = offered
+    ? "مشخصات شغل پیشنهادی (هنوز ثبت نشده است)"
+    : result?.details?.length > 1
+      ? "اطلاعات این مشاغل در پایگاه داده"
+      : "اطلاعات این شغل در پایگاه داده";
 
   return (
     <>
@@ -81,6 +93,8 @@ export default function Search() {
           </div>
 
           <p className="answer">{result.answer}</p>
+
+          <JobDetails key={runId} details={result.details} title={detailsTitle} />
 
           {result.mode === "job_match" && nearby.length > 0 && (
             <div style={{ marginTop: 12 }}>

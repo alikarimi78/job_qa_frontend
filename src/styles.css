@@ -78,3 +78,41 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .notice { background: var(--warning-bg); color: var(--warning); padding: 10px 14px; border-radius: var(--radius); font-size: 13px; margin: 12px 0; }
 .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 4px; border-top: 1px solid var(--border); }
 .meta { font-size: 12px; color: var(--muted); }
+
+/* Per-field boxes under a search answer. Fields the question asked about arrive
+   flagged `primary` and render open and tinted; the rest of the record is folded. */
+.details-block { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 14px; }
+.details-title { margin: 0 0 10px; }
+.detail-heading { font-size: 14px; font-weight: 600; margin: 16px 0 8px; }
+.field-boxes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; align-items: start; }
+
+.field-box {
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg); padding: 10px 12px;
+}
+.field-box.primary { background: var(--accent-bg); border-color: #c9defa; }
+/* Sentences and paragraphs need the whole row — but only once they are open.
+   Closed, a box is just its label, and a full row for that leaves the grid holed. */
+.field-box.wide[open] { grid-column: 1 / -1; }
+
+.field-box > summary {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  cursor: pointer; list-style: none;
+}
+.field-box > summary::-webkit-details-marker { display: none; }
+.field-box > summary::after {
+  content: "▾"; font-size: 11px; color: var(--muted);
+  transition: transform 0.15s; flex-shrink: 0;
+}
+.field-box[open] > summary::after { transform: rotate(180deg); }
+.field-box .field-label { font-size: 13px; font-weight: 600; }
+.field-box.primary .field-label { color: var(--accent); }
+
+.field-body { margin-top: 8px; font-size: 14px; }
+.field-text { margin: 0; }
+.field-list { margin: 0; padding-inline-start: 18px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 999px; padding: 1px 12px; font-size: 13px;
+}
