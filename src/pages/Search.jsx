@@ -1,16 +1,22 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api, { errorMessage } from "../api.js";
+import { useAuth } from "../auth.jsx";
+import { stashDraft } from "../draft.js";
 
 export default function Search() {
   const [question, setQuestion] = useState("");
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [declined, setDeclined] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   async function submit(e) {
     e.preventDefault();
     if (!question.trim()) return;
-    setLoading(true); setError(""); setResult(null);
+    setLoading(true); setError(""); setResult(null); setDeclined(false);
     try {
       const { data } = await api.post("/search", { question });
       setResult(data);
@@ -20,6 +26,18 @@ export default function Search() {
       setLoading(false);
     }
   }
+
+  // Stash before navigating: an anonymous user is sent through /login on the way
+  // to the form, and the accepted proposal has to survive that detour.
+  function accept() {
+    stashDraft(result.job_draft);
+    if (user) navigate("/suggest");
+    else navigate("/login", { state: { from: { pathname: "/suggest" } } });
+  }
+
+  const offered = result?.mode === "job_generated" && result.job_draft;
+  // related_jobs leads with the matched record itself; showing it twice reads as a bug
+  const nearby = result?.related_jobs?.filter((t) => t !== result.job) ?? [];
 
   return (
     <>
@@ -36,6 +54,9 @@ export default function Search() {
             {loading ? "..." : "جستجو"}
           </button>
         </form>
+        <p className="hint" style={{ margin: "12px 0 0" }}>
+          می‌توانید شغل دلخواهتان را هم توصیف کنید؛ اگر در دیتاست نباشد، شغلی متناسب با آن پیشنهاد می‌شود.
+        </p>
       </div>
 
       {error && <div className="error">{error}</div>}
@@ -45,6 +66,10 @@ export default function Search() {
           <div className="row" style={{ justifyContent: "space-between", marginBottom: 10 }}>
             <span>
               {result.mode === "single" && <span className="badge accent">{result.job}</span>}
+              {result.mode === "job_match" && <span className="badge success">{result.job}</span>}
+              {result.mode === "job_generated" && (
+                <span className="badge warning">شغل پیشنهادی — هنوز ثبت نشده</span>
+              )}
               {result.mode === "interdisciplinary" && (
                 <span className="badge accent">{result.jobs?.join(" + ")}</span>
               )}
@@ -54,7 +79,33 @@ export default function Search() {
               <span className="meta">تطابق: {result.score.toFixed(2)}</span>
             )}
           </div>
+
           <p className="answer">{result.answer}</p>
+
+          {result.mode === "job_match" && nearby.length > 0 && (
+            <div style={{ marginTop: 12 }}>
+              <span className="meta">مشاغل مرتبط: </span>
+              {nearby.map((title) => (
+                <span key={title} className="badge accent" style={{ marginInlineEnd: 6 }}>
+                  {title}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {offered && !declined && (
+            <div className="row" style={{ marginTop: 16, flexWrap: "wrap" }}>
+              <button className="primary" onClick={accept}>بله، ثبتش می‌کنم</button>
+              <button onClick={() => setDeclined(true)}>نه، ممنون</button>
+              {!user && <span className="meta">برای ثبت باید وارد حساب خود شوید</span>}
+            </div>
+          )}
+
+          {offered && declined && (
+            <p className="meta" style={{ marginTop: 16 }}>
+              این پیشنهاد ثبت نشد. با پرسش تازه می‌توانید پیشنهاد دیگری بگیرید.
+            </p>
+          )}
         </div>
       )}
     </>

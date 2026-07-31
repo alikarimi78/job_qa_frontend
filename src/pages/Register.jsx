@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import api, { errorMessage } from "../api.js";
 import { useAuth } from "../auth.jsx";
 
@@ -9,6 +9,9 @@ export default function Register() {
   const [error, setError] = useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  // Carried over from a protected page the user was redirected away from
+  const next = location.state?.from?.pathname || "/";
 
   async function submit(e) {
     e.preventDefault();
@@ -16,7 +19,7 @@ export default function Register() {
     try {
       const { data } = await api.post("/auth/register", { username, password });
       login({ token: data.access_token, role: data.role, username });
-      navigate("/");
+      navigate(next, { replace: true });
     } catch (err) {
       setError(errorMessage(err));
     }
@@ -35,7 +38,7 @@ export default function Register() {
         <button className="primary" style={{ marginTop: 16, width: "100%" }}>ثبت‌نام</button>
       </form>
       <p className="meta" style={{ marginTop: 12 }}>
-        حساب دارید؟ <Link to="/login">وارد شوید</Link>
+        حساب دارید؟ <Link to="/login" state={location.state}>وارد شوید</Link>
       </p>
     </div>
   );

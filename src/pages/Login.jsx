@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import api, { errorMessage } from "../api.js";
 import { useAuth } from "../auth.jsx";
 
@@ -9,6 +9,9 @@ export default function Login() {
   const [error, setError] = useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  // Set when the user was redirected here mid-action (e.g. accepting a job draft)
+  const next = location.state?.from?.pathname || "/";
 
   async function submit(e) {
     e.preventDefault();
@@ -16,7 +19,7 @@ export default function Login() {
     try {
       const { data } = await api.post("/auth/login", { username, password });
       login({ token: data.access_token, role: data.role, username });
-      navigate("/");
+      navigate(next, { replace: true });
     } catch (err) {
       setError(errorMessage(err));
     }
@@ -34,7 +37,7 @@ export default function Login() {
         <button className="primary" style={{ marginTop: 16, width: "100%" }}>ورود</button>
       </form>
       <p className="meta" style={{ marginTop: 12 }}>
-        حساب ندارید؟ <Link to="/register">ثبت‌نام کنید</Link>
+        حساب ندارید؟ <Link to="/register" state={location.state}>ثبت‌نام کنید</Link>
       </p>
     </div>
   );

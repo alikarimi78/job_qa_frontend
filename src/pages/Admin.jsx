@@ -120,6 +120,8 @@ export default function Admin() {
                 <p><strong>نام‌های دیگر:</strong> {it.aliases}</p>
                 <p><strong>ابزارها:</strong> {it.tools}</p>
                 <p><strong>مهارت‌ها:</strong> {it.skills}</p>
+                <p><strong>دانش تخصصی:</strong> {it.knowledge}</p>
+                <p><strong>توانایی‌ها:</strong> {it.abilities}</p>
                 <p><strong>شرح:</strong> {it.description}</p>
                 <p><strong>وظایف:</strong> {it.responsibilities}</p>
                 <p><strong>محیط کاری:</strong> {it.work_context}</p>

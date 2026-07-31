@@ -1,4 +1,4 @@
-import { Routes, Route, NavLink, Navigate } from "react-router-dom";
+import { Routes, Route, NavLink, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./auth.jsx";
 import Search from "./pages/Search.jsx";
 import Login from "./pages/Login.jsx";
@@ -9,7 +9,10 @@ import Admin from "./pages/Admin.jsx";
 
 function Protected({ children, adminOnly = false }) {
   const { user } = useAuth();
-  if (!user) return <Navigate to="/login" replace />;
+  const location = useLocation();
+  // Carry the attempted page so login can return the user to it — a job draft
+  // accepted while logged out is waiting on the other side of that redirect.
+  if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
   if (adminOnly && user.role !== "admin") return <Navigate to="/" replace />;
   return children;
 }
@@ -19,7 +22,7 @@ export default function App() {
   return (
     <>
       <header className="navbar">
-        <NavLink to="/" className="brand">سامانه پرسش‌وپاسخ مشاغل</NavLink>
+        <NavLink to="/" className="brand">سامانه تحلیل مشاغل</NavLink>
         <nav>
           <NavLink to="/">جستجو</NavLink>
           {user && <NavLink to="/suggest">پیشنهاد شغل</NavLink>}
