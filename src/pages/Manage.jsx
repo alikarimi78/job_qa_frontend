@@ -56,6 +56,8 @@ export default function Manage() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  // Which organization/unit is waiting for a delete confirmation: {kind, id}
+  const [confirming, setConfirming] = useState(null);
 
   async function load() {
     try {
@@ -110,6 +112,34 @@ export default function Manage() {
   const orgAdminOf = (id) => accounts.find((a) => a.role === "org_admin" && a.organization_id === id);
   const unitAdminOf = (id) => accounts.find((a) => a.role === "unit_admin" && a.unit_id === id);
 
+  const asking = (kind, id) => confirming?.kind === kind && confirming?.id === id;
+
+  // The server refuses to delete anything that still holds units or accounts, and says
+  // so — the error banner carries that message through unchanged.
+  function confirmDelete(kind, item, label) {
+    if (!asking(kind, item.id)) {
+      return (
+        <button className="danger" disabled={busy}
+                onClick={() => setConfirming({ kind, id: item.id })}>حذف</button>
+      );
+    }
+    return (
+      <span className="row" style={{ flexWrap: "wrap" }}>
+        <span className="meta">«{item.name}» حذف شود؟</span>
+        <button className="danger" disabled={busy} onClick={() => act(
+          () => api.delete(`/${kind === "org" ? "orgs" : "units"}/${item.id}`),
+          `${label} «${item.name}» حذف شد.`,
+          () => {
+            setConfirming(null);
+            // Stop pointing at something that is gone
+            if (kind === "org" && orgId === item.id) { setOrgId(null); setUnitId(null); }
+            if (kind === "unit" && unitId === item.id) setUnitId(null);
+          })}>حذف کن</button>
+        <button disabled={busy} onClick={() => setConfirming(null)}>انصراف</button>
+      </span>
+    );
+  }
+
   // The table follows the selection so a large deployment stays readable
   const listed = accounts.filter((a) => {
     if (unitId != null) return a.unit_id === unitId;
@@ -159,6 +189,7 @@ export default function Manage() {
                       act(() => api.post("/accounts/org-admins", { ...body, organization_id: org.id }),
                           `ادمین سازمان «${org.name}» ساخته شد.`, reset)} />
                 )}
+                {confirmDelete("org", org, "سازمان")}
               </div>
             );
           })}
@@ -205,6 +236,7 @@ export default function Manage() {
                       act(() => api.post("/accounts/unit-admins", { ...body, unit_id: unit.id }),
                           `ادمین واحد «${unit.name}» ساخته شد.`, reset)} />
                 )}
+                {confirmDelete("unit", unit, "واحد")}
               </div>
             );
           })}
