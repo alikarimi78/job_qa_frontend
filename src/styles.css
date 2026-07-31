@@ -79,6 +79,18 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 4px; border-top: 1px solid var(--border); }
 .meta { font-size: 12px; color: var(--muted); }
 
+/* Account management table */
+.table-wrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.table th {
+  text-align: start; font-size: 12px; font-weight: 500; color: var(--muted);
+  padding: 8px 6px; border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.table td { padding: 10px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.table tr:last-child td { border-bottom: none; }
+.table td:last-child { text-align: end; }
+.row-blocked td:first-child { text-decoration: line-through; color: var(--muted); }
+
 /* Per-field boxes under a search answer. Fields the question asked about arrive
    flagged `primary` and render open and tinted; the rest of the record is folded. */
 .details-block { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 14px; }

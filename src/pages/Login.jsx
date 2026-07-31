@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import api, { errorMessage } from "../api.js";
 import { useAuth } from "../auth.jsx";
 
@@ -37,7 +37,7 @@ export default function Login() {
         <button className="primary" style={{ marginTop: 16, width: "100%" }}>ورود</button>
       </form>
       <p className="meta" style={{ marginTop: 12 }}>
-        حساب ندارید؟ <Link to="/register" state={location.state}>ثبت‌نام کنید</Link>
+        حساب‌ها را مدیر واحد شما می‌سازد؛ ثبت‌نام آزاد وجود ندارد.
       </p>
     </div>
   );
