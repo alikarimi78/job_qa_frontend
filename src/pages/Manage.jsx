@@ -245,11 +245,13 @@ export default function Manage() {
         <h1>حساب‌ها</h1>
         <p className="hint">
           مسدودکردن حساب چیزی را حذف نمی‌کند؛ فقط ورود آن حساب رد می‌شود — بی‌درنگ، حتی اگر
-          توکن معتبری در دست داشته باشد.
+          توکن معتبری در دست داشته باشد. حذف برگشت‌پذیر نیست، ولی پیشنهادهای شغلی آن حساب
+          در دیتاست باقی می‌مانند.
           {unitId != null || orgId != null ? " (محدود به انتخاب بالا)" : ""}
         </p>
         <AccountsTable
-          accounts={listed} me={me} unitsById={unitsById} orgsById={orgsById} busy={busy}
+          accounts={listed} me={me} units={units} unitsById={unitsById} orgsById={orgsById}
+          busy={busy}
           onBlock={(a) => act(() => api.post(`/accounts/${a.id}/block`),
                               `حساب «${a.username}» مسدود شد.`)}
           onUnblock={(a) => act(() => api.post(`/accounts/${a.id}/unblock`),
@@ -257,6 +259,12 @@ export default function Manage() {
           onResetPassword={(a, password, reset) =>
             act(() => api.post(`/accounts/${a.id}/password`, { password }),
                 `رمز «${a.username}» تغییر کرد.`, reset)}
+          onMove={(a, unitId, reset) =>
+            act(() => api.post(`/accounts/${a.id}/unit`, { unit_id: unitId }),
+                `«${a.username}» به واحد «${unitsById[unitId]?.name ?? unitId}» منتقل شد.`, reset)}
+          onDelete={(a, reset) =>
+            act(() => api.delete(`/accounts/${a.id}`),
+                `حساب «${a.username}» حذف شد.`, reset)}
         />
       </div>
     </>

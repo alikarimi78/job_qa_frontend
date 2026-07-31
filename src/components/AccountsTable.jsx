@@ -23,10 +23,30 @@ function canManage(me, target, unitsById) {
   return false;
 }
 
-export default function AccountsTable({ accounts, me, unitsById, orgsById,
-                                        onBlock, onUnblock, onResetPassword, busy }) {
-  const [resettingId, setResettingId] = useState(null);
+// Moving is narrower than the rest: only an account that lives in a unit can go
+// anywhere, and only the two levels above a unit decide between units.
+function canMove(me, target, unitsById) {
+  return canManage(me, target, unitsById)
+    && target.unit_id != null
+    && (me.role === "super_admin" || me.role === "org_admin");
+}
+
+export default function AccountsTable({ accounts, me, units, unitsById, orgsById, busy,
+                                        onBlock, onUnblock, onResetPassword, onMove,
+                                        onDelete }) {
+  // At most one inline panel is open at a time: {id, kind: password|move|delete}
+  const [panel, setPanel] = useState(null);
   const [password, setPassword] = useState("");
+  const [destination, setDestination] = useState("");
+
+  function open(account, kind) {
+    setPassword("");
+    setDestination(String(account.unit_id ?? ""));
+    setPanel(panel?.id === account.id && panel.kind === kind
+      ? null : { id: account.id, kind });
+  }
+  const isOpen = (account, kind) => panel?.id === account.id && panel.kind === kind;
+  const close = () => setPanel(null);
 
   function where(account) {
     if (account.unit_id != null) {
@@ -38,6 +58,11 @@ export default function AccountsTable({ accounts, me, unitsById, orgsById,
       return orgsById[account.organization_id]?.name ?? `سازمان ${account.organization_id}`;
     }
     return "—";
+  }
+
+  function unitLabel(unit) {
+    const org = orgsById[unit.organization_id];
+    return org ? `${unit.name} — ${org.name}` : unit.name;
   }
 
   if (accounts.length === 0) {
@@ -55,6 +80,7 @@ export default function AccountsTable({ accounts, me, unitsById, orgsById,
         <tbody>
           {accounts.map((account) => {
             const manageable = canManage(me, account, unitsById);
+            const movable = canMove(me, account, unitsById);
             const isMe = me?.id === account.id;
             return (
               <tr key={account.id} className={account.is_active ? "" : "row-blocked"}>
@@ -77,29 +103,51 @@ export default function AccountsTable({ accounts, me, unitsById, orgsById,
                                   onClick={() => onBlock(account)}>مسدود کن</button>
                         : <button className="success" disabled={busy}
                                   onClick={() => onUnblock(account)}>رفع مسدودی</button>}
-                      <button disabled={busy} onClick={() => {
-                        setResettingId(resettingId === account.id ? null : account.id);
-                        setPassword("");
-                      }}>تغییر رمز</button>
+                      <button disabled={busy} onClick={() => open(account, "password")}>تغییر رمز</button>
+                      {movable && (
+                        <button disabled={busy} onClick={() => open(account, "move")}>انتقال</button>
+                      )}
+                      <button className="danger" disabled={busy}
+                              onClick={() => open(account, "delete")}>حذف</button>
                     </div>
                   )}
-                  {resettingId === account.id && (
-                    <form
-                      className="row"
-                      style={{ marginTop: 8, justifyContent: "flex-end" }}
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        onResetPassword(account, password, () => {
-                          setResettingId(null);
-                          setPassword("");
-                        });
-                      }}
-                    >
+
+                  {isOpen(account, "password") && (
+                    <form className="row panel" onSubmit={(e) => {
+                      e.preventDefault();
+                      onResetPassword(account, password, close);
+                    }}>
                       <input type="password" required minLength={8} value={password}
                              placeholder="رمز تازه (حداقل ۸ نویسه)" style={{ maxWidth: 220 }}
                              onChange={(e) => setPassword(e.target.value)} />
                       <button className="primary" disabled={busy}>ثبت</button>
                     </form>
+                  )}
+
+                  {isOpen(account, "move") && (
+                    <form className="row panel" onSubmit={(e) => {
+                      e.preventDefault();
+                      onMove(account, Number(destination), close);
+                    }}>
+                      <select value={destination} required style={{ maxWidth: 240 }}
+                              onChange={(e) => setDestination(e.target.value)}>
+                        {units.map((unit) => (
+                          <option key={unit.id} value={unit.id}>{unitLabel(unit)}</option>
+                        ))}
+                      </select>
+                      <button className="primary" disabled={busy}>انتقال بده</button>
+                    </form>
+                  )}
+
+                  {isOpen(account, "delete") && (
+                    <div className="row panel">
+                      <span className="meta">
+                        «{account.username}» برای همیشه حذف شود؟ برگشت‌پذیر نیست.
+                      </span>
+                      <button className="danger" disabled={busy}
+                              onClick={() => onDelete(account, close)}>حذف کن</button>
+                      <button disabled={busy} onClick={close}>انصراف</button>
+                    </div>
                   )}
                 </td>
               </tr>

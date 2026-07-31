@@ -90,6 +90,9 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .table tr:last-child td { border-bottom: none; }
 .table td:last-child { text-align: end; }
 .row-blocked td:first-child { text-decoration: line-through; color: var(--muted); }
+/* Inline panel under a row: reset password, move to a unit, confirm deletion */
+.table .panel { margin-top: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.table .panel select { width: auto; }
 
 /* Per-field boxes under a search answer. Fields the question asked about arrive
    flagged `primary` and render open and tinted; the rest of the record is folded. */
