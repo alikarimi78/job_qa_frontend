@@ -1,133 +1,43 @@
-:root {
-  --bg: #f6f5f0;
-  --card: #ffffff;
-  --border: #ddd9cf;
-  --text: #2c2c2a;
-  --muted: #6f6e68;
-  --accent: #185fa5;
-  --accent-bg: #e6f1fb;
-  --success: #3b6d11;
-  --success-bg: #eaf3de;
-  --danger: #a32d2d;
-  --danger-bg: #fcebeb;
-  --warning: #854f0b;
-  --warning-bg: #faeeda;
-  --radius: 8px;
+@import "tailwindcss";
+
+/* Vazirmatn is loaded from the CDN in index.html; naming it here is what makes
+   every Tailwind `font-sans` (and therefore the whole app) use it. */
+@theme {
+  --font-sans: Vazirmatn, ui-sans-serif, system-ui, sans-serif;
 }
 
-* { box-sizing: border-box; }
+html,
+body,
+#root {
+  height: 100%;
+}
 
 body {
   margin: 0;
-  font-family: Vazirmatn, sans-serif;
-  background: var(--bg);
-  color: var(--text);
   line-height: 1.8;
 }
 
-.container { max-width: 860px; margin: 0 auto; padding: 24px 16px; }
-
-.navbar {
-  display: flex; justify-content: space-between; align-items: center;
-  background: var(--card); border-bottom: 1px solid var(--border);
-  padding: 12px 24px;
-}
-.navbar .brand { font-weight: 600; font-size: 16px; color: var(--text); text-decoration: none; }
-.navbar nav { display: flex; gap: 16px; align-items: center; }
-.navbar a { color: var(--muted); text-decoration: none; font-size: 14px; }
-.navbar a.active { color: var(--accent); font-weight: 500; }
-
-.card {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: 12px; padding: 20px 24px; margin-bottom: 16px;
+/* Persian digits read better than Latin ones in an all-Persian UI, and the
+   dataset's own numbers are Persian already. */
+.fa-nums {
+  font-feature-settings: "ss02";
 }
 
-h1 { font-size: 20px; font-weight: 600; margin: 0 0 8px; }
-.hint { font-size: 13px; color: var(--muted); margin: 0 0 16px; }
-
-input, textarea, select {
-  width: 100%; padding: 9px 12px; font-family: inherit; font-size: 14px;
-  border: 1px solid var(--border); border-radius: var(--radius);
-  background: #fff; color: var(--text);
+/* The reference sheets style the scrollbar nowhere, but the sidebar and the
+   result panes both scroll — an unstyled one is the single loudest thing on the
+   page against the glass chrome. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(148 163 184 / 0.5) transparent;
 }
-input:focus, textarea:focus { outline: 2px solid var(--accent-bg); border-color: var(--accent); }
-label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 4px; }
-
-button {
-  padding: 9px 18px; font-family: inherit; font-size: 14px; cursor: pointer;
-  border: 1px solid var(--border); border-radius: var(--radius);
-  background: #fff; color: var(--text);
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
-button:hover { background: var(--bg); }
-button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-button.primary:hover { opacity: 0.9; }
-button.success { color: var(--success); }
-button.danger { color: var(--danger); }
-button:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.badge { display: inline-block; font-size: 12px; padding: 2px 10px; border-radius: 999px; }
-.badge.accent { background: var(--accent-bg); color: var(--accent); }
-.badge.success { background: var(--success-bg); color: var(--success); }
-.badge.danger { background: var(--danger-bg); color: var(--danger); }
-.badge.warning { background: var(--warning-bg); color: var(--warning); }
-
-.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
-.row { display: flex; gap: 8px; align-items: center; }
-.answer { white-space: pre-wrap; font-size: 15px; }
-.error { background: var(--danger-bg); color: var(--danger); padding: 10px 14px; border-radius: var(--radius); font-size: 13px; margin: 12px 0; }
-.notice { background: var(--warning-bg); color: var(--warning); padding: 10px 14px; border-radius: var(--radius); font-size: 13px; margin: 12px 0; }
-.list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 4px; border-top: 1px solid var(--border); }
-.meta { font-size: 12px; color: var(--muted); }
-
-/* Account management table */
-.table-wrap { overflow-x: auto; }
-.table { width: 100%; border-collapse: collapse; font-size: 14px; }
-.table th {
-  text-align: start; font-size: 12px; font-weight: 500; color: var(--muted);
-  padding: 8px 6px; border-bottom: 1px solid var(--border); white-space: nowrap;
+*::-webkit-scrollbar-thumb {
+  background-color: rgb(148 163 184 / 0.5);
+  border-radius: 999px;
 }
-.table td { padding: 10px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
-.table tr:last-child td { border-bottom: none; }
-.table td:last-child { text-align: end; }
-.row-blocked td:first-child { text-decoration: line-through; color: var(--muted); }
-/* Inline panel under a row: reset password, move to a unit, confirm deletion */
-.table .panel { margin-top: 8px; justify-content: flex-end; flex-wrap: wrap; }
-.table .panel select { width: auto; }
-
-/* Per-field boxes under a search answer. Fields the question asked about arrive
-   flagged `primary` and render open and tinted; the rest of the record is folded. */
-.details-block { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 14px; }
-.details-title { margin: 0 0 10px; }
-.detail-heading { font-size: 14px; font-weight: 600; margin: 16px 0 8px; }
-.field-boxes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; align-items: start; }
-
-.field-box {
-  border: 1px solid var(--border); border-radius: var(--radius);
-  background: var(--bg); padding: 10px 12px;
-}
-.field-box.primary { background: var(--accent-bg); border-color: #c9defa; }
-/* Sentences and paragraphs need the whole row — but only once they are open.
-   Closed, a box is just its label, and a full row for that leaves the grid holed. */
-.field-box.wide[open] { grid-column: 1 / -1; }
-
-.field-box > summary {
-  display: flex; justify-content: space-between; align-items: center; gap: 10px;
-  cursor: pointer; list-style: none;
-}
-.field-box > summary::-webkit-details-marker { display: none; }
-.field-box > summary::after {
-  content: "▾"; font-size: 11px; color: var(--muted);
-  transition: transform 0.15s; flex-shrink: 0;
-}
-.field-box[open] > summary::after { transform: rotate(180deg); }
-.field-box .field-label { font-size: 13px; font-weight: 600; }
-.field-box.primary .field-label { color: var(--accent); }
-
-.field-body { margin-top: 8px; font-size: 14px; }
-.field-text { margin: 0; }
-.field-list { margin: 0; padding-inline-start: 18px; }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: 999px; padding: 1px 12px; font-size: 13px;
+*::-webkit-scrollbar-track {
+  background: transparent;
 }

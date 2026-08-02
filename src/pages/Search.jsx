@@ -1,43 +1,52 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api, { errorMessage } from "../api.js";
-import { useAuth } from "../auth.jsx";
-import { stashDraft } from "../draft.js";
-import JobDetails from "../components/JobDetails.jsx";
+import Card from "@components/ui/Card";
+import Button from "@components/ui/Button";
+import Badge from "@components/ui/Badge";
+import { Spinner } from "@components/ui/Loader";
+import JobDetails from "@components/JobDetails";
+import { useSearchMutation } from "@services/jobsApi";
+import { stashDraft } from "@utils/draft";
+import { errorMessage } from "@utils/errors";
+import { showMessage } from "@utils/toast";
+
+const MODE_BADGE = {
+  single: "accent",
+  job_match: "success",
+  job_generated: "warning",
+  interdisciplinary: "accent",
+  out_of_domain: "danger",
+};
 
 export default function Search() {
   const [question, setQuestion] = useState("");
   const [result, setResult] = useState(null);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
   const [declined, setDeclined] = useState(false);
   // Counts searches so the detail boxes remount on each one: a box the user folded
   // open last time must not stay that way against a new answer's intent.
   const [runId, setRunId] = useState(0);
-  const { user } = useAuth();
+  const [search, { isLoading }] = useSearchMutation();
   const navigate = useNavigate();
 
   async function submit(e) {
     e.preventDefault();
     if (!question.trim()) return;
-    setLoading(true); setError(""); setResult(null); setDeclined(false);
+    setResult(null);
+    setDeclined(false);
     try {
-      const { data } = await api.post("/search", { question });
+      const data = await search(question).unwrap();
       setResult(data);
       setRunId((n) => n + 1);
     } catch (err) {
-      setError(errorMessage(err));
-    } finally {
-      setLoading(false);
+      showMessage.error(errorMessage(err));
     }
   }
 
-  // Stash before navigating: an anonymous user is sent through /login on the way
-  // to the form, and the accepted proposal has to survive that detour.
+  // Stash before navigating: the offer has to survive the hop to the form, and an
+  // expired session in between sends the user through /login on the way.
   function accept() {
     stashDraft(result.job_draft);
-    if (user) navigate("/suggest");
-    else navigate("/login", { state: { from: { pathname: "/suggest" } } });
+    navigate("/suggest");
   }
 
   const offered = result?.mode === "job_generated" && result.job_draft;
@@ -53,74 +62,91 @@ export default function Search() {
 
   return (
     <>
-      <div className="card" style={{ textAlign: "center" }}>
-        <h1>درباره هر شغلی بپرسید</h1>
-        <p className="hint">وظایف، مهارت‌ها، ابزارها، محیط کاری و مسیر ارتقای بیش از ۱۰۰۰ شغل</p>
-        <form onSubmit={submit} className="row" style={{ maxWidth: 560, margin: "0 auto" }}>
+      <Card className="text-center">
+        <h1 className="text-xl md:text-2xl font-bold text-slate-800">درباره هر شغلی بپرسید</h1>
+        <p className="text-sm text-slate-500 mt-2">
+          وظایف، مهارت‌ها، ابزارها، محیط کاری و مسیر ارتقای بیش از ۱۰۰۰ شغل
+        </p>
+
+        <form onSubmit={submit} className="flex gap-2 max-w-xl mx-auto mt-5">
           <input
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             placeholder="مثلاً: وظایف افسر توپخانه چیست؟"
+            maxLength={500}
+            className="flex-1 h-11 px-4 rounded-xl bg-white text-sm text-slate-800
+                       border border-slate-200 outline-none transition-all duration-200
+                       placeholder:text-slate-400
+                       hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
           />
-          <button className="primary" disabled={loading}>
-            {loading ? "..." : "جستجو"}
-          </button>
+          <Button
+            variant="primary"
+            className="h-11 px-6"
+            buttonProps={{ type: "submit", disabled: isLoading }}
+          >
+            {isLoading ? <Spinner /> : "جستجو"}
+          </Button>
         </form>
-        <p className="hint" style={{ margin: "12px 0 0" }}>
-          می‌توانید شغل دلخواهتان را هم توصیف کنید؛ اگر در دیتاست نباشد، شغلی متناسب با آن پیشنهاد می‌شود.
-        </p>
-      </div>
 
-      {error && <div className="error">{error}</div>}
+        <p className="text-xs text-slate-400 mt-4 leading-6">
+          می‌توانید شغل دلخواهتان را هم توصیف کنید؛ اگر در دیتاست نباشد، شغلی متناسب با آن پیشنهاد
+          می‌شود.
+        </p>
+      </Card>
 
       {result && (
-        <div className="card">
-          <div className="row" style={{ justifyContent: "space-between", marginBottom: 10 }}>
+        <Card>
+          <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
             <span>
-              {result.mode === "single" && <span className="badge accent">{result.job}</span>}
-              {result.mode === "job_match" && <span className="badge success">{result.job}</span>}
-              {result.mode === "job_generated" && (
-                <span className="badge warning">شغل پیشنهادی — هنوز ثبت نشده</span>
+              {result.mode === "job_generated" ? (
+                <Badge tone="warning">شغل پیشنهادی — هنوز ثبت نشده</Badge>
+              ) : result.mode === "out_of_domain" ? (
+                <Badge tone="danger">خارج از دامنه</Badge>
+              ) : result.mode === "interdisciplinary" ? (
+                <Badge tone="accent">{result.jobs?.join(" + ")}</Badge>
+              ) : (
+                result.job && <Badge tone={MODE_BADGE[result.mode] ?? "accent"}>{result.job}</Badge>
               )}
-              {result.mode === "interdisciplinary" && (
-                <span className="badge accent">{result.jobs?.join(" + ")}</span>
-              )}
-              {result.mode === "out_of_domain" && <span className="badge danger">خارج از دامنه</span>}
             </span>
             {result.score != null && (
-              <span className="meta">تطابق: {result.score.toFixed(2)}</span>
+              <span className="text-xs text-slate-400">تطابق: {result.score.toFixed(2)}</span>
             )}
           </div>
 
-          <p className="answer">{result.answer}</p>
+          <p className="whitespace-pre-wrap text-[15px] leading-9 text-slate-800 m-0">
+            {result.answer}
+          </p>
 
           <JobDetails key={runId} details={result.details} title={detailsTitle} />
 
           {result.mode === "job_match" && nearby.length > 0 && (
-            <div style={{ marginTop: 12 }}>
-              <span className="meta">مشاغل مرتبط: </span>
+            <div className="flex items-center gap-2 flex-wrap mt-4">
+              <span className="text-xs text-slate-400">مشاغل مرتبط:</span>
               {nearby.map((title) => (
-                <span key={title} className="badge accent" style={{ marginInlineEnd: 6 }}>
+                <Badge key={title} tone="neutral">
                   {title}
-                </span>
+                </Badge>
               ))}
             </div>
           )}
 
           {offered && !declined && (
-            <div className="row" style={{ marginTop: 16, flexWrap: "wrap" }}>
-              <button className="primary" onClick={accept}>بله، ثبتش می‌کنم</button>
-              <button onClick={() => setDeclined(true)}>نه، ممنون</button>
-              {!user && <span className="meta">برای ثبت باید وارد حساب خود شوید</span>}
+            <div className="flex items-center gap-2 flex-wrap mt-5 pt-4 border-t border-slate-200">
+              <Button variant="primary" buttonProps={{ onClick: accept }}>
+                بله، ثبتش می‌کنم
+              </Button>
+              <Button variant="outline" buttonProps={{ onClick: () => setDeclined(true) }}>
+                نه، ممنون
+              </Button>
             </div>
           )}
 
           {offered && declined && (
-            <p className="meta" style={{ marginTop: 16 }}>
+            <p className="text-xs text-slate-400 mt-5 pt-4 border-t border-slate-200">
               این پیشنهاد ثبت نشد. با پرسش تازه می‌توانید پیشنهاد دیگری بگیرید.
             </p>
           )}
-        </div>
+        </Card>
       )}
     </>
   );

@@ -1,4 +1,8 @@
-import { useState } from "react";
+import { FormProvider, useForm } from "react-hook-form";
+import Button from "@components/ui/Button";
+import Input from "@components/ui/Input";
+import Textarea from "@components/ui/Textarea";
+import { Spinner } from "@components/ui/Loader";
 
 // The dataset's ten canonical columns. Every one is required by JobIn on the
 // backend, so a field missing here fails the whole submit with a 422.
@@ -18,36 +22,62 @@ const AREAS = [
   ["responsibilities", "وظایف و مسئولیت‌ها", "طراحی API | بهینه‌سازی کوئری‌ها"],
 ];
 
-const EMPTY = Object.fromEntries([...FIELDS, ...AREAS].map(([k]) => [k, ""]));
+const KEYS = [...FIELDS, ...AREAS].map(([key]) => key);
+const EMPTY = Object.fromEntries(KEYS.map((key) => [key, ""]));
 
-// Shared by the user suggestion page and the admin direct-add form. `initial`
-// prefills the form from a generated draft; it is projected onto the ten columns
-// above, so whatever extra keys the model returned never reach the request body.
+// The «|» rule is stated once by the caller's card and demonstrated by every list
+// column's placeholder («پایتون | جنگو | PostgreSQL»). Repeating it under each of the
+// seven list fields was pure noise. The three prose columns — job_title, description,
+// work_context — take a comma as punctuation and must never receive a «|».
+
 export default function JobForm({ onSubmit, submitLabel, busy, initial }) {
-  const [form, setForm] = useState(() =>
-    Object.fromEntries(Object.keys(EMPTY).map((k) => [k, initial?.[k] ?? ""]))
-  );
-  const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+  // Projected onto the ten columns, so whatever extra keys a generated draft carried
+  // never reach the request body.
+  const methods = useForm({
+    defaultValues: Object.fromEntries(KEYS.map((key) => [key, initial?.[key] ?? ""])),
+  });
+
+  const submit = (values) => onSubmit(values, () => methods.reset(EMPTY));
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSubmit(form, () => setForm(EMPTY)); }}>
-      <div className="grid2">
-        {FIELDS.map(([key, label, ph]) => (
-          <div key={key}>
-            <label>{label}</label>
-            <input required value={form[key]} onChange={set(key)} placeholder={ph} />
-          </div>
-        ))}
-      </div>
-      {AREAS.map(([key, label, ph]) => (
-        <div key={key} style={{ marginTop: 12 }}>
-          <label>{label}</label>
-          <textarea required rows={3} value={form[key]} onChange={set(key)} placeholder={ph} />
+    <FormProvider {...methods}>
+      <form onSubmit={methods.handleSubmit(submit)} className="flex flex-col gap-4">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4">
+          {FIELDS.map(([key, label, placeholder]) => (
+            <Input
+              key={key}
+              name={key}
+              label={label}
+              placeholder={placeholder}
+              registerProps={{ required: `${label} را وارد کنید` }}
+            />
+          ))}
         </div>
-      ))}
-      <button className="primary" style={{ marginTop: 16 }} disabled={busy}>
-        {busy ? "..." : submitLabel}
-      </button>
-    </form>
+
+        {AREAS.map(([key, label, placeholder]) => (
+          <Textarea
+            key={key}
+            name={key}
+            label={label}
+            placeholder={placeholder}
+            rows={3}
+            registerProps={{ required: `${label} را وارد کنید` }}
+          />
+        ))}
+
+        <div>
+          <Button variant="primary" buttonProps={{ type: "submit", disabled: busy }}>
+            {busy ? (
+              <>
+                <Spinner />
+                در حال ثبت...
+              </>
+            ) : (
+              submitLabel
+            )}
+          </Button>
+        </div>
+      </form>
+    </FormProvider>
   );
 }
