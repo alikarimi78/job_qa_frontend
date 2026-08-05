@@ -13,15 +13,15 @@ export const adminApi = baseApi.injectEndpoints({
     }),
     approveSuggestion: builder.mutation({
       query: (id) => ({ url: `/admin/suggestions/${id}/approve`, method: "POST" }),
-      invalidatesTags: ["Suggestion", "MySuggestion"],
+      invalidatesTags: ["Suggestion", "MySuggestion", "Stats"],
     }),
     rejectSuggestion: builder.mutation({
       query: (id) => ({ url: `/admin/suggestions/${id}/reject`, method: "POST" }),
-      invalidatesTags: ["Suggestion", "MySuggestion"],
+      invalidatesTags: ["Suggestion", "MySuggestion", "Stats"],
     }),
     createJob: builder.mutation({
       query: (body) => ({ url: "/admin/jobs", method: "POST", body }),
-      invalidatesTags: ["Suggestion"],
+      invalidatesTags: ["Suggestion", "Stats"],
     }),
     // 202: the engine is rebuilt on a daemon thread and swapped in atomically, so
     // this returns immediately and the page polls the status below.
@@ -31,7 +31,7 @@ export const adminApi = baseApi.injectEndpoints({
         method: "POST",
         params: { force_embeddings: forceEmbeddings },
       }),
-      invalidatesTags: ["Rebuild"],
+      invalidatesTags: ["Rebuild", "Stats"],
     }),
     rebuildStatus: builder.query({
       query: () => "/admin/rebuild/status",

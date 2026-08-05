@@ -57,19 +57,19 @@ export default function MenuItem({ href, icon, label, submenuItems }) {
             transition-all duration-300 ease-out overflow-hidden
             ${
               isActive
-                ? "bg-gradient-to-r from-slate-600 to-slate-700 text-white shadow-lg shadow-slate-600/25"
-                : "text-gray-700 hover:bg-gradient-to-r hover:from-slate-600/40 hover:to-slate-500/40 hover:text-white hover:shadow-sm"
+                ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-lg shadow-indigo-600/30"
+                : "text-indigo-950/80 hover:bg-gradient-to-r hover:from-indigo-600/40 hover:to-blue-500/40 hover:text-white hover:shadow-sm"
             }
           `}
         >
           {isActive && (
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-400/20 to-slate-600/20" />
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-400/20 to-blue-600/20" />
           )}
 
           <div
             className={`
               relative p-1.5 rounded-lg transition-all duration-300
-              ${isActive ? "bg-white/20 text-white" : "bg-slate-200/80 text-slate-600 group-hover:bg-slate-600/50 group-hover:text-white"}
+              ${isActive ? "bg-white/20 text-white" : "bg-white/70 text-indigo-700 group-hover:bg-indigo-600/60 group-hover:text-white"}
             `}
           >
             {icon}
@@ -95,8 +95,8 @@ export default function MenuItem({ href, icon, label, submenuItems }) {
               transition-all duration-300 ease-out overflow-hidden
               ${
                 submenuOpen || isSubmenuActive
-                  ? "bg-gradient-to-r from-slate-600/50 to-slate-500/50 text-white shadow-sm"
-                  : "text-gray-700 hover:bg-gradient-to-r hover:from-slate-600/40 hover:to-slate-500/40 hover:text-white"
+                  ? "bg-gradient-to-r from-indigo-600/55 to-blue-500/55 text-white shadow-sm"
+                  : "text-indigo-950/80 hover:bg-gradient-to-r hover:from-indigo-600/40 hover:to-blue-500/40 hover:text-white"
               }
             `}
           >
@@ -106,8 +106,8 @@ export default function MenuItem({ href, icon, label, submenuItems }) {
                   relative p-1.5 rounded-lg transition-all duration-300
                   ${
                     submenuOpen || isSubmenuActive
-                      ? "bg-slate-700/60 text-white"
-                      : "bg-slate-200/80 text-slate-600 group-hover:bg-slate-600/50 group-hover:text-white"
+                      ? "bg-indigo-700/70 text-white"
+                      : "bg-white/70 text-indigo-700 group-hover:bg-indigo-600/60 group-hover:text-white"
                   }
                 `}
               >
@@ -121,8 +121,8 @@ export default function MenuItem({ href, icon, label, submenuItems }) {
                 p-1 rounded-lg transition-all duration-300
                 ${
                   submenuOpen
-                    ? "bg-slate-700/60 text-white -rotate-90"
-                    : "bg-slate-200/80 text-slate-600 group-hover:bg-slate-600/50 group-hover:text-white"
+                    ? "bg-indigo-700/70 text-white -rotate-90"
+                    : "bg-white/70 text-indigo-700 group-hover:bg-indigo-600/60 group-hover:text-white"
                 }
               `}
             >
@@ -138,11 +138,11 @@ export default function MenuItem({ href, icon, label, submenuItems }) {
             `}
           >
             <div className="relative mr-8 space-y-1">
-              <div className="absolute right-0 top-2 bottom-2 w-px bg-gradient-to-b from-slate-400 via-slate-500 to-transparent" />
+              <div className="absolute right-0 top-2 bottom-2 w-px bg-gradient-to-b from-indigo-400 via-indigo-500 to-transparent" />
 
               {submenuItems.map((submenuItem, index) => (
                 <div key={index} className="relative">
-                  <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-400 rounded-full" />
+                  <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-indigo-400 rounded-full" />
 
                   {submenuItem.href ? (
                     <Link
@@ -151,8 +151,8 @@ export default function MenuItem({ href, icon, label, submenuItems }) {
                         block px-4 py-2.5 mr-4 rounded-lg text-sm transition-all duration-300
                         ${
                           isReady && location.pathname === submenuItem.href
-                            ? "bg-gradient-to-r from-slate-500 to-slate-600 text-white font-medium shadow-md shadow-slate-600/25"
-                            : "text-gray-600 hover:bg-gradient-to-r hover:from-slate-600/30 hover:to-slate-500/30 hover:text-white hover:font-medium"
+                            ? "bg-gradient-to-r from-indigo-500 to-blue-600 text-white font-medium shadow-md shadow-indigo-600/25"
+                            : "text-indigo-950/75 hover:bg-gradient-to-r hover:from-indigo-600/35 hover:to-blue-500/35 hover:text-white hover:font-medium"
                         }
                       `}
                     >
@@ -172,8 +172,8 @@ export default function MenuItem({ href, icon, label, submenuItems }) {
                           cursor-pointer transition-all duration-300
                           ${
                             openSecondSubmenu === submenuItem.label
-                              ? "bg-gradient-to-r from-slate-600/40 to-slate-500/40 text-white font-medium"
-                              : "text-gray-600 hover:bg-gradient-to-r hover:from-slate-600/30 hover:to-slate-500/30 hover:text-white hover:font-medium"
+                              ? "bg-gradient-to-r from-indigo-600/45 to-blue-500/45 text-white font-medium"
+                              : "text-indigo-950/75 hover:bg-gradient-to-r hover:from-indigo-600/35 hover:to-blue-500/35 hover:text-white hover:font-medium"
                           }
                         `}
                       >
@@ -183,8 +183,8 @@ export default function MenuItem({ href, icon, label, submenuItems }) {
                             p-0.5 rounded transition-all duration-300
                             ${
                               openSecondSubmenu === submenuItem.label
-                                ? "-rotate-90 bg-slate-700/60 text-white"
-                                : "bg-slate-300/80 text-slate-600"
+                                ? "-rotate-90 bg-indigo-700/70 text-white"
+                                : "bg-white/70 text-indigo-700"
                             }
                           `}
                         >
@@ -206,11 +206,11 @@ export default function MenuItem({ href, icon, label, submenuItems }) {
                                 to={secondMenuItem.href}
                                 className={`
                                   block px-4 py-2 rounded-lg text-xs transition-all duration-300
-                                  border-r-2 border-transparent hover:border-slate-400
+                                  border-r-2 border-transparent hover:border-indigo-400
                                   ${
                                     isReady && location.pathname === secondMenuItem.href
-                                      ? "bg-gradient-to-r from-slate-600/50 to-slate-500/50 text-white font-medium border-r-slate-300"
-                                      : "text-gray-500 hover:bg-gradient-to-r hover:from-slate-600/20 hover:to-slate-500/20 hover:text-white hover:font-medium"
+                                      ? "bg-gradient-to-r from-indigo-600/50 to-blue-500/50 text-white font-medium border-r-indigo-300"
+                                      : "text-indigo-950/65 hover:bg-gradient-to-r hover:from-indigo-600/25 hover:to-blue-500/25 hover:text-white hover:font-medium"
                                   }
                                 `}
                               >

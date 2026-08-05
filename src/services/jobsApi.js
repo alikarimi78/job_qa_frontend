@@ -9,7 +9,7 @@ export const jobsApi = baseApi.injectEndpoints({
     }),
     suggestJob: builder.mutation({
       query: (body) => ({ url: "/jobs/suggestions", method: "POST", body }),
-      invalidatesTags: ["MySuggestion", "Suggestion"],
+      invalidatesTags: ["MySuggestion", "Suggestion", "Stats"],
     }),
     mySuggestions: builder.query({
       query: () => "/jobs/suggestions/mine",

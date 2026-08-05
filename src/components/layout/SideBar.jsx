@@ -28,12 +28,17 @@ export default function SideBar({ isOpen, setIsOpen }) {
           onClick={() => setIsOpen(false)}
         />
       )}
+      {/* Indigo glass rather than the reference's neutral slate: the content behind it
+          already runs blue-50 → indigo-100, so the panel now reads as the same material
+          tinted, instead of a grey card laid over a blue page. Navigation stays in the
+          indigo family and green is left to mean "this button files something". */}
       <aside
         className={`
           fixed md:static inset-y-0 right-0
           flex flex-col justify-between
-          bg-slate-500/35 backdrop-blur-3xl z-[9999999]
-          border-l border-slate-300/40
+          bg-gradient-to-b from-indigo-500/25 via-indigo-400/15 to-blue-500/20
+          backdrop-blur-3xl z-[9999999]
+          border-l border-indigo-300/50
           transition-all duration-300 ease-out
           ${
             isOpen
@@ -46,7 +51,7 @@ export default function SideBar({ isOpen, setIsOpen }) {
       >
         {/* Header */}
         <div className="flex flex-col gap-4 px-2 py-4 flex-1 min-h-0">
-          <div className="flex flex-col items-center gap-2 border-b border-slate-300/50 pb-4">
+          <div className="flex flex-col items-center gap-2 border-b border-indigo-300/60 pb-4">
             <img
               src={Logo}
               width={140}
@@ -73,7 +78,7 @@ export default function SideBar({ isOpen, setIsOpen }) {
         </div>
 
         <div className="px-6 py-3 shrink-0">
-          <p className="text-xs font-light text-center text-slate-700 leading-5">
+          <p className="text-xs font-light text-center text-indigo-950/70 leading-5">
             کلیه حقوق این سامانه برای <strong className="font-bold">{ORGANISATION}</strong> محفوظ
             است.
           </p>

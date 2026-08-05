@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
-import Button from "@components/ui/Button";
 import Input from "@components/ui/Input";
-import { Spinner } from "@components/ui/Loader";
+import SubmitBar from "@components/ui/SubmitBar";
 import { useLoginMutation, useLazyCurrentUserQuery } from "@services/authApi";
 import { useAppDispatch } from "@store/hooks";
 import { setAuthToken, setRoleUser, setUserInfo } from "@store/slices/authSlice";
@@ -119,29 +118,14 @@ export default function Login() {
               />
             </div>
 
-            <div className="md:pt-2">
-              <Button
-                variant="primary"
-                className="w-full h-11 md:h-12 rounded-xl"
-                buttonProps={{ type: "submit", disabled: isLoading }}
-              >
-                {isLoading ? (
-                  <>
-                    <Spinner />
-                    در حال ورود...
-                  </>
-                ) : (
-                  <>
-                    ورود به سیستم
-                    <LoginIcon />
-                  </>
-                )}
-              </Button>
-            </div>
-
-            <p className="text-xs text-center text-slate-500 leading-6">
-              حساب‌ها را مدیر واحد شما می‌سازد؛ ثبت‌نام آزاد وجود ندارد.
-            </p>
+            <SubmitBar
+              label="ورود به سیستم"
+              icon={<LoginIcon />}
+              busy={isLoading}
+              busyLabel="در حال ورود..."
+              className="mt-1"
+              hint="حساب‌ها را مدیر واحد شما می‌سازد؛ ثبت‌نام آزاد وجود ندارد."
+            />
           </form>
         </FormProvider>
 

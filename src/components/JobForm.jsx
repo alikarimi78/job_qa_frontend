@@ -1,8 +1,7 @@
 import { FormProvider, useForm } from "react-hook-form";
-import Button from "@components/ui/Button";
 import Input from "@components/ui/Input";
+import SubmitBar from "@components/ui/SubmitBar";
 import Textarea from "@components/ui/Textarea";
-import { Spinner } from "@components/ui/Loader";
 
 // The dataset's ten canonical columns. Every one is required by JobIn on the
 // backend, so a field missing here fails the whole submit with a 422.
@@ -65,18 +64,7 @@ export default function JobForm({ onSubmit, submitLabel, busy, initial }) {
           />
         ))}
 
-        <div>
-          <Button variant="primary" buttonProps={{ type: "submit", disabled: busy }}>
-            {busy ? (
-              <>
-                <Spinner />
-                در حال ثبت...
-              </>
-            ) : (
-              submitLabel
-            )}
-          </Button>
-        </div>
+        <SubmitBar label={submitLabel} busy={busy} />
       </form>
     </FormProvider>
   );

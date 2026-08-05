@@ -137,7 +137,7 @@ export default function AccountsTable({
                       {account.is_active ? (
                         <Button
                           variant="outline"
-                          className="h-8 px-3 text-xs"
+                          size="sm"
                           buttonProps={{ disabled: busy, onClick: () => onBlock(account) }}
                         >
                           مسدود کن
@@ -145,7 +145,7 @@ export default function AccountsTable({
                       ) : (
                         <Button
                           variant="success"
-                          className="h-8 px-3 text-xs"
+                          size="sm"
                           buttonProps={{ disabled: busy, onClick: () => onUnblock(account) }}
                         >
                           رفع مسدودی
@@ -153,7 +153,7 @@ export default function AccountsTable({
                       )}
                       <Button
                         variant="outline"
-                        className="h-8 px-3 text-xs"
+                        size="sm"
                         buttonProps={{ disabled: busy, onClick: () => open(account, "password") }}
                       >
                         تغییر رمز
@@ -161,7 +161,7 @@ export default function AccountsTable({
                       {movable && (
                         <Button
                           variant="outline"
-                          className="h-8 px-3 text-xs"
+                          size="sm"
                           buttonProps={{ disabled: busy, onClick: () => open(account, "move") }}
                         >
                           انتقال
@@ -169,7 +169,7 @@ export default function AccountsTable({
                       )}
                       <Button
                         variant="danger-outline"
-                        className="h-8 px-3 text-xs"
+                        size="sm"
                         buttonProps={{ disabled: busy, onClick: () => open(account, "delete") }}
                       >
                         حذف
@@ -192,12 +192,11 @@ export default function AccountsTable({
                         value={password}
                         placeholder="رمز تازه (حداقل ۸ نویسه)"
                         onChange={(e) => setPassword(e.target.value)}
-                        className="h-9 px-3 w-56 rounded-xl bg-white text-sm border border-slate-200
+                        className="h-10 px-3 w-56 rounded-xl bg-white text-sm border border-slate-200
                                    outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
                       />
                       <Button
                         variant="primary"
-                        className="h-9 px-4 text-xs"
                         buttonProps={{ type: "submit", disabled: busy }}
                       >
                         ثبت
@@ -216,7 +215,7 @@ export default function AccountsTable({
                       <Select
                         value={destination}
                         onChange={(e) => setDestination(e.target.value)}
-                        className="h-9 max-w-60"
+                        className="max-w-60"
                         selectProps={{ required: true }}
                       >
                         {units.map((unit) => (
@@ -227,7 +226,6 @@ export default function AccountsTable({
                       </Select>
                       <Button
                         variant="primary"
-                        className="h-9 px-4 text-xs"
                         buttonProps={{ type: "submit", disabled: busy }}
                       >
                         انتقال بده
@@ -242,14 +240,12 @@ export default function AccountsTable({
                       </span>
                       <Button
                         variant="danger"
-                        className="h-9 px-4 text-xs"
                         buttonProps={{ disabled: busy, onClick: () => onDelete(account, close) }}
                       >
                         حذف کن
                       </Button>
                       <Button
                         variant="ghost"
-                        className="h-9 px-4 text-xs"
                         buttonProps={{ disabled: busy, onClick: close }}
                       >
                         انصراف

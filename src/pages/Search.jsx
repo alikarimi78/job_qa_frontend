@@ -79,11 +79,7 @@ export default function Search() {
                        placeholder:text-slate-400
                        hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
           />
-          <Button
-            variant="primary"
-            className="h-11 px-6"
-            buttonProps={{ type: "submit", disabled: isLoading }}
-          >
+          <Button variant="primary" size="lg" buttonProps={{ type: "submit", disabled: isLoading }}>
             {isLoading ? <Spinner /> : "جستجو"}
           </Button>
         </form>

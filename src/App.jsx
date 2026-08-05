@@ -8,7 +8,12 @@ import Login from "@pages/Login";
 import Suggest from "@pages/Suggest";
 import MySuggestions from "@pages/MySuggestions";
 import Admin from "@pages/Admin";
-import Manage from "@pages/Manage";
+import ManageLayout from "@pages/manage/ManageLayout";
+import Dashboard from "@pages/manage/Dashboard";
+import Organizations from "@pages/manage/Organizations";
+import Units from "@pages/manage/Units";
+import Users from "@pages/manage/Users";
+import Accounts from "@pages/manage/Accounts";
 
 function Protected({ children, roles }) {
   const token = useAppSelector((state) => state.auth.token);
@@ -40,14 +45,46 @@ export default function App() {
           <Route path="/" element={<Search />} />
           <Route path="/suggest" element={<Suggest />} />
           <Route path="/my-suggestions" element={<MySuggestions />} />
+          {/* One section per panel rather than one page stacking all of them. The
+              layout resolves the caller once; each child is gated on the same roles
+              the matching endpoints are, so a route nobody can use is never reachable
+              even though the API is what actually refuses it. */}
           <Route
             path="/manage"
             element={
               <Protected roles={ADMIN_ROLES}>
-                <Manage />
+                <ManageLayout />
               </Protected>
             }
-          />
+          >
+            <Route index element={<Navigate to="/manage/dashboard" replace />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route
+              path="organizations"
+              element={
+                <Protected roles={["super_admin"]}>
+                  <Organizations />
+                </Protected>
+              }
+            />
+            <Route
+              path="units"
+              element={
+                <Protected roles={["super_admin", "org_admin"]}>
+                  <Units />
+                </Protected>
+              }
+            />
+            <Route
+              path="users"
+              element={
+                <Protected roles={["super_admin", "unit_admin"]}>
+                  <Users />
+                </Protected>
+              }
+            />
+            <Route path="accounts" element={<Accounts />} />
+          </Route>
           <Route
             path="/admin"
             element={

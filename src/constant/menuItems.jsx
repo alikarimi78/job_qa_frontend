@@ -52,8 +52,40 @@ const UsersIcon = icon(
   </>
 );
 
+const ChartIcon = icon(
+  <>
+    <path d="M3 3v18h18" />
+    <path d="M7 15v3M12 10v8M17 6v12" />
+  </>
+);
+
+const BuildingIcon = icon(
+  <>
+    <path d="M3 21h18" />
+    <path d="M5 21V5a2 2 0 012-2h6a2 2 0 012 2v16" />
+    <path d="M19 21V11a2 2 0 00-2-2h-2" />
+    <path d="M9 7h2M9 11h2M9 15h2" />
+  </>
+);
+
+const LayersIcon = icon(
+  <>
+    <path d="M12 3l9 5-9 5-9-5 9-5z" />
+    <path d="M3 13l9 5 9-5" />
+  </>
+);
+
+const UserPlusIcon = icon(
+  <>
+    <path d="M15 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
+    <circle cx="8.5" cy="7" r="4" />
+    <path d="M19 8v6M22 11h-6" />
+  </>
+);
+
 // `roles` is the gate the sidebar filters on. An item with none is open to anyone
-// signed in; a parent whose children are all filtered out disappears with them.
+// signed in; a parent whose children are all filtered out disappears with them — which
+// is what keeps «مدیریت» from opening onto a list of sections its caller cannot enter.
 export const menuItems = [
   {
     href: "/",
@@ -75,8 +107,22 @@ export const menuItems = [
     icon: ShieldIcon,
     roles: ADMIN_ROLES,
     submenuItems: [
-      { label: "حساب‌ها و سازمان‌ها", href: "/manage", roles: ADMIN_ROLES, icon: UsersIcon },
-      { label: "بررسی پیشنهادها", href: "/admin", roles: ["super_admin"] },
+      { label: "داشبورد", href: "/manage/dashboard", roles: ADMIN_ROLES, icon: ChartIcon },
+      { label: "سازمان‌ها", href: "/manage/organizations", roles: ["super_admin"], icon: BuildingIcon },
+      {
+        label: "واحدها",
+        href: "/manage/units",
+        roles: ["super_admin", "org_admin"],
+        icon: LayersIcon,
+      },
+      {
+        label: "کاربران",
+        href: "/manage/users",
+        roles: ["super_admin", "unit_admin"],
+        icon: UserPlusIcon,
+      },
+      { label: "حساب‌ها", href: "/manage/accounts", roles: ADMIN_ROLES, icon: UsersIcon },
+      { label: "بررسی پیشنهادها", href: "/admin", roles: ["super_admin"], icon: ShieldIcon },
     ],
   },
 ];
