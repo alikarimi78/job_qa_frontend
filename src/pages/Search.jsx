@@ -5,10 +5,27 @@ import Button from "@components/ui/Button";
 import Badge from "@components/ui/Badge";
 import { Spinner } from "@components/ui/Loader";
 import JobDetails from "@components/JobDetails";
-import { useSearchMutation } from "@services/jobsApi";
+import { useSearchMutation, useSearchReportMutation } from "@services/jobsApi";
 import { stashDraft } from "@utils/draft";
+import { downloadBlob, safeFileName } from "@utils/download";
 import { errorMessage } from "@utils/errors";
 import { showMessage } from "@utils/toast";
+
+// Inline and `currentColor`, the same way `constant/menuItems.jsx` draws its icons —
+// no icon assets came with the style files.
+const DownloadIcon = () => (
+  <svg
+    className="w-3.5 h-3.5"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    viewBox="0 0 24 24"
+  >
+    <path d="M12 3v12M7 12l5 5 5-5M4 20h16" />
+  </svg>
+);
 
 const MODE_BADGE = {
   single: "accent",
@@ -21,11 +38,15 @@ const MODE_BADGE = {
 export default function Search() {
   const [question, setQuestion] = useState("");
   const [result, setResult] = useState(null);
+  // The question this answer came from, kept apart from the input the user may already
+  // be retyping — the report prints the pair, and they have to be the same pair.
+  const [asked, setAsked] = useState("");
   const [declined, setDeclined] = useState(false);
   // Counts searches so the detail boxes remount on each one: a box the user folded
   // open last time must not stay that way against a new answer's intent.
   const [runId, setRunId] = useState(0);
   const [search, { isLoading }] = useSearchMutation();
+  const [searchReport, { isLoading: isReporting }] = useSearchReportMutation();
   const navigate = useNavigate();
 
   async function submit(e) {
@@ -36,7 +57,28 @@ export default function Search() {
     try {
       const data = await search(question).unwrap();
       setResult(data);
+      setAsked(question.trim());
       setRunId((n) => n + 1);
+    } catch (err) {
+      showMessage.error(errorMessage(err));
+    }
+  }
+
+  // Sends the answer back to be printed, rather than asking for it to be produced
+  // again: the PDF is meant to be exactly the page it was downloaded from.
+  async function downloadReport() {
+    try {
+      const blob = await searchReport({
+        question: asked,
+        mode: result.mode,
+        answer: result.answer,
+        job: result.job ?? null,
+        jobs: result.jobs ?? null,
+        details: result.details ?? [],
+        related_jobs: result.related_jobs ?? null,
+      }).unwrap();
+      const subject = result.job ?? result.jobs?.join(" و ") ?? result.details?.[0]?.job_title;
+      downloadBlob(blob, `${safeFileName(`گزارش ${subject ?? ""}`, "گزارش تحلیل شغل")}.pdf`);
     } catch (err) {
       showMessage.error(errorMessage(err));
     }
@@ -104,9 +146,22 @@ export default function Search() {
                 result.job && <Badge tone={MODE_BADGE[result.mode] ?? "accent"}>{result.job}</Badge>
               )}
             </span>
-            {result.score != null && (
-              <span className="text-xs text-slate-400">تطابق: {result.score.toFixed(2)}</span>
-            )}
+            <span className="flex items-center gap-3">
+              {result.score != null && (
+                <span className="text-xs text-slate-400">تطابق: {result.score.toFixed(2)}</span>
+              )}
+              {/* Nothing to file a report about when the question was not about a job */}
+              {result.mode !== "out_of_domain" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  buttonProps={{ onClick: downloadReport, disabled: isReporting }}
+                >
+                  {isReporting ? <Spinner /> : <DownloadIcon />}
+                  گزارش PDF
+                </Button>
+              )}
+            </span>
           </div>
 
           <p className="whitespace-pre-wrap text-[15px] leading-9 text-slate-800 m-0">
