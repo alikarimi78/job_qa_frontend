@@ -1,10 +1,14 @@
 import Button from "./Button";
 import { Spinner } from "./Loader";
 
-// How every form in the app ends: a rule across the width, then one tall green button
-// filling it. It is a component rather than a class string repeated at each call so the
-// eight submits — login, the five provisioning forms, the job form and the direct add —
+// How every form in the app ends: a rule across the width, then one green button filling
+// it. It is a component rather than a class string repeated at each call so the eight
+// submits — login, the five provisioning forms, the job form and the direct add —
 // cannot drift apart, and so «where do I confirm this» has one answer everywhere.
+//
+// Full width but only `md` tall: the width is what makes it the form's conclusion, the
+// height was just weight. At `xl` the green bar was the loudest thing on a page whose
+// actual content is the fields above it.
 //
 // Always the last child of its <form>, and always type=submit: the bar is the form's
 // end, not a floating action, so it scrolls with the fields it belongs to.
@@ -22,7 +26,7 @@ export default function SubmitBar({
       {hint && <p className="text-xs text-slate-400 leading-6 mb-3">{hint}</p>}
       <Button
         variant="submit"
-        size="xl"
+        size="md"
         className="w-full"
         buttonProps={{ type: "submit", disabled: disabled ?? busy }}
       >
