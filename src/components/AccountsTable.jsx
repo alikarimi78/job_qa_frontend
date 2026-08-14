@@ -1,7 +1,18 @@
 import { useState } from "react";
-import Button from "@components/ui/Button";
 import Badge from "@components/ui/Badge";
+import Button from "@components/ui/Button";
 import Select from "@components/ui/Select";
+import Modal from "@components/ui/Modal";
+import DataTable, { RowActions } from "@components/ui/DataTable";
+import IconButton, {
+  EyeGlyph,
+  KeyGlyph,
+  LockGlyph,
+  PencilGlyph,
+  TrashGlyph,
+  UnlockGlyph,
+} from "@components/ui/IconButton";
+import { ConfirmDialog, DetailsDialog, PasswordDialog } from "@components/manage/Forms";
 import { ROLE_LABELS } from "@routes/roles";
 
 export { ROLE_LABELS };
@@ -23,7 +34,10 @@ function canManage(me, target, unitsById) {
 }
 
 // Moving is narrower than the rest: only an account that lives in a unit can go
-// anywhere, and only the two levels above a unit decide between units.
+// anywhere, and only the two levels above a unit decide between units. It is also the
+// whole of what «ویرایش» means for an account — a username is the credential you log
+// in with, so there is no endpoint that changes one, and the pencil is hidden for
+// anyone who cannot move the row instead of opening onto nothing.
 function canMove(me, target, unitsById) {
   return (
     canManage(me, target, unitsById) &&
@@ -52,27 +66,26 @@ export default function AccountsTable({
   onMove,
   onDelete,
 }) {
-  // At most one inline panel is open at a time: {id, kind: password|move|delete}
-  const [panel, setPanel] = useState(null);
-  const [password, setPassword] = useState("");
+  // One dialog at a time: {kind: view|password|move|delete|block, account}
+  const [dialog, setDialog] = useState(null);
   const [destination, setDestination] = useState("");
+  const close = () => setDialog(null);
+  const is = (kind) => dialog?.kind === kind;
+  const account = dialog?.account ?? null;
 
-  function open(account, kind) {
-    setPassword("");
-    setDestination(String(account.unit_id ?? units[0]?.id ?? ""));
-    setPanel(panel?.id === account.id && panel.kind === kind ? null : { id: account.id, kind });
+  function open(kind, target) {
+    if (kind === "move") setDestination(String(target.unit_id ?? units[0]?.id ?? ""));
+    setDialog({ kind, account: target });
   }
-  const isOpen = (account, kind) => panel?.id === account.id && panel.kind === kind;
-  const close = () => setPanel(null);
 
-  function where(account) {
-    if (account.unit_id != null) {
-      const unit = unitsById[account.unit_id];
+  function where(target) {
+    if (target.unit_id != null) {
+      const unit = unitsById[target.unit_id];
       const org = unit ? orgsById[unit.organization_id] : null;
-      return unit ? `${unit.name}${org ? ` — ${org.name}` : ""}` : `واحد ${account.unit_id}`;
+      return unit ? `${unit.name}${org ? ` — ${org.name}` : ""}` : `واحد ${target.unit_id}`;
     }
-    if (account.organization_id != null) {
-      return orgsById[account.organization_id]?.name ?? `سازمان ${account.organization_id}`;
+    if (target.organization_id != null) {
+      return orgsById[target.organization_id]?.name ?? `سازمان ${target.organization_id}`;
     }
     return "—";
   }
@@ -82,182 +95,219 @@ export default function AccountsTable({
     return org ? `${unit.name} — ${org.name}` : unit.name;
   }
 
-  if (accounts.length === 0) {
-    return <p className="text-sm text-slate-500">هنوز حسابی در دسترس شما ثبت نشده است.</p>;
-  }
+  const columns = [
+    {
+      key: "username",
+      header: "نام کاربری",
+      cell: (row) => (
+        <>
+          <span className={row.is_active ? "text-slate-800" : "text-slate-400 line-through"}>
+            {row.username}
+          </span>
+          {me?.id === row.id && <span className="text-xs text-slate-400"> (شما)</span>}
+        </>
+      ),
+    },
+    {
+      key: "role",
+      header: "نقش",
+      cell: (row) => (
+        <Badge tone={ROLE_TONE[row.role] ?? "neutral"}>{ROLE_LABELS[row.role] ?? row.role}</Badge>
+      ),
+    },
+    {
+      key: "where",
+      header: "جایگاه",
+      className: "text-xs text-slate-500",
+      cell: (row) => where(row),
+    },
+    {
+      key: "status",
+      header: "وضعیت",
+      cell: (row) =>
+        row.is_active ? <Badge tone="success">فعال</Badge> : <Badge tone="danger">مسدود</Badge>,
+    },
+    {
+      key: "actions",
+      header: "عملیات‌ها",
+      align: "end",
+      cell: (row) => {
+        const manageable = canManage(me, row, unitsById);
+        return (
+          <RowActions>
+            {manageable && (
+              <IconButton
+                tone="neutral"
+                title={row.is_active ? `مسدودکردن ${row.username}` : `رفع مسدودی ${row.username}`}
+                disabled={busy}
+                onClick={() => (row.is_active ? open("block", row) : onUnblock(row))}
+              >
+                {/* The glyph is the action, not the state: an active account offers a
+                    closing padlock, a blocked one an open padlock. */}
+                {row.is_active ? LockGlyph : UnlockGlyph}
+              </IconButton>
+            )}
+            {manageable && (
+              <IconButton
+                tone="warning"
+                title={`تغییر رمز ${row.username}`}
+                disabled={busy}
+                onClick={() => open("password", row)}
+              >
+                {KeyGlyph}
+              </IconButton>
+            )}
+            {canMove(me, row, unitsById) && (
+              <IconButton
+                tone="edit"
+                title={`ویرایش حساب ${row.username}`}
+                disabled={busy}
+                onClick={() => open("move", row)}
+              >
+                {PencilGlyph}
+              </IconButton>
+            )}
+            <IconButton
+              tone="view"
+              title={`مشاهده حساب ${row.username}`}
+              onClick={() => open("view", row)}
+            >
+              {EyeGlyph}
+            </IconButton>
+            {manageable && (
+              <IconButton
+                tone="danger"
+                title={`حذف حساب ${row.username}`}
+                disabled={busy}
+                onClick={() => open("delete", row)}
+              >
+                {TrashGlyph}
+              </IconButton>
+            )}
+          </RowActions>
+        );
+      },
+    },
+  ];
 
   return (
-    <div className="overflow-x-auto -mx-1 px-1">
-      <table className="w-full border-collapse text-sm">
-        <thead>
-          <tr>
-            {["نام کاربری", "نقش", "جایگاه", "وضعیت", ""].map((head, i) => (
-              <th
-                key={i}
-                className="text-start text-xs font-medium text-slate-500 px-2 py-2
-                           border-b border-slate-200 whitespace-nowrap"
-              >
-                {head}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {accounts.map((account) => {
-            const manageable = canManage(me, account, unitsById);
-            const movable = canMove(me, account, unitsById);
-            const isMe = me?.id === account.id;
+    <>
+      <DataTable
+        columns={columns}
+        rows={accounts}
+        empty="هنوز حسابی در دسترس شما ثبت نشده است."
+      />
 
-            return (
-              <tr key={account.id} className="align-top">
-                <td className="px-2 py-3 border-b border-slate-200">
-                  <span className={account.is_active ? "text-slate-800" : "text-slate-400 line-through"}>
-                    {account.username}
-                  </span>
-                  {isMe && <span className="text-xs text-slate-400"> (شما)</span>}
-                </td>
-                <td className="px-2 py-3 border-b border-slate-200">
-                  <Badge tone={ROLE_TONE[account.role] ?? "neutral"}>
-                    {ROLE_LABELS[account.role] ?? account.role}
-                  </Badge>
-                </td>
-                <td className="px-2 py-3 border-b border-slate-200 text-xs text-slate-500">
-                  {where(account)}
-                </td>
-                <td className="px-2 py-3 border-b border-slate-200">
-                  {account.is_active ? (
+      <DetailsDialog
+        open={is("view")}
+        title="مشاهده حساب"
+        onClose={close}
+        rows={
+          account
+            ? [
+                { label: "نام کاربری", value: account.username },
+                {
+                  label: "نقش",
+                  value: (
+                    <Badge tone={ROLE_TONE[account.role] ?? "neutral"}>
+                      {ROLE_LABELS[account.role] ?? account.role}
+                    </Badge>
+                  ),
+                },
+                { label: "جایگاه", value: where(account) },
+                {
+                  label: "وضعیت",
+                  value: account.is_active ? (
                     <Badge tone="success">فعال</Badge>
                   ) : (
                     <Badge tone="danger">مسدود</Badge>
-                  )}
-                </td>
-                <td className="px-2 py-3 border-b border-slate-200 text-end">
-                  {manageable && (
-                    <div className="flex items-center justify-end gap-2 flex-wrap">
-                      {account.is_active ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          buttonProps={{ disabled: busy, onClick: () => onBlock(account) }}
-                        >
-                          مسدود کن
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="success"
-                          size="sm"
-                          buttonProps={{ disabled: busy, onClick: () => onUnblock(account) }}
-                        >
-                          رفع مسدودی
-                        </Button>
-                      )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        buttonProps={{ disabled: busy, onClick: () => open(account, "password") }}
-                      >
-                        تغییر رمز
-                      </Button>
-                      {movable && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          buttonProps={{ disabled: busy, onClick: () => open(account, "move") }}
-                        >
-                          انتقال
-                        </Button>
-                      )}
-                      <Button
-                        variant="danger-outline"
-                        size="sm"
-                        buttonProps={{ disabled: busy, onClick: () => open(account, "delete") }}
-                      >
-                        حذف
-                      </Button>
-                    </div>
-                  )}
+                  ),
+                },
+              ]
+            : []
+        }
+      />
 
-                  {isOpen(account, "password") && (
-                    <form
-                      className="flex items-center justify-end gap-2 flex-wrap mt-2"
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        onResetPassword(account, password, close);
-                      }}
-                    >
-                      <input
-                        type="password"
-                        required
-                        minLength={8}
-                        value={password}
-                        placeholder="رمز تازه (حداقل ۸ نویسه)"
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="h-10 px-3 w-56 rounded-xl bg-white text-sm border border-slate-200
-                                   outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
-                      />
-                      <Button
-                        variant="primary"
-                        buttonProps={{ type: "submit", disabled: busy }}
-                      >
-                        ثبت
-                      </Button>
-                    </form>
-                  )}
+      <PasswordDialog
+        open={is("password")}
+        title="تغییر رمز حساب"
+        hint={`رمز تازه برای «${account?.username ?? ""}». رمز فعلی پرسیده نمی‌شود — این کار برای حسابی است که نمی‌تواند آن را بگوید.`}
+        busy={busy}
+        onClose={close}
+        onSubmit={(password, done) => onResetPassword(account, password, done)}
+      />
 
-                  {isOpen(account, "move") && (
-                    <form
-                      className="flex items-center justify-end gap-2 flex-wrap mt-2"
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        onMove(account, Number(destination), close);
-                      }}
-                    >
-                      <Select
-                        value={destination}
-                        onChange={(e) => setDestination(e.target.value)}
-                        className="max-w-60"
-                        selectProps={{ required: true }}
-                      >
-                        {units.map((unit) => (
-                          <option key={unit.id} value={unit.id}>
-                            {unitLabel(unit)}
-                          </option>
-                        ))}
-                      </Select>
-                      <Button
-                        variant="primary"
-                        buttonProps={{ type: "submit", disabled: busy }}
-                      >
-                        انتقال بده
-                      </Button>
-                    </form>
-                  )}
+      {/* «ویرایش حساب» is the unit and nothing else: a role is not edited (it decides
+          which scope column the row carries) and a username is the credential. */}
+      <Modal
+        open={is("move")}
+        title="ویرایش حساب"
+        hint={`«${account?.username ?? ""}» به واحد تازه منتقل می‌شود؛ نقش آن عوض نمی‌شود و هیچ‌چیز دیگری با آن جابه‌جا نمی‌شود.`}
+        onClose={busy ? undefined : close}
+        size="md"
+        footer={
+          <>
+            <Button
+              variant="submit"
+              size="lg"
+              className="max-w-md"
+              buttonProps={{ type: "submit", form: "account-move-form", disabled: busy }}
+            >
+              ثبت تغییر
+            </Button>
+            <Button variant="outline" size="lg" buttonProps={{ onClick: close, disabled: busy }}>
+              بستن
+            </Button>
+          </>
+        }
+      >
+        <form
+          id="account-move-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            onMove(account, Number(destination), close);
+          }}
+          className="flex flex-col gap-1.5"
+        >
+          <label className="text-sm font-medium text-slate-700">واحد</label>
+          <Select
+            value={destination}
+            onChange={(event) => setDestination(event.target.value)}
+            className="w-full h-11"
+            selectProps={{ required: true }}
+          >
+            {units.map((unit) => (
+              <option key={unit.id} value={unit.id}>
+                {unitLabel(unit)}
+              </option>
+            ))}
+          </Select>
+          {account?.role === "unit_admin" && (
+            <span className="text-xs text-slate-400">
+              یک ادمین واحد فقط به واحدی می‌رود که ادمین نداشته باشد.
+            </span>
+          )}
+        </form>
+      </Modal>
 
-                  {isOpen(account, "delete") && (
-                    <div className="flex items-center justify-end gap-2 flex-wrap mt-2">
-                      <span className="text-xs text-slate-500">
-                        «{account.username}» برای همیشه حذف شود؟ برگشت‌پذیر نیست.
-                      </span>
-                      <Button
-                        variant="danger"
-                        buttonProps={{ disabled: busy, onClick: () => onDelete(account, close) }}
-                      >
-                        حذف کن
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        buttonProps={{ disabled: busy, onClick: close }}
-                      >
-                        انصراف
-                      </Button>
-                    </div>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+      <ConfirmDialog
+        open={is("block")}
+        title="مسدودکردن حساب"
+        message={`ورود «${account?.username ?? ""}» از همین لحظه رد می‌شود، حتی اگر توکن معتبری در دست داشته باشد. چیزی حذف نمی‌شود و هر وقت بخواهید می‌توانید رفع مسدودی کنید.`}
+        confirmLabel="مسدود شود"
+        busy={busy}
+        onClose={close}
+        onConfirm={() => onBlock(account, close)}
+      />
+
+      <ConfirmDialog
+        open={is("delete")}
+        title="حذف حساب"
+        message={`آیا از حذف «${account?.username ?? ""}» اطمینان دارید؟ این عملیات قابل بازگشت نیست. پیشنهادهای شغلی این حساب در دیتاست باقی می‌مانند و فقط نام صاحبشان را از دست می‌دهند.`}
+        busy={busy}
+        onClose={close}
+        onConfirm={() => onDelete(account, close)}
+      />
+    </>
   );
 }

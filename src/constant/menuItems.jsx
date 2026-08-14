@@ -75,17 +75,16 @@ const LayersIcon = icon(
   </>
 );
 
-const UserPlusIcon = icon(
-  <>
-    <path d="M15 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
-    <circle cx="8.5" cy="7" r="4" />
-    <path d="M19 8v6M22 11h-6" />
-  </>
-);
-
-// `roles` is the gate the sidebar filters on. An item with none is open to anyone
-// signed in; a parent whose children are all filtered out disappears with them — which
-// is what keeps «مدیریت» from opening onto a list of sections its caller cannot enter.
+// `roles` is the gate the sidebar filters on; an item with none is open to anyone
+// signed in. `MenuItem` still knows how to draw a parent that expands — the reference
+// component was ported whole — but nothing here declares one any more.
+//
+// The four management sections used to sit under one «مدیریت» parent. They are top
+// level now, at the customer's request: each is a destination in its own right, and
+// one accordion standing between the sidebar and every one of them meant two clicks to
+// reach the page an admin spends the day on. A role that cannot enter a section does
+// not see its item, so the list is short for everyone — a unit_admin gets two of the
+// four, and an ordinary user none at all.
 export const menuItems = [
   {
     href: "/",
@@ -103,27 +102,34 @@ export const menuItems = [
     icon: ListIcon,
   },
   {
-    label: "مدیریت",
-    icon: ShieldIcon,
+    href: "/manage/dashboard",
+    label: "داشبورد",
+    icon: ChartIcon,
     roles: ADMIN_ROLES,
-    submenuItems: [
-      { label: "داشبورد", href: "/manage/dashboard", roles: ADMIN_ROLES, icon: ChartIcon },
-      { label: "سازمان‌ها", href: "/manage/organizations", roles: ["super_admin"], icon: BuildingIcon },
-      {
-        label: "واحدها",
-        href: "/manage/units",
-        roles: ["super_admin", "org_admin"],
-        icon: LayersIcon,
-      },
-      {
-        label: "کاربران",
-        href: "/manage/users",
-        roles: ["super_admin", "unit_admin"],
-        icon: UserPlusIcon,
-      },
-      { label: "حساب‌ها", href: "/manage/accounts", roles: ADMIN_ROLES, icon: UsersIcon },
-      { label: "بررسی پیشنهادها", href: "/admin", roles: ["super_admin"], icon: ShieldIcon },
-    ],
+  },
+  {
+    href: "/manage/organizations",
+    label: "مدیریت سازمان‌ها",
+    icon: BuildingIcon,
+    roles: ["super_admin"],
+  },
+  {
+    href: "/manage/units",
+    label: "مدیریت واحدها",
+    icon: LayersIcon,
+    roles: ["super_admin", "org_admin"],
+  },
+  {
+    href: "/manage/accounts",
+    label: "مدیریت حساب‌ها",
+    icon: UsersIcon,
+    roles: ADMIN_ROLES,
+  },
+  {
+    href: "/admin",
+    label: "بررسی پیشنهادها",
+    icon: ShieldIcon,
+    roles: ["super_admin"],
   },
 ];
 

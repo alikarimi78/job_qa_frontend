@@ -23,6 +23,20 @@ body {
   font-feature-settings: "ss02";
 }
 
+/* The one animation declared by hand: ui/Modal opens with it. Tailwind v4 has no
+   config file here to register a keyframe in, and the utility (`animate-[modal-in…]`)
+   only names an animation — the keyframes themselves have to exist somewhere. */
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* The reference sheets style the scrollbar nowhere, but the sidebar and the
    result panes both scroll — an unstyled one is the single loudest thing on the
    page against the glass chrome. */

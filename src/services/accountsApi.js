@@ -68,6 +68,12 @@ export const accountsApi = baseApi.injectEndpoints({
       query: (name) => ({ url: "/orgs", method: "POST", body: { name } }),
       invalidatesTags: ["Organization", "Stats"],
     }),
+    // A name is the only thing either container has to change — id and parent are not
+    // in `RenameIn` at all — so one mutation covers the whole of «ویرایش».
+    renameOrganization: builder.mutation({
+      query: ({ id, name }) => ({ url: `/orgs/${id}`, method: "PATCH", body: { name } }),
+      invalidatesTags: ["Organization"],
+    }),
     // Refused with a 409 naming what is still inside; there is no cascade on purpose.
     deleteOrganization: builder.mutation({
       query: (id) => ({ url: `/orgs/${id}`, method: "DELETE" }),
@@ -82,6 +88,10 @@ export const accountsApi = baseApi.injectEndpoints({
     createUnit: builder.mutation({
       query: (body) => ({ url: "/units", method: "POST", body }),
       invalidatesTags: ["Unit", "Stats"],
+    }),
+    renameUnit: builder.mutation({
+      query: ({ id, name }) => ({ url: `/units/${id}`, method: "PATCH", body: { name } }),
+      invalidatesTags: ["Unit"],
     }),
     deleteUnit: builder.mutation({
       query: (id) => ({ url: `/units/${id}`, method: "DELETE" }),
@@ -103,8 +113,10 @@ export const {
   useDeleteAccountMutation,
   useOrganizationsQuery,
   useCreateOrganizationMutation,
+  useRenameOrganizationMutation,
   useDeleteOrganizationMutation,
   useUnitsQuery,
   useCreateUnitMutation,
+  useRenameUnitMutation,
   useDeleteUnitMutation,
 } = accountsApi;

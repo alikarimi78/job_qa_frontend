@@ -3,6 +3,7 @@ import { useOutletContext } from "react-router-dom";
 import Card from "@components/ui/Card";
 import Button from "@components/ui/Button";
 import Loader from "@components/ui/Loader";
+import PageToolbar from "@components/ui/PageToolbar";
 import CategoryBars from "@components/charts/CategoryBars";
 import MonthlyBars from "@components/charts/MonthlyBars";
 import { Meter, StatTile } from "@components/charts/StatTile";
@@ -89,7 +90,11 @@ export default function Dashboard() {
 
   return (
     <>
-      <Card title="یک نگاه" hint={scopeNote}>
+      {/* The same strip the other three sections open with — this one has nothing to
+          add, so it carries only where you are and how far the numbers reach. */}
+      <PageToolbar title="داشبورد مدیریت" hint={scopeNote} />
+
+      <Card title="یک نگاه">
         <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3">
           {isSuper && <StatTile label="سازمان‌ها" value={stats.organizations} />}
           {!isUnitAdmin && <StatTile label="واحدها" value={stats.units} />}

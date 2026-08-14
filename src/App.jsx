@@ -12,7 +12,6 @@ import ManageLayout from "@pages/manage/ManageLayout";
 import Dashboard from "@pages/manage/Dashboard";
 import Organizations from "@pages/manage/Organizations";
 import Units from "@pages/manage/Units";
-import Users from "@pages/manage/Users";
 import Accounts from "@pages/manage/Accounts";
 
 function Protected({ children, roles }) {
@@ -75,14 +74,10 @@ export default function App() {
                 </Protected>
               }
             />
-            <Route
-              path="users"
-              element={
-                <Protected roles={["super_admin", "unit_admin"]}>
-                  <Users />
-                </Protected>
-              }
-            />
+            {/* «کاربران» was its own page until account creation moved into one
+                dialog on /manage/accounts. The redirect is for a bookmark, and for
+                the sidebar of a tab that was open across the change. */}
+            <Route path="users" element={<Navigate to="/manage/accounts" replace />} />
             <Route path="accounts" element={<Accounts />} />
           </Route>
           <Route
