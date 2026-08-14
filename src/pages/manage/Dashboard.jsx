@@ -31,9 +31,9 @@ export default function Dashboard() {
     if (!stats) return [];
     // Fixed order, so a series keeps its colour whichever of them this role sees.
     const all = [
-      { key: "accounts", label: "حساب‌های تازه", series: stats.accounts_series },
-      { key: "units", label: "واحدهای تازه", series: stats.units_series },
-      { key: "organizations", label: "سازمان‌های تازه", series: stats.organizations_series },
+      { key: "accounts", label: "حساب‌های جدید", series: stats.accounts_series },
+      { key: "units", label: "واحدهای جدید", series: stats.units_series },
+      { key: "organizations", label: "سازمان‌های جدید", series: stats.organizations_series },
     ];
     const shown = isUnitAdmin ? all.slice(0, 1) : isSuper ? all : all.slice(0, 2);
     return shown.map((item) => ({
@@ -123,7 +123,7 @@ export default function Dashboard() {
 
       <Card
         title="رشد ماهانه"
-        hint="تعداد رکوردهای تازه در هر ماه شمسی — ماه‌ها از راست به چپ"
+        hint="تعداد رکوردهای جدید در هر ماه شمسی — ماه‌ها از راست به چپ"
         actions={
           <div className="flex items-center gap-2">
             {[6, 12].map((count) => (

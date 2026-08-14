@@ -194,7 +194,7 @@ export default function Search() {
 
           {offered && declined && (
             <p className="text-xs text-slate-400 mt-5 pt-4 border-t border-slate-200">
-              این پیشنهاد ثبت نشد. با پرسش تازه می‌توانید پیشنهاد دیگری بگیرید.
+              این پیشنهاد ثبت نشد. با پرسش جدید می‌توانید پیشنهاد دیگری بگیرید.
             </p>
           )}
         </Card>

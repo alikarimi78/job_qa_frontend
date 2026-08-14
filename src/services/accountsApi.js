@@ -64,15 +64,29 @@ export const accountsApi = baseApi.injectEndpoints({
       query: () => "/orgs",
       providesTags: ["Organization"],
     }),
+    // An organization is a name plus the contact detail admin_panel.mp4 asks for —
+    // شناسه، آدرس، شماره تماس، پست الکترونیکی and a logo. The whole form goes up as one
+    // body; the server takes what it is sent and leaves the rest alone.
     createOrganization: builder.mutation({
-      query: (name) => ({ url: "/orgs", method: "POST", body: { name } }),
+      query: (body) => ({ url: "/orgs", method: "POST", body }),
       invalidatesTags: ["Organization", "Stats"],
     }),
-    // A name is the only thing either container has to change — id and parent are not
-    // in `RenameIn` at all — so one mutation covers the whole of «ویرایش».
-    renameOrganization: builder.mutation({
-      query: ({ id, name }) => ({ url: `/orgs/${id}`, method: "PATCH", body: { name } }),
-      invalidatesTags: ["Organization"],
+    // PATCH applies only the fields present in the body, so this backs both the whole
+    // edit dialog and a one-box correction. `Logo` is invalidated separately because the
+    // image lives behind its own endpoint and is not in the row this returns.
+    updateOrganization: builder.mutation({
+      query: ({ id, ...body }) => ({ url: `/orgs/${id}`, method: "PATCH", body }),
+      invalidatesTags: (result, error, { id }) => [
+        "Organization",
+        { type: "OrgLogo", id },
+      ],
+    }),
+    // The image, fetched per organization rather than carried in the list — see
+    // `OrganizationOut.has_logo`. It arrives as a data URI because an `<img src>` cannot
+    // send the Authorization header this endpoint needs like every other one.
+    organizationLogo: builder.query({
+      query: (id) => `/orgs/${id}/logo`,
+      providesTags: (result, error, id) => [{ type: "OrgLogo", id }],
     }),
     // Refused with a 409 naming what is still inside; there is no cascade on purpose.
     deleteOrganization: builder.mutation({
@@ -113,7 +127,8 @@ export const {
   useDeleteAccountMutation,
   useOrganizationsQuery,
   useCreateOrganizationMutation,
-  useRenameOrganizationMutation,
+  useUpdateOrganizationMutation,
+  useOrganizationLogoQuery,
   useDeleteOrganizationMutation,
   useUnitsQuery,
   useCreateUnitMutation,

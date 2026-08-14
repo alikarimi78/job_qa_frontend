@@ -161,7 +161,7 @@ export default function Units() {
         title="مدیریت واحدها"
         hint={
           isSuper
-            ? "واحد تازه در سازمانی ساخته می‌شود که در فیلتر زیر انتخاب کرده‌اید"
+            ? "واحد جدید در سازمانی ساخته می‌شود که در فیلتر زیر انتخاب کرده‌اید"
             : `واحدهای سازمان ${me.organization?.name ?? "شما"}`
         }
         action={{
@@ -187,7 +187,7 @@ export default function Units() {
             </Select>
             {selectedOrgId == null && (
               <span className="text-xs text-slate-400">
-                برای ساخت واحد تازه، ابتدا سازمان آن را انتخاب کنید.
+                برای ساخت واحد جدید، ابتدا سازمان آن را انتخاب کنید.
               </span>
             )}
           </div>
@@ -201,7 +201,7 @@ export default function Units() {
         title="افزودن واحد"
         hint={
           isSuper
-            ? `واحد تازه در سازمان «${orgsById[selectedOrgId]?.name ?? ""}» ساخته می‌شود.`
+            ? `واحد جدید در سازمان «${orgsById[selectedOrgId]?.name ?? ""}» ساخته می‌شود.`
             : undefined
         }
         fieldLabel="نام واحد"
@@ -223,7 +223,7 @@ export default function Units() {
         title="ویرایش واحد"
         hint="واحد در همان سازمانی می‌ماند که هست؛ فقط نامش عوض می‌شود و حساب‌های داخل آن دست‌نخورده می‌مانند."
         fieldLabel="نام واحد"
-        placeholder="نام تازه"
+        placeholder="نام جدید"
         defaultValue={target?.name ?? ""}
         submitLabel="ثبت تغییر"
         busy={renaming}

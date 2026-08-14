@@ -66,7 +66,18 @@ export function bucketByMonth(series, months) {
   return counts;
 }
 
-/** Persian digits, which is what the rest of the interface uses. */
+/** Persian digits, which is what the rest of the interface uses. For *quantities*. */
 export const faNumber = (value) => Number(value ?? 0).toLocaleString("fa-IR");
+
+/**
+ * Persian digits one character at a time, for strings that merely contain numbers —
+ * a phone number, an organization code.
+ *
+ * `faNumber` is the wrong tool for those twice over: it groups, so «۰۹۱۰۲۱۷۸۱۴۶» would
+ * be printed as «۹٬۱۰۲٬۱۷۸٬۱۴۶» with the leading zero gone, and anything with a dash or
+ * a space in it is not a Number at all and comes out «ناعدد».
+ */
+export const faDigits = (value) =>
+  String(value ?? "").replace(/[0-9]/g, (digit) => "۰۱۲۳۴۵۶۷۸۹"[digit]);
 
 export default lastPersianMonths;

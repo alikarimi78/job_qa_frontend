@@ -28,7 +28,7 @@ export default function MonthlyBars({ months, series, height = 280 }) {
     0
   );
   if (total === 0) {
-    return <ChartEmpty>در این بازه رکورد تازه‌ای ثبت نشده است.</ChartEmpty>;
+    return <ChartEmpty>در این بازه رکورد جدیدی ثبت نشده است.</ChartEmpty>;
   }
 
   return (

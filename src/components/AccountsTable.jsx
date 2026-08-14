@@ -231,7 +231,7 @@ export default function AccountsTable({
       <PasswordDialog
         open={is("password")}
         title="تغییر رمز حساب"
-        hint={`رمز تازه برای «${account?.username ?? ""}». رمز فعلی پرسیده نمی‌شود — این کار برای حسابی است که نمی‌تواند آن را بگوید.`}
+        hint={`رمز جدید برای «${account?.username ?? ""}». رمز فعلی پرسیده نمی‌شود — این کار برای حسابی است که نمی‌تواند آن را بگوید.`}
         busy={busy}
         onClose={close}
         onSubmit={(password, done) => onResetPassword(account, password, done)}
@@ -242,7 +242,7 @@ export default function AccountsTable({
       <Modal
         open={is("move")}
         title="ویرایش حساب"
-        hint={`«${account?.username ?? ""}» به واحد تازه منتقل می‌شود؛ نقش آن عوض نمی‌شود و هیچ‌چیز دیگری با آن جابه‌جا نمی‌شود.`}
+        hint={`«${account?.username ?? ""}» به واحد جدید منتقل می‌شود؛ نقش آن عوض نمی‌شود و هیچ‌چیز دیگری با آن جابه‌جا نمی‌شود.`}
         onClose={busy ? undefined : close}
         size="md"
         footer={

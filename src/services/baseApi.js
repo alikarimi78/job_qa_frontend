@@ -26,7 +26,10 @@ const baseQuery = async (args, api, extraOptions) => {
 export const baseApi = createApi({
   reducerPath: "api",
   baseQuery,
-  tagTypes: ["Me", "Account", "Organization", "Unit", "Suggestion", "MySuggestion", "Rebuild",
-             "Stats"],
+  // `OrgLogo` is per-id and separate from `Organization` on purpose: the image is
+  // fetched by its own endpoint, so editing one organization's logo must not throw away
+  // every other one's cached image.
+  tagTypes: ["Me", "Account", "Organization", "OrgLogo", "Unit", "Suggestion",
+             "MySuggestion", "Rebuild", "Stats"],
   endpoints: () => ({}),
 });
