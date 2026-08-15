@@ -16,11 +16,13 @@ import {
   useCreateUserMutation,
   useDeleteAccountMutation,
   useMoveAccountMutation,
+  useMoveAccountOrganizationMutation,
   useOrganizationsQuery,
   useResetPasswordMutation,
   useUnblockAccountMutation,
   useUnitsQuery,
 } from "@services/accountsApi";
+import { useChangeOwnPasswordMutation } from "@services/authApi";
 import { runAction } from "@utils/action";
 import { faNumber } from "@utils/jalali";
 
@@ -73,12 +75,14 @@ export default function Accounts() {
   const [resetPassword, { isLoading: b3 }] = useResetPasswordMutation();
   const [moveAccount, { isLoading: b4 }] = useMoveAccountMutation();
   const [deleteAccount, { isLoading: b5 }] = useDeleteAccountMutation();
-  const [createSuperAdmin, { isLoading: b6 }] = useCreateSuperAdminMutation();
-  const [createOrgAdmin, { isLoading: b7 }] = useCreateOrgAdminMutation();
-  const [createUnitAdmin, { isLoading: b8 }] = useCreateUnitAdminMutation();
-  const [createUser, { isLoading: b9 }] = useCreateUserMutation();
-  const busy = b1 || b2 || b3 || b4 || b5;
-  const creating = b6 || b7 || b8 || b9;
+  const [moveAccountOrganization, { isLoading: b6 }] = useMoveAccountOrganizationMutation();
+  const [changeOwnPassword, { isLoading: b7 }] = useChangeOwnPasswordMutation();
+  const [createSuperAdmin, { isLoading: c1 }] = useCreateSuperAdminMutation();
+  const [createOrgAdmin, { isLoading: c2 }] = useCreateOrgAdminMutation();
+  const [createUnitAdmin, { isLoading: c3 }] = useCreateUnitAdminMutation();
+  const [createUser, { isLoading: c4 }] = useCreateUserMutation();
+  const busy = b1 || b2 || b3 || b4 || b5 || b6 || b7;
+  const creating = c1 || c2 || c3 || c4;
 
   const orgsById = Object.fromEntries(orgs.map((o) => [o.id, o]));
   const unitsById = Object.fromEntries(units.map((u) => [u.id, u]));
@@ -216,6 +220,7 @@ export default function Accounts() {
           me={me}
           units={units}
           unitsById={unitsById}
+          orgs={orgs}
           orgsById={orgsById}
           busy={busy}
           onBlock={(a, done) =>
@@ -231,10 +236,20 @@ export default function Accounts() {
               done
             )
           }
+          onChangeOwnPassword={(values, done) =>
+            runAction(() => changeOwnPassword(values), "رمز شما تغییر کرد.", done)
+          }
           onMove={(a, destination, done) =>
             runAction(
               () => moveAccount({ id: a.id, unitId: destination }),
               `«${a.username}» به واحد «${unitsById[destination]?.name ?? destination}» منتقل شد.`,
+              done
+            )
+          }
+          onMoveOrganization={(a, destination, done) =>
+            runAction(
+              () => moveAccountOrganization({ id: a.id, organizationId: destination }),
+              `«${a.username}» به سازمان «${orgsById[destination]?.name ?? destination}» منتقل شد.`,
               done
             )
           }

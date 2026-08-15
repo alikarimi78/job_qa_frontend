@@ -498,6 +498,70 @@ export function PasswordDialog({ open, title, hint, busy, onClose, onSubmit }) {
 }
 
 /**
+ * The caller's own password. It asks for the current one, which is the whole difference
+ * from `PasswordDialog` above and is not a formality: an admin resetting somebody
+ * else's password is authorised by being that admin, and an account changing its own
+ * has only its session to show for it — so without this box a browser left open on a
+ * shared machine would be a permanent takeover rather than an hour of borrowed access.
+ *
+ * It is the only way a super_admin ever changes their password: `/accounts/{id}/password`
+ * refuses one's own row, and there is nobody above a super_admin to ask.
+ */
+export function SelfPasswordDialog({ open, title, hint, busy, onClose, onSubmit }) {
+  const formId = "self-password-dialog-form";
+  const blank = { current_password: "", new_password: "" };
+  const methods = useForm({ defaultValues: blank });
+
+  useEffect(() => {
+    if (open) methods.reset(blank);
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <Modal
+      open={open}
+      title={title}
+      hint={hint}
+      onClose={busy ? undefined : onClose}
+      size="sm"
+      footer={
+        <>
+          <DialogFooter formId={formId} label="ثبت رمز جدید" busy={busy} />
+          <CloseButton onClose={onClose} busy={busy} />
+        </>
+      }
+    >
+      <FormProvider {...methods}>
+        <form
+          id={formId}
+          onSubmit={methods.handleSubmit((values) => onSubmit(values, onClose))}
+          className="flex flex-col gap-4"
+        >
+          <Input
+            name="current_password"
+            type="password"
+            label="رمز فعلی"
+            placeholder="رمزی که الان با آن وارد می‌شوید"
+            registerProps={{ required: "رمز فعلی لازم است" }}
+          />
+          <Input
+            name="new_password"
+            type="password"
+            label="رمز جدید"
+            placeholder="حداقل ۸ نویسه"
+            registerProps={{
+              required: "رمز جدید لازم است",
+              minLength: { value: 8, message: "حداقل ۸ نویسه" },
+              validate: (value, values) =>
+                value !== values.current_password || "رمز جدید باید با رمز فعلی فرق کند",
+            }}
+          />
+        </form>
+      </FormProvider>
+    </Modal>
+  );
+}
+
+/**
  * The two-step delete, as the dialog admin_panel.mp4 uses rather than the inline pair
  * of buttons it used to be. The page still does not try to predict whether a container
  * is empty — it asks, and shows the 409 the server answers with, which names what is

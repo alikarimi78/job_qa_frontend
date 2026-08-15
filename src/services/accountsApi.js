@@ -54,6 +54,18 @@ export const accountsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Account", "Unit", "Stats"],
     }),
+    // The same move for an org_admin, which sits in an organization rather than in a
+    // unit and has nowhere to go through the endpoint above. Invalidates Organization
+    // too: the «ادمین ندارد» line beside a row is read off the account list, and this
+    // moves it for two organizations at once.
+    moveAccountOrganization: builder.mutation({
+      query: ({ id, organizationId }) => ({
+        url: `/accounts/${id}/organization`,
+        method: "POST",
+        body: { organization_id: organizationId },
+      }),
+      invalidatesTags: ["Account", "Organization", "Stats"],
+    }),
     deleteAccount: builder.mutation({
       query: (id) => ({ url: `/accounts/${id}`, method: "DELETE" }),
       invalidatesTags: ["Account", "Organization", "Unit", "Stats"],
@@ -124,6 +136,7 @@ export const {
   useUnblockAccountMutation,
   useResetPasswordMutation,
   useMoveAccountMutation,
+  useMoveAccountOrganizationMutation,
   useDeleteAccountMutation,
   useOrganizationsQuery,
   useCreateOrganizationMutation,

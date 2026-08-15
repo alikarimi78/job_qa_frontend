@@ -12,7 +12,12 @@ import IconButton, {
   TrashGlyph,
   UnlockGlyph,
 } from "@components/ui/IconButton";
-import { ConfirmDialog, DetailsDialog, PasswordDialog } from "@components/manage/Forms";
+import {
+  ConfirmDialog,
+  DetailsDialog,
+  PasswordDialog,
+  SelfPasswordDialog,
+} from "@components/manage/Forms";
 import { ROLE_LABELS } from "@routes/roles";
 
 export { ROLE_LABELS };
@@ -46,6 +51,19 @@ function canMove(me, target, unitsById) {
   );
 }
 
+// The same «ویرایش», for the one role that does not sit in a unit: an org_admin belongs
+// to its organization directly, so its move is `POST /accounts/{id}/organization` and
+// its pencil would otherwise never appear. Super_admin only, matching the endpoint —
+// an org_admin cannot manage a peer (a peer has no unit through which it would be
+// inside their organization) and has no second organization to move one into.
+function canMoveOrganization(me, target, unitsById) {
+  return (
+    canManage(me, target, unitsById) &&
+    me.role === "super_admin" &&
+    target.organization_id != null
+  );
+}
+
 const ROLE_TONE = {
   super_admin: "danger",
   org_admin: "warning",
@@ -58,23 +76,34 @@ export default function AccountsTable({
   me,
   units,
   unitsById,
+  orgs,
   orgsById,
   busy,
   onBlock,
   onUnblock,
   onResetPassword,
+  onChangeOwnPassword,
   onMove,
+  onMoveOrganization,
   onDelete,
 }) {
-  // One dialog at a time: {kind: view|password|move|delete|block, account}
+  // One dialog at a time: {kind: view|password|self-password|move|delete|block, account}
   const [dialog, setDialog] = useState(null);
   const [destination, setDestination] = useState("");
   const close = () => setDialog(null);
   const is = (kind) => dialog?.kind === kind;
   const account = dialog?.account ?? null;
+  // «ویرایش» is one dialog over two endpoints: an org_admin changes organization, and
+  // everyone else changes unit. Which one is read off the row's own scope column rather
+  // than off its role — that column *is* the role's scope (`ck_users_scope`).
+  const movingOrganization = account?.organization_id != null;
 
   function open(kind, target) {
-    if (kind === "move") setDestination(String(target.unit_id ?? units[0]?.id ?? ""));
+    // Seeded with where the row already is; the last fallback is for a legacy `user`
+    // row, which is the one kind of account that may sit in no unit at all.
+    if (kind === "move") {
+      setDestination(String(target.organization_id ?? target.unit_id ?? units[0]?.id ?? ""));
+    }
     setDialog({ kind, account: target });
   }
 
@@ -147,6 +176,10 @@ export default function AccountsTable({
                 {row.is_active ? LockGlyph : UnlockGlyph}
               </IconButton>
             )}
+            {/* Someone else's password is set outright; the caller's own is changed
+                against the current one, through the endpoint that asks for it. That
+                second case is the only way a super_admin ever changes their password —
+                nobody may act on their own row here, and nobody sits above them. */}
             {manageable && (
               <IconButton
                 tone="warning"
@@ -157,7 +190,17 @@ export default function AccountsTable({
                 {KeyGlyph}
               </IconButton>
             )}
-            {canMove(me, row, unitsById) && (
+            {me?.id === row.id && (
+              <IconButton
+                tone="warning"
+                title="تغییر رمز خودم"
+                disabled={busy}
+                onClick={() => open("self-password", row)}
+              >
+                {KeyGlyph}
+              </IconButton>
+            )}
+            {(canMove(me, row, unitsById) || canMoveOrganization(me, row, unitsById)) && (
               <IconButton
                 tone="edit"
                 title={`ویرایش حساب ${row.username}`}
@@ -237,12 +280,27 @@ export default function AccountsTable({
         onSubmit={(password, done) => onResetPassword(account, password, done)}
       />
 
-      {/* «ویرایش حساب» is the unit and nothing else: a role is not edited (it decides
-          which scope column the row carries) and a username is the credential. */}
+      <SelfPasswordDialog
+        open={is("self-password")}
+        title="تغییر رمز خودم"
+        hint="رمز فعلی پرسیده می‌شود، چون اینجا چیزی جز نشست باز شما ثابت نمی‌کند که صاحب حساب هستید."
+        busy={busy}
+        onClose={close}
+        onSubmit={(values, done) => onChangeOwnPassword(values, done)}
+      />
+
+      {/* «ویرایش حساب» is where the account sits and nothing else: a role is not edited
+          (it decides which scope column the row carries) and a username is the
+          credential. Which container that is follows the row — an org_admin belongs to
+          an organization, everyone below it to a unit. */}
       <Modal
         open={is("move")}
         title="ویرایش حساب"
-        hint={`«${account?.username ?? ""}» به واحد جدید منتقل می‌شود؛ نقش آن عوض نمی‌شود و هیچ‌چیز دیگری با آن جابه‌جا نمی‌شود.`}
+        hint={
+          movingOrganization
+            ? `«${account?.username ?? ""}» به سازمان دیگری منتقل می‌شود؛ نقش آن عوض نمی‌شود و واحدهای سازمان قبلی با آن جابه‌جا نمی‌شوند.`
+            : `«${account?.username ?? ""}» به واحد جدید منتقل می‌شود؛ نقش آن عوض نمی‌شود و هیچ‌چیز دیگری با آن جابه‌جا نمی‌شود.`
+        }
         onClose={busy ? undefined : close}
         size="md"
         footer={
@@ -265,26 +323,40 @@ export default function AccountsTable({
           id="account-move-form"
           onSubmit={(event) => {
             event.preventDefault();
-            onMove(account, Number(destination), close);
+            const target = Number(destination);
+            if (movingOrganization) onMoveOrganization(account, target, close);
+            else onMove(account, target, close);
           }}
           className="flex flex-col gap-1.5"
         >
-          <label className="text-sm font-medium text-slate-700">واحد</label>
+          <label className="text-sm font-medium text-slate-700">
+            {movingOrganization ? "سازمان" : "واحد"}
+          </label>
           <Select
             value={destination}
             onChange={(event) => setDestination(event.target.value)}
             className="w-full h-11"
             selectProps={{ required: true }}
           >
-            {units.map((unit) => (
-              <option key={unit.id} value={unit.id}>
-                {unitLabel(unit)}
-              </option>
-            ))}
+            {movingOrganization
+              ? orgs.map((org) => (
+                  <option key={org.id} value={org.id}>
+                    {org.name}
+                  </option>
+                ))
+              : units.map((unit) => (
+                  <option key={unit.id} value={unit.id}>
+                    {unitLabel(unit)}
+                  </option>
+                ))}
           </Select>
-          {account?.role === "unit_admin" && (
+          {/* The seat may already be taken, and this does not try to predict it — the
+              page asks and shows the 409, which names the admin sitting there. */}
+          {(movingOrganization || account?.role === "unit_admin") && (
             <span className="text-xs text-slate-400">
-              یک ادمین واحد فقط به واحدی می‌رود که ادمین نداشته باشد.
+              {movingOrganization
+                ? "یک ادمین سازمان فقط به سازمانی می‌رود که ادمین نداشته باشد."
+                : "یک ادمین واحد فقط به واحدی می‌رود که ادمین نداشته باشد."}
             </span>
           )}
         </form>

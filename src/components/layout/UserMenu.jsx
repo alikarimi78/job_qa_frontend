@@ -1,3 +1,4 @@
+import { KeyGlyph } from "@components/ui/IconButton";
 import { ROLE_LABELS } from "@routes/roles";
 
 // The reference dropdown links to /profile and /company-info. Neither page exists here
@@ -12,6 +13,35 @@ export function AccountSummary({ username, role, userInfo }) {
       <p className="text-xs text-slate-300 mt-0.5">{ROLE_LABELS[role] ?? role}</p>
       {place && <p className="text-xs text-slate-400 mt-1 leading-5">{place}</p>}
     </div>
+  );
+}
+
+/**
+ * What the panel offers under the summary, in both header modes. The two used to carry
+ * one copy each of the logout button and drifted apart the moment there was a second
+ * action to add — the panel's body lives here now, beside the summary it sits under.
+ *
+ * «تغییر رمز» is here as well as on the caller's own row in `/manage/accounts`, because
+ * that page is admin-only: an ordinary user has no other way to reach the dialog, and an
+ * org_admin does not appear in its own account listing at all.
+ */
+export function AccountActions({ onChangePassword, onLogout }) {
+  const item =
+    "w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-slate-700/50 transition-colors cursor-pointer";
+
+  return (
+    <>
+      <button onClick={onChangePassword} className={`${item} text-slate-200`}>
+        {/* The same key the accounts table draws for the same action — that is what
+            `ui/IconButton`'s glyphs are there for, and it is already `w-4 h-4`. */}
+        {KeyGlyph}
+        تغییر رمز
+      </button>
+      <button onClick={onLogout} className={`${item} text-red-400 border-t border-slate-600/40`}>
+        <LogoutIcon />
+        خروج از حساب
+      </button>
+    </>
   );
 }
 

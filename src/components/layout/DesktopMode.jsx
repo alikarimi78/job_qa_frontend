@@ -1,8 +1,14 @@
 import { useAppSelector } from "@store/hooks";
 import { APP_TITLE } from "@constant/config";
-import { AccountSummary, AvatarIcon, ChevronIcon, LogoutIcon } from "./UserMenu";
+import { AccountActions, AccountSummary, AvatarIcon, ChevronIcon } from "./UserMenu";
 
-export default function DesktopMode({ isOpen, dropdownRef, setIsOpen, handleLogout }) {
+export default function DesktopMode({
+  isOpen,
+  dropdownRef,
+  setIsOpen,
+  handleLogout,
+  handleChangePassword,
+}) {
   const { username, role, userInfo } = useAppSelector((state) => state.auth);
 
   return (
@@ -69,15 +75,10 @@ export default function DesktopMode({ isOpen, dropdownRef, setIsOpen, handleLogo
             `}
           >
             <AccountSummary username={username} role={role} userInfo={userInfo} />
-
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-400
-                         hover:bg-slate-700/50 transition-colors cursor-pointer"
-            >
-              <LogoutIcon />
-              خروج از حساب
-            </button>
+            <AccountActions
+              onChangePassword={handleChangePassword}
+              onLogout={handleLogout}
+            />
           </div>
         </div>
       </div>

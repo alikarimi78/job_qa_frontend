@@ -12,7 +12,20 @@ export const authApi = baseApi.injectEndpoints({
       query: () => "/auth/me",
       providesTags: ["Me"],
     }),
+    // The caller's own password, and the only endpoint that acts on the caller's own
+    // account. `/accounts/{id}/password` refuses one's own row, which leaves a
+    // super_admin — who has nobody above them — with no way to change their password at
+    // all. The current one is required here and stands in for the authority an admin
+    // resetting somebody else's would have; nothing cached changes, so no tag moves.
+    changeOwnPassword: builder.mutation({
+      query: (body) => ({ url: "/auth/password", method: "POST", body }),
+    }),
   }),
 });
 
-export const { useLoginMutation, useCurrentUserQuery, useLazyCurrentUserQuery } = authApi;
+export const {
+  useLoginMutation,
+  useCurrentUserQuery,
+  useLazyCurrentUserQuery,
+  useChangeOwnPasswordMutation,
+} = authApi;
