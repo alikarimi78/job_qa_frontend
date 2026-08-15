@@ -21,7 +21,7 @@ const VARIANTS = {
     "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20 border border-emerald-600",
   // The one that commits a form — see ui/SubmitBar. Green, and a shade deeper than
   // `success`, so the button that files something is not the same object as the
-  // «تأیید» sitting next to a «رد» in the moderation queue.
+  // «تایید» sitting next to a «رد» in the moderation queue.
   submit:
     "bg-gradient-to-l from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 " +
     "text-white font-semibold shadow-lg shadow-emerald-700/25 border border-emerald-700/60",

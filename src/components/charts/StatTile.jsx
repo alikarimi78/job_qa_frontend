@@ -45,7 +45,7 @@ export function Meter({ label, value, total, note }) {
       </div>
       <span className="text-xs text-slate-500 leading-6">
         {remaining > 0
-          ? `${faNumber(remaining)} رکورد تأییدشده هنوز وارد موتور جستجو نشده است؛ با «بازسازی» در صفحه بررسی پیشنهادها اعمال می‌شود.`
+          ? `${faNumber(remaining)} رکورد تایید شده هنوز وارد موتور جستجو نشده است؛ با «بازسازی» در صفحه بررسی پیشنهادها اعمال می‌شود.`
           : note}
       </span>
     </div>

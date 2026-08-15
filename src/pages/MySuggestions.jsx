@@ -6,7 +6,7 @@ import { errorMessage } from "@utils/errors";
 
 const STATUS = {
   pending: ["در انتظار بررسی", "warning"],
-  approved: ["تأیید شده", "success"],
+  approved: ["تایید شده", "success"],
   rejected: ["رد شده", "danger"],
 };
 

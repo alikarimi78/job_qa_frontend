@@ -110,7 +110,7 @@ export default function Dashboard() {
           <StatTile
             label="مشاغل دیتاست"
             value={stats.jobs.corpus_records}
-            hint="رکوردهای تأییدشده‌ای که جستجو روی آن‌ها انجام می‌شود"
+            hint="رکوردهای تایید شده‌ای که جستجو روی آن‌ها انجام می‌شود"
           />
           <StatTile
             label="در انتظار بررسی"
@@ -171,7 +171,7 @@ export default function Dashboard() {
         hint="پیشنهادهای زیر، پیشنهادهای حساب‌های زیرمجموعه شماست؛ اندازه دیتاست مشترک همه سازمان‌هاست"
       >
         <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3 mb-6">
-          <StatTile label="تأییدشده" value={stats.jobs.approved} />
+          <StatTile label="تایید شده" value={stats.jobs.approved} />
           <StatTile label="در انتظار" value={stats.jobs.pending} tone="warning" />
           <StatTile label="رد شده" value={stats.jobs.rejected} tone="muted" />
         </div>
@@ -185,7 +185,7 @@ export default function Dashboard() {
             label="رکوردهای واردشده در موتور جستجو"
             value={stats.jobs.engine_records}
             total={stats.jobs.corpus_records}
-            note="موتور جستجو با همه رکوردهای تأییدشده ساخته شده است."
+            note="موتور جستجو با همه رکوردهای تایید شده ساخته شده است."
           />
         )}
       </Card>

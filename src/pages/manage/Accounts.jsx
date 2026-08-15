@@ -164,7 +164,7 @@ export default function Accounts() {
     <>
       <PageToolbar
         title="مدیریت حساب‌ها"
-        hint="مسدودکردن چیزی را حذف نمی‌کند؛ فقط ورود آن حساب رد می‌شود — بی‌درنگ، حتی اگر توکن معتبری در دست داشته باشد."
+        hint="می‌توانید برای محدودسازی دسترسی کاربران، آنهارا مسدود کنید."
         action={
           creatableRoles.length
             ? { label: "افزودن حساب جدید", onClick: openAddDialog }

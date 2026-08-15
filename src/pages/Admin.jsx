@@ -52,7 +52,7 @@ export default function Admin() {
       await (action === "approve" ? approve(id) : reject(id)).unwrap();
       showMessage.success(
         action === "approve"
-          ? `«${title}» تأیید شد. برای اعمال در جستجو، بازسازی امبدینگ لازم است.`
+          ? `«${title}» تایید شد. برای اعمال در جستجو، بازسازی امبدینگ لازم است.`
           : `«${title}» رد شد.`
       );
     } catch (err) {
@@ -84,7 +84,7 @@ export default function Admin() {
     <>
       <Card
         title="بررسی پیشنهادها"
-        hint="پیشنهاد تأییدشده به دیتاست مشترک همه سازمان‌ها اضافه می‌شود"
+        hint="پیشنهاد تایید به دیتاست مشترک همه سازمان‌ها اضافه می‌شود"
         actions={
           <Badge tone={pending.length ? "warning" : "neutral"}>
             {pending.length.toLocaleString("fa-IR")} پیشنهاد در انتظار
@@ -137,7 +137,7 @@ export default function Admin() {
                     variant="success"
                     buttonProps={{ onClick: () => review(it.id, "approve", it.job_title) }}
                   >
-                    تأیید
+                    تایید
                   </Button>
                   <Button
                     variant="danger"
@@ -173,7 +173,7 @@ export default function Admin() {
 
       <Card
         title="افزودن مستقیم شغل"
-        hint="این فرم رکورد را بدون صف بررسی، مستقیماً تأییدشده ثبت می‌کند. در فیلدهای چندمقداری، موردها را با «|» از هم جدا کنید؛ در «عنوان شغل»، «شرح شغل» و «محیط کاری» که متن پیوسته‌اند از «|» استفاده نکنید."
+        hint="این فرم رکورد را بدون صف بررسی، مستقیما تاییدشده ثبت می‌کند."
         actions={
           <Button variant="outline" buttonProps={{ onClick: () => setShowAdd(!showAdd) }}>
             {showAdd ? "بستن" : "باز کردن فرم"}
