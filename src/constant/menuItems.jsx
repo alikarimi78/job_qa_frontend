@@ -86,6 +86,15 @@ const LayersIcon = icon(
 // not see its item, so the list is short for everyone — a unit_admin gets two of the
 // four, and an ordinary user none at all.
 export const menuItems = [
+  // The dashboard leads for anyone who has one — it is the overview the other sections
+  // are read from. An ordinary user is not in `ADMIN_ROLES`, so for them the list still
+  // opens on «جستجوی شغل».
+  {
+    href: "/manage/dashboard",
+    label: "داشبورد",
+    icon: ChartIcon,
+    roles: ADMIN_ROLES,
+  },
   {
     href: "/",
     label: "جستجوی شغل",
@@ -100,12 +109,6 @@ export const menuItems = [
     href: "/my-suggestions",
     label: "پیشنهادهای من",
     icon: ListIcon,
-  },
-  {
-    href: "/manage/dashboard",
-    label: "داشبورد",
-    icon: ChartIcon,
-    roles: ADMIN_ROLES,
   },
   {
     href: "/manage/organizations",
