@@ -7,6 +7,11 @@ export const jobsApi = baseApi.injectEndpoints({
     search: builder.mutation({
       query: (question) => ({ url: "/search", method: "POST", body: { question } }),
     }),
+    // Advanced search: a profile in, a ranking out. Items travel as arrays, never as a
+    // «|»-joined string — the separator was the user's guess to make and is now nobody's.
+    advancedSearch: builder.mutation({
+      query: (profile) => ({ url: "/search/advanced", method: "POST", body: { profile } }),
+    }),
     // The answer on screen, posted back to be printed. The server does not re-run the
     // search: that would spend a second LLM call and could hand back different prose
     // from the report's own first page.
@@ -35,6 +40,7 @@ export const jobsApi = baseApi.injectEndpoints({
 
 export const {
   useSearchMutation,
+  useAdvancedSearchMutation,
   useSearchReportMutation,
   useSuggestJobMutation,
   useMySuggestionsQuery,

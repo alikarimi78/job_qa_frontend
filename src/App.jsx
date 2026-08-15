@@ -4,6 +4,7 @@ import { useAppSelector } from "@store/hooks";
 import { ADMIN_ROLES } from "@routes/roles";
 import MainLayout from "@components/layout/MainLayout";
 import Search from "@pages/Search";
+import Analyze from "@pages/Analyze";
 import Login from "@pages/Login";
 import Suggest from "@pages/Suggest";
 import MySuggestions from "@pages/MySuggestions";
@@ -42,6 +43,9 @@ export default function App() {
           }
         >
           <Route path="/" element={<Search />} />
+          {/* The other half of searching: a profile in, a ranking out. Open to every
+              signed-in account, exactly as «/» is — the corpus is one shared dataset. */}
+          <Route path="/analyze" element={<Analyze />} />
           <Route path="/suggest" element={<Suggest />} />
           <Route path="/my-suggestions" element={<MySuggestions />} />
           {/* One section per panel rather than one page stacking all of them. The

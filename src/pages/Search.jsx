@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Card from "@components/ui/Card";
 import Button from "@components/ui/Button";
 import Badge from "@components/ui/Badge";
@@ -126,9 +126,16 @@ export default function Search() {
           </Button>
         </form>
 
+        {/* Both halves of «I don't know the name of the job I want», in the order they
+            are usually reached: describe it here and a record may be designed for you,
+            or list what you can do and have the corpus ranked against it. */}
         <p className="text-xs text-slate-400 mt-4 leading-6">
           می‌توانید شغل دلخواهتان را هم توصیف کنید؛ اگر در دیتاست نباشد، شغلی متناسب با آن پیشنهاد
-          می‌شود.
+          می‌شود. برای تحلیل بر اساس مهارت‌ها و ویژگی‌های خودتان،{" "}
+          <Link to="/analyze" className="text-blue-600 hover:text-blue-700">
+            جستجوی پیشرفته
+          </Link>{" "}
+          را باز کنید.
         </p>
       </Card>
 
