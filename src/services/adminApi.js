@@ -18,17 +18,22 @@ export const adminApi = baseApi.injectEndpoints({
       query: ({ id, ...body }) => ({ url: `/admin/suggestions/${id}`, method: "PUT", body }),
       invalidatesTags: ["Suggestion", "MySuggestion"],
     }),
+    // Approving starts the rebuild on the server (`app/routers/admin.py`), so `Rebuild`
+    // is invalidated with the rest: the status panel picks the run up at once instead of
+    // waiting out its polling interval.
     approveSuggestion: builder.mutation({
       query: (id) => ({ url: `/admin/suggestions/${id}/approve`, method: "POST" }),
-      invalidatesTags: ["Suggestion", "MySuggestion", "Stats"],
+      invalidatesTags: ["Suggestion", "MySuggestion", "Stats", "Rebuild"],
     }),
     rejectSuggestion: builder.mutation({
       query: (id) => ({ url: `/admin/suggestions/${id}/reject`, method: "POST" }),
       invalidatesTags: ["Suggestion", "MySuggestion", "Stats"],
     }),
+    // Same as an approval from the corpus's point of view — an approved row goes in and
+    // the server rebuilds — so it invalidates the same tags.
     createJob: builder.mutation({
       query: (body) => ({ url: "/admin/jobs", method: "POST", body }),
-      invalidatesTags: ["Suggestion", "Stats"],
+      invalidatesTags: ["Suggestion", "Stats", "Rebuild"],
     }),
     // 202: the engine is rebuilt on a daemon thread and swapped in atomically, so
     // this returns immediately and the page polls the status below.

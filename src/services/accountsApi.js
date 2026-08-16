@@ -46,6 +46,12 @@ export const accountsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Account"],
     }),
+    // The person's name, not the credential: `username` is what you log in with and has
+    // no endpoint at all. Fills in an account created before the columns existed, too.
+    renameAccount: builder.mutation({
+      query: ({ id, ...body }) => ({ url: `/accounts/${id}/name`, method: "POST", body }),
+      invalidatesTags: ["Account"],
+    }),
     moveAccount: builder.mutation({
       query: ({ id, unitId }) => ({
         url: `/accounts/${id}/unit`,
@@ -135,6 +141,7 @@ export const {
   useBlockAccountMutation,
   useUnblockAccountMutation,
   useResetPasswordMutation,
+  useRenameAccountMutation,
   useMoveAccountMutation,
   useMoveAccountOrganizationMutation,
   useDeleteAccountMutation,

@@ -1,4 +1,4 @@
-import { KeyGlyph } from "@components/ui/IconButton";
+import { KeyGlyph, PencilGlyph } from "@components/ui/IconButton";
 import { ROLE_LABELS } from "@routes/roles";
 
 // The reference dropdown links to /profile and /company-info. Neither page exists here
@@ -9,7 +9,14 @@ export function AccountSummary({ username, role, userInfo }) {
 
   return (
     <div className="px-4 py-3 border-b border-slate-600/40">
-      <p className="text-sm text-white font-medium truncate">{username}</p>
+      {/* The person leads when the account has a name, with the credential under it —
+          an account created before migration 0007 still shows the username alone. */}
+      <p className="text-sm text-white font-medium truncate">
+        {userInfo?.full_name || username}
+      </p>
+      {userInfo?.full_name && (
+        <p className="text-xs text-slate-400 mt-0.5 truncate">{username}</p>
+      )}
       <p className="text-xs text-slate-300 mt-0.5">{ROLE_LABELS[role] ?? role}</p>
       {place && <p className="text-xs text-slate-400 mt-1 leading-5">{place}</p>}
     </div>
@@ -21,16 +28,22 @@ export function AccountSummary({ username, role, userInfo }) {
  * one copy each of the logout button and drifted apart the moment there was a second
  * action to add — the panel's body lives here now, beside the summary it sits under.
  *
- * «تغییر رمز» is here as well as on the caller's own row in `/manage/accounts`, because
- * that page is admin-only: an ordinary user has no other way to reach the dialog, and an
- * org_admin does not appear in its own account listing at all.
+ * «تغییر رمز» and «ویرایش نام» are here as well as on the caller's own row in
+ * `/manage/accounts`, because that page is admin-only: an ordinary user has no other way
+ * to reach either dialog, and an org_admin does not appear in its own account listing at
+ * all. The name matters here for a second reason — a report is headed by it, and the
+ * seeded first super_admin is created from environment variables that carry no name.
  */
-export function AccountActions({ onChangePassword, onLogout }) {
+export function AccountActions({ onChangeName, onChangePassword, onLogout }) {
   const item =
     "w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-slate-700/50 transition-colors cursor-pointer";
 
   return (
     <>
+      <button onClick={onChangeName} className={`${item} text-slate-200`}>
+        {PencilGlyph}
+        ویرایش نام
+      </button>
       <button onClick={onChangePassword} className={`${item} text-slate-200`}>
         {/* The same key the accounts table draws for the same action — that is what
             `ui/IconButton`'s glyphs are there for, and it is already `w-4 h-4`. */}

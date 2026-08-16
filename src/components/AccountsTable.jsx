@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { FormProvider, useForm } from "react-hook-form";
 import Badge from "@components/ui/Badge";
 import Button from "@components/ui/Button";
 import Select from "@components/ui/Select";
@@ -16,6 +17,7 @@ import {
   ConfirmDialog,
   DetailsDialog,
   PasswordDialog,
+  PersonNameFields,
   SelfPasswordDialog,
 } from "@components/manage/Forms";
 import { ROLE_LABELS } from "@routes/roles";
@@ -39,10 +41,10 @@ function canManage(me, target, unitsById) {
 }
 
 // Moving is narrower than the rest: only an account that lives in a unit can go
-// anywhere, and only the two levels above a unit decide between units. It is also the
-// whole of what «ویرایش» means for an account — a username is the credential you log
-// in with, so there is no endpoint that changes one, and the pencil is hidden for
-// anyone who cannot move the row instead of opening onto nothing.
+// anywhere, and only the two levels above a unit decide between units. It used to be
+// the whole of what «ویرایش» meant for an account; an account now also carries the
+// person's name, which anyone who can manage the row may correct — so the pencil opens
+// on the name, and the destination is the part of the dialog that comes and goes.
 function canMove(me, target, unitsById) {
   return (
     canManage(me, target, unitsById) &&
@@ -83,13 +85,15 @@ export default function AccountsTable({
   onUnblock,
   onResetPassword,
   onChangeOwnPassword,
-  onMove,
-  onMoveOrganization,
+  onSaveAccount,
   onDelete,
 }) {
-  // One dialog at a time: {kind: view|password|self-password|move|delete|block, account}
+  // One dialog at a time: {kind: view|password|self-password|edit|delete|block, account}
   const [dialog, setDialog] = useState(null);
   const [destination, setDestination] = useState("");
+  // The name half of the edit dialog. The destination stays plain state below — `ui/Select`
+  // is a controlled input by design, and one form of two shapes would be worse than this.
+  const editForm = useForm({ defaultValues: { first_name: "", last_name: "" } });
   const close = () => setDialog(null);
   const is = (kind) => dialog?.kind === kind;
   const account = dialog?.account ?? null;
@@ -97,12 +101,22 @@ export default function AccountsTable({
   // everyone else changes unit. Which one is read off the row's own scope column rather
   // than off its role — that column *is* the role's scope (`ck_users_scope`).
   const movingOrganization = account?.organization_id != null;
+  // Whether the dialog offers a destination at all: a unit_admin may correct the name of
+  // a user in their unit but may not move them, and nobody moves their own row.
+  const movable =
+    !!account &&
+    (canMove(me, account, unitsById) || canMoveOrganization(me, account, unitsById));
 
   function open(kind, target) {
-    // Seeded with where the row already is; the last fallback is for a legacy `user`
-    // row, which is the one kind of account that may sit in no unit at all.
-    if (kind === "move") {
+    // Seeded with what the row already holds — this is an edit, not a re-entry. The last
+    // fallback is for a legacy `user` row, the one kind of account that may sit in no
+    // unit at all, and for a legacy row that has no name either.
+    if (kind === "edit") {
       setDestination(String(target.organization_id ?? target.unit_id ?? units[0]?.id ?? ""));
+      editForm.reset({
+        first_name: target.first_name ?? "",
+        last_name: target.last_name ?? "",
+      });
     }
     setDialog({ kind, account: target });
   }
@@ -125,6 +139,17 @@ export default function AccountsTable({
   }
 
   const columns = [
+    {
+      key: "person",
+      header: "نام و نام خانوادگی",
+      // Null for an account created before the columns existed (migration 0007); the
+      // pencil is how it gets filled in.
+      cell: (row) => (
+        <span className={row.full_name ? "text-slate-800" : "text-slate-400"}>
+          {row.full_name || "—"}
+        </span>
+      ),
+    },
     {
       key: "username",
       header: "نام کاربری",
@@ -200,12 +225,15 @@ export default function AccountsTable({
                 {KeyGlyph}
               </IconButton>
             )}
-            {(canMove(me, row, unitsById) || canMoveOrganization(me, row, unitsById)) && (
+            {/* Shown for every row the caller may act on, and for their own: the name
+                is editable in both cases (`/accounts/{id}/name` and `/auth/name`), while
+                the destination inside the dialog appears only when a move is allowed. */}
+            {(manageable || me?.id === row.id) && (
               <IconButton
                 tone="edit"
                 title={`ویرایش حساب ${row.username}`}
                 disabled={busy}
-                onClick={() => open("move", row)}
+                onClick={() => open("edit", row)}
               >
                 {PencilGlyph}
               </IconButton>
@@ -248,6 +276,7 @@ export default function AccountsTable({
         rows={
           account
             ? [
+                { label: "نام و نام خانوادگی", value: account.full_name || "—" },
                 { label: "نام کاربری", value: account.username },
                 {
                   label: "نقش",
@@ -289,17 +318,20 @@ export default function AccountsTable({
         onSubmit={(values, done) => onChangeOwnPassword(values, done)}
       />
 
-      {/* «ویرایش حساب» is where the account sits and nothing else: a role is not edited
-          (it decides which scope column the row carries) and a username is the
-          credential. Which container that is follows the row — an org_admin belongs to
-          an organization, everyone below it to a unit. */}
+      {/* «ویرایش حساب» is the person's name, plus where the account sits when the caller
+          may move it. Neither the role nor the username is edited: the role decides which
+          scope column the row carries, and the username is the credential you log in
+          with. Which container a move offers follows the row — an org_admin belongs to an
+          organization, everyone below it to a unit. */}
       <Modal
-        open={is("move")}
+        open={is("edit")}
         title="ویرایش حساب"
         hint={
-          movingOrganization
-            ? `«${account?.username ?? ""}» به سازمان دیگری منتقل می‌شود؛ نقش آن عوض نمی‌شود و واحدهای سازمان قبلی با آن جابه‌جا نمی‌شوند.`
-            : `«${account?.username ?? ""}» به واحد جدید منتقل می‌شود؛ نقش آن عوض نمی‌شود و هیچ‌چیز دیگری با آن جابه‌جا نمی‌شود.`
+          !movable
+            ? `نام «${account?.username ?? ""}» اصلاح می‌شود؛ نام کاربری و نقش تغییر نمی‌کنند.`
+            : movingOrganization
+              ? `نام و سازمان «${account?.username ?? ""}» ویرایش می‌شود؛ نقش آن عوض نمی‌شود و واحدهای سازمان قبلی با آن جابه‌جا نمی‌شوند.`
+              : `نام و واحد «${account?.username ?? ""}» ویرایش می‌شود؛ نقش آن عوض نمی‌شود و هیچ‌چیز دیگری با آن جابه‌جا نمی‌شود.`
         }
         onClose={busy ? undefined : close}
         size="md"
@@ -309,7 +341,7 @@ export default function AccountsTable({
               variant="submit"
               size="lg"
               className="max-w-md"
-              buttonProps={{ type: "submit", form: "account-move-form", disabled: busy }}
+              buttonProps={{ type: "submit", form: "account-edit-form", disabled: busy }}
             >
               ثبت تغییر
             </Button>
@@ -319,47 +351,68 @@ export default function AccountsTable({
           </>
         }
       >
-        <form
-          id="account-move-form"
-          onSubmit={(event) => {
-            event.preventDefault();
-            const target = Number(destination);
-            if (movingOrganization) onMoveOrganization(account, target, close);
-            else onMove(account, target, close);
-          }}
-          className="flex flex-col gap-1.5"
-        >
-          <label className="text-sm font-medium text-slate-700">
-            {movingOrganization ? "سازمان" : "واحد"}
-          </label>
-          <Select
-            value={destination}
-            onChange={(event) => setDestination(event.target.value)}
-            className="w-full h-11"
-            selectProps={{ required: true }}
+        <FormProvider {...editForm}>
+          <form
+            id="account-edit-form"
+            onSubmit={editForm.handleSubmit((values) => {
+              // Only what actually changed is sent: the page turns each part into its own
+              // request, and re-submitting the unit an account already sits in would be a
+              // move for nothing (and, for an admin, a 409 against its own seat).
+              const target = Number(destination);
+              const moved =
+                movable && String(target) !== String(account.organization_id ?? account.unit_id ?? "");
+              onSaveAccount(
+                account,
+                {
+                  ...values,
+                  unitId: moved && !movingOrganization ? target : null,
+                  organizationId: moved && movingOrganization ? target : null,
+                },
+                close
+              );
+            })}
+            className="flex flex-col gap-4"
           >
-            {movingOrganization
-              ? orgs.map((org) => (
-                  <option key={org.id} value={org.id}>
-                    {org.name}
-                  </option>
-                ))
-              : units.map((unit) => (
-                  <option key={unit.id} value={unit.id}>
-                    {unitLabel(unit)}
-                  </option>
-                ))}
-          </Select>
-          {/* The seat may already be taken, and this does not try to predict it — the
-              page asks and shows the 409, which names the admin sitting there. */}
-          {(movingOrganization || account?.role === "unit_admin") && (
-            <span className="text-xs text-slate-400">
-              {movingOrganization
-                ? "انتقال ادمین سازمان تنها به سازمانی امکان‌پذیر است که ادمین نداشته باشد."
-                : "انتقال ادمین واحد تنها به واحدی امکان‌پذیر است که ادمین نداشته باشد."}
-            </span>
-          )}
-        </form>
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
+              <PersonNameFields />
+            </div>
+
+            {movable && (
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-slate-700">
+                  {movingOrganization ? "سازمان" : "واحد"}
+                </label>
+                <Select
+                  value={destination}
+                  onChange={(event) => setDestination(event.target.value)}
+                  className="w-full h-11"
+                  selectProps={{ required: true }}
+                >
+                  {movingOrganization
+                    ? orgs.map((org) => (
+                        <option key={org.id} value={org.id}>
+                          {org.name}
+                        </option>
+                      ))
+                    : units.map((unit) => (
+                        <option key={unit.id} value={unit.id}>
+                          {unitLabel(unit)}
+                        </option>
+                      ))}
+                </Select>
+                {/* The seat may already be taken, and this does not try to predict it —
+                    the page asks and shows the 409, which names the admin sitting there. */}
+                {(movingOrganization || account?.role === "unit_admin") && (
+                  <span className="text-xs text-slate-400">
+                    {movingOrganization
+                      ? "انتقال ادمین سازمان تنها به سازمانی امکان‌پذیر است که ادمین نداشته باشد."
+                      : "انتقال ادمین واحد تنها به واحدی امکان‌پذیر است که ادمین نداشته باشد."}
+                  </span>
+                )}
+              </div>
+            )}
+          </form>
+        </FormProvider>
       </Modal>
 
       <ConfirmDialog

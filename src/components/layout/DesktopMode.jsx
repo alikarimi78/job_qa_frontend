@@ -8,6 +8,7 @@ export default function DesktopMode({
   setIsOpen,
   handleLogout,
   handleChangePassword,
+  handleChangeName,
 }) {
   const { username, role, userInfo } = useAppSelector((state) => state.auth);
 
@@ -76,6 +77,7 @@ export default function DesktopMode({
           >
             <AccountSummary username={username} role={role} userInfo={userInfo} />
             <AccountActions
+              onChangeName={handleChangeName}
               onChangePassword={handleChangePassword}
               onLogout={handleLogout}
             />

@@ -88,7 +88,7 @@ export default function Admin() {
       if (open?.id === id) setOpen(null);
       showMessage.success(
         action === "approve"
-          ? `«${title}» تایید شد؛ برای اعمال در جستجو، بازسازی امبدینگ‌ها لازم است.`
+          ? `«${title}» تایید شد؛ بازسازی امبدینگ‌ها آغاز شد و وضعیت آن در همین صفحه نمایش داده می‌شود.`
           : `«${title}» رد شد.`
       );
     } catch (err) {
@@ -121,7 +121,7 @@ export default function Admin() {
   async function addDirect(form, reset) {
     try {
       await createJob(form).unwrap();
-      showMessage.success("شغل ثبت شد؛ برای اعمال در جستجو، بازسازی امبدینگ‌ها لازم است.");
+      showMessage.success("شغل ثبت شد؛ بازسازی امبدینگ‌ها آغاز شد.");
       reset();
       setShowAdd(false);
     } catch (err) {

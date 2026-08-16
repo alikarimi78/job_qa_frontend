@@ -20,6 +20,14 @@ export const authApi = baseApi.injectEndpoints({
     changeOwnPassword: builder.mutation({
       query: (body) => ({ url: "/auth/password", method: "POST", body }),
     }),
+    // The caller's own name. No password asked for, unlike the endpoint above — a name
+    // is not a credential — and it exists for the same reason: an admin can fix the name
+    // on any account below them, and the seeded first super_admin has nobody above them
+    // and no name at all. Invalidates `Me`, since the header reads it.
+    changeOwnName: builder.mutation({
+      query: (body) => ({ url: "/auth/name", method: "POST", body }),
+      invalidatesTags: ["Me", "Account"],
+    }),
   }),
 });
 
@@ -28,4 +36,5 @@ export const {
   useCurrentUserQuery,
   useLazyCurrentUserQuery,
   useChangeOwnPasswordMutation,
+  useChangeOwnNameMutation,
 } = authApi;

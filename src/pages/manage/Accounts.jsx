@@ -18,11 +18,12 @@ import {
   useMoveAccountMutation,
   useMoveAccountOrganizationMutation,
   useOrganizationsQuery,
+  useRenameAccountMutation,
   useResetPasswordMutation,
   useUnblockAccountMutation,
   useUnitsQuery,
 } from "@services/accountsApi";
-import { useChangeOwnPasswordMutation } from "@services/authApi";
+import { useChangeOwnNameMutation, useChangeOwnPasswordMutation } from "@services/authApi";
 import { runAction } from "@utils/action";
 import { faNumber } from "@utils/jalali";
 
@@ -77,11 +78,13 @@ export default function Accounts() {
   const [deleteAccount, { isLoading: b5 }] = useDeleteAccountMutation();
   const [moveAccountOrganization, { isLoading: b6 }] = useMoveAccountOrganizationMutation();
   const [changeOwnPassword, { isLoading: b7 }] = useChangeOwnPasswordMutation();
+  const [renameAccount, { isLoading: b8 }] = useRenameAccountMutation();
+  const [changeOwnName, { isLoading: b9 }] = useChangeOwnNameMutation();
   const [createSuperAdmin, { isLoading: c1 }] = useCreateSuperAdminMutation();
   const [createOrgAdmin, { isLoading: c2 }] = useCreateOrgAdminMutation();
   const [createUnitAdmin, { isLoading: c3 }] = useCreateUnitAdminMutation();
   const [createUser, { isLoading: c4 }] = useCreateUserMutation();
-  const busy = b1 || b2 || b3 || b4 || b5 || b6 || b7;
+  const busy = b1 || b2 || b3 || b4 || b5 || b6 || b7 || b8 || b9;
   const creating = c1 || c2 || c3 || c4;
 
   const orgsById = Object.fromEntries(orgs.map((o) => [o.id, o]));
@@ -95,7 +98,44 @@ export default function Accounts() {
   const listed = accounts.filter((account) => {
     if (unitId != null) return account.unit_id === unitId;
     if (organizationId != null) {
-      return (
+      // «ویرایش حساب» is one dialog over as many as two endpoints — the name, and the move
+  // the dialog only offers when the caller may make one. They are separate requests
+  // because they are separate decisions on the server; the dialog closes when both have
+  // gone through, and stays open on the first failure with the server's own message.
+  async function saveAccount(a, { first_name, last_name, unitId, organizationId }, done) {
+    const renamed =
+      first_name !== (a.first_name ?? "") || last_name !== (a.last_name ?? "");
+    // An account fixes its own name through `/auth/name`; nobody may act on their own
+    // row through `/accounts/{id}/*`, which is the rule this one endpoint exists beside.
+    const rename = () =>
+      a.id === me.id
+        ? changeOwnName({ first_name, last_name })
+        : renameAccount({ id: a.id, first_name, last_name });
+
+    if (renamed && !(await runAction(rename, `نام «${a.username}» ثبت شد.`))) return;
+
+    if (unitId != null) {
+      const moved = await runAction(
+        () => moveAccount({ id: a.id, unitId }),
+        `«${a.username}» به واحد «${unitsById[unitId]?.name ?? unitId}» منتقل شد.`
+      );
+      if (!moved) return;
+    } else if (organizationId != null) {
+      const moved = await runAction(
+        () => moveAccountOrganization({ id: a.id, organizationId }),
+        `«${a.username}» به سازمان «${orgsById[organizationId]?.name ?? organizationId}» منتقل شد.`
+      );
+      if (!moved) return;
+    } else if (!renamed) {
+      // Nothing was touched: close quietly rather than report a change that never happened.
+      done?.();
+      return;
+    }
+
+    done?.();
+  }
+
+  return (
         account.organization_id === organizationId ||
         (account.unit_id != null &&
           unitsById[account.unit_id]?.organization_id === organizationId)
@@ -239,20 +279,7 @@ export default function Accounts() {
           onChangeOwnPassword={(values, done) =>
             runAction(() => changeOwnPassword(values), "رمز شما تغییر کرد.", done)
           }
-          onMove={(a, destination, done) =>
-            runAction(
-              () => moveAccount({ id: a.id, unitId: destination }),
-              `«${a.username}» به واحد «${unitsById[destination]?.name ?? destination}» منتقل شد.`,
-              done
-            )
-          }
-          onMoveOrganization={(a, destination, done) =>
-            runAction(
-              () => moveAccountOrganization({ id: a.id, organizationId: destination }),
-              `«${a.username}» به سازمان «${orgsById[destination]?.name ?? destination}» منتقل شد.`,
-              done
-            )
-          }
+          onSaveAccount={saveAccount}
           onDelete={(a, done) =>
             runAction(() => deleteAccount(a.id), `حساب «${a.username}» حذف شد.`, done)
           }

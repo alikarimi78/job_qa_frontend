@@ -381,6 +381,86 @@ function LogoPicker({ preview, error, fileRef, onPick, onClear }) {
 }
 
 /**
+ * The person behind an account: «نام» and «نام خانوادگی». One component rather than four
+ * copies of the same two boxes — it is used when an account is created, when an admin
+ * corrects the name on one, and when the caller edits their own from the header menu.
+ *
+ * `username` is deliberately not next to these: it is the credential, it never changes,
+ * and there is no endpoint that would change it.
+ */
+export function PersonNameFields() {
+  return (
+    <>
+      <Input
+        name="first_name"
+        label={<Required>نام</Required>}
+        placeholder="مثلاً: زهرا"
+        registerProps={{
+          required: "نام لازم است",
+          maxLength: { value: 64, message: "حداکثر ۶۴ نویسه" },
+        }}
+      />
+      <Input
+        name="last_name"
+        label={<Required>نام خانوادگی</Required>}
+        placeholder="مثلاً: کریمی"
+        registerProps={{
+          required: "نام خانوادگی لازم است",
+          maxLength: { value: 64, message: "حداکثر ۶۴ نویسه" },
+        }}
+      />
+    </>
+  );
+}
+
+/**
+ * An existing account's name, corrected. Backs both `POST /accounts/{id}/name` (an admin,
+ * over an account below them) and `POST /auth/name` (the caller's own) — the fields and
+ * the rules are the same, and only the endpoint the caller passes in differs.
+ */
+export function PersonNameDialog({ open, title, hint, initial, busy, onClose, onSubmit }) {
+  const formId = "person-name-dialog-form";
+  const methods = useForm({ defaultValues: { first_name: "", last_name: "" } });
+
+  // Seeded from the row each time it opens, so this is an edit rather than a re-entry —
+  // and reset on close, or the next account opens holding the previous one's name.
+  useEffect(() => {
+    if (open) {
+      methods.reset({
+        first_name: initial?.first_name ?? "",
+        last_name: initial?.last_name ?? "",
+      });
+    }
+  }, [open, initial?.first_name, initial?.last_name]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <Modal
+      open={open}
+      title={title}
+      hint={hint}
+      onClose={busy ? undefined : onClose}
+      size="md"
+      footer={
+        <>
+          <DialogFooter formId={formId} label="ثبت نام" busy={busy} />
+          <CloseButton onClose={onClose} busy={busy} />
+        </>
+      }
+    >
+      <FormProvider {...methods}>
+        <form
+          id={formId}
+          onSubmit={methods.handleSubmit((values) => onSubmit(values, onClose))}
+          className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4"
+        >
+          <PersonNameFields />
+        </form>
+      </FormProvider>
+    </Modal>
+  );
+}
+
+/**
  * Credentials for an account someone else is creating. `children` is where the caller
  * puts whatever the endpoint additionally needs — a role, an organization, a unit —
  * because those differ per call and none of them is a credential.
@@ -397,10 +477,13 @@ export function CredentialsDialog({
   children,
 }) {
   const formId = "credentials-dialog-form";
-  const methods = useForm({ defaultValues: { username: "", password: "" } });
+  // The name is required by `AccountIn` as well as by this form: an account is a person
+  // as well as a credential now, and the PDF report is headed by the person.
+  const blank = { first_name: "", last_name: "", username: "", password: "" };
+  const methods = useForm({ defaultValues: blank });
 
   useEffect(() => {
-    if (open) methods.reset({ username: "", password: "" });
+    if (open) methods.reset(blank);
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
@@ -429,6 +512,9 @@ export function CredentialsDialog({
           className="flex flex-col gap-4"
         >
           {children}
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
+            <PersonNameFields />
+          </div>
           <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
             <Input
               name="username"

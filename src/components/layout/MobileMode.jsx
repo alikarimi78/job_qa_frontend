@@ -9,6 +9,7 @@ export default function MobileMode({
   setIsOpen,
   handleLogout,
   handleChangePassword,
+  handleChangeName,
 }) {
   const { username, role, userInfo } = useAppSelector((state) => state.auth);
 
@@ -60,7 +61,11 @@ export default function MobileMode({
           `}
         >
           <AccountSummary username={username} role={role} userInfo={userInfo} />
-          <AccountActions onChangePassword={handleChangePassword} onLogout={handleLogout} />
+          <AccountActions
+            onChangeName={handleChangeName}
+            onChangePassword={handleChangePassword}
+            onLogout={handleLogout}
+          />
         </div>
       </div>
     </div>
