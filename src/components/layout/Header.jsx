@@ -37,7 +37,7 @@ export default function Header({ toggleSidebar }) {
     // Without this the next account to sign in on this browser is shown the previous
     // one's cached accounts and suggestions until each query refetches.
     dispatch(baseApi.util.resetApiState());
-    showMessage.success("شما خارج شدید");
+    showMessage.success("از حساب کاربری خارج شدید.");
     navigate("/login", { replace: true });
   };
 
@@ -82,7 +82,7 @@ export default function Header({ toggleSidebar }) {
         busy={changingPassword}
         onClose={() => setPasswordOpen(false)}
         onSubmit={(values, done) =>
-          runAction(() => changeOwnPassword(values), "رمز شما تغییر کرد.", done)
+          runAction(() => changeOwnPassword(values), "رمز عبور شما تغییر یافت.", done)
         }
       />
 

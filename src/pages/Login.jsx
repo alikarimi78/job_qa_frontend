@@ -55,7 +55,7 @@ export default function Login() {
       dispatch(setRoleUser(me.role));
       dispatch(setUserInfo(me));
 
-      showMessage.success(`خوش آمدید به ${APP_TITLE}`);
+      showMessage.success(`به ${APP_TITLE} خوش آمدید`);
       navigate(next ?? landingPath(me.role), { replace: true });
     } catch (err) {
       showMessage.error(errorMessage(err));
@@ -108,7 +108,7 @@ export default function Login() {
                 placeholder="نام کاربری را وارد نمایید"
                 className="w-full"
                 inputProps={{ autoComplete: "username", autoFocus: true }}
-                registerProps={{ required: "نام کاربری را وارد کنید" }}
+                registerProps={{ required: "نام کاربری را وارد نمایید" }}
               />
               <Input
                 name="password"
@@ -117,7 +117,7 @@ export default function Login() {
                 placeholder="کلمه عبور را وارد نمایید"
                 className="w-full"
                 inputProps={{ autoComplete: "current-password" }}
-                registerProps={{ required: "کلمه عبور را وارد کنید" }}
+                registerProps={{ required: "کلمه عبور را وارد نمایید" }}
               />
             </div>
 
@@ -127,7 +127,7 @@ export default function Login() {
               busy={isLoading}
               busyLabel="در حال ورود..."
               className="mt-1"
-              hint="حساب‌ها را مدیر واحد شما می‌سازد؛ ثبت‌نام آزاد وجود ندارد."
+              hint="ایجاد حساب کاربری بر عهده مدیر واحد شماست؛ امکان ثبت‌نام آزاد وجود ندارد."
             />
           </form>
         </FormProvider>

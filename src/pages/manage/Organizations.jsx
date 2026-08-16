@@ -172,7 +172,7 @@ export default function Organizations() {
     <>
       <PageToolbar
         title="مدیریت سازمان‌ها"
-        hint="سازمان بالاترین سطح است؛ واحدها و ادمین سازمان زیر آن ساخته می‌شوند"
+        hint="سازمان بالاترین سطح است؛ واحدها و ادمین سازمان ذیل آن ایجاد می‌شوند"
         action={{ label: "افزودن سازمان جدید", onClick: () => setDialog({ kind: "create" }) }}
       >
         <Badge tone="neutral">{faNumber(orgs.length)} سازمان</Badge>
@@ -182,7 +182,7 @@ export default function Organizations() {
         <DataTable
           columns={columns}
           rows={orgs}
-          empty="هنوز سازمانی ساخته نشده است."
+          empty="تاکنون سازمانی ایجاد نشده است."
         />
       </Card>
 
@@ -195,7 +195,7 @@ export default function Organizations() {
         onSubmit={(body, done) =>
           runAction(
             () => createOrganization(body),
-            `سازمان «${body.name}» ساخته شد.`,
+            `سازمان «${body.name}» ایجاد شد.`,
             done
           )
         }
@@ -204,7 +204,7 @@ export default function Organizations() {
       <OrganizationDialog
         open={is("edit")}
         title="ویرایش سازمان"
-        hint="مشخصات سازمان تغییر می‌کند؛ واحدها و حساب‌های زیر آن دست‌نخورده می‌مانند."
+        hint="مشخصات سازمان تغییر می‌کند؛ واحدها و حساب‌های ذیل آن بدون تغییر باقی می‌مانند."
         submitLabel="ویرایش سازمان"
         organization={target}
         initialLogo={targetLogo}
@@ -284,14 +284,14 @@ export default function Organizations() {
       <CredentialsDialog
         open={is("admin")}
         title="تعریف ادمین سازمان"
-        hint={`ادمین سازمان «${target?.name ?? ""}» — واحدهای این سازمان و ادمین هر واحد را او می‌سازد. هر سازمان فقط یک ادمین دارد.`}
+        hint={`ادمین سازمان «${target?.name ?? ""}» — ایجاد واحدهای این سازمان و ادمین هر واحد بر عهده اوست. هر سازمان تنها یک ادمین دارد.`}
         submitLabel="ثبت ادمین سازمان"
         busy={addingAdmin}
         onClose={close}
         onSubmit={(body, done) =>
           runAction(
             () => createOrgAdmin({ ...body, organization_id: target.id }),
-            `ادمین سازمان «${target.name}» ساخته شد.`,
+            `ادمین سازمان «${target.name}» ایجاد شد.`,
             done
           )
         }

@@ -7,7 +7,7 @@
 // sideways instead — which on an RTL page moves the sidebar, not just the table.
 export default function DataTable({ columns, rows, rowKey = (row) => row.id, empty }) {
   if (!rows.length) {
-    return <p className="text-sm text-slate-500">{empty ?? "چیزی برای نمایش نیست."}</p>;
+    return <p className="text-sm text-slate-500">{empty ?? "موردی برای نمایش وجود ندارد."}</p>;
   }
 
   return (

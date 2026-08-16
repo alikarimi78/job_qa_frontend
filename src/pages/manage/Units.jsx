@@ -161,7 +161,7 @@ export default function Units() {
         title="مدیریت واحدها"
         hint={
           isSuper
-            ? "واحد جدید در سازمانی ساخته می‌شود که در فیلتر زیر انتخاب کرده‌اید"
+            ? "واحد جدید در سازمانی ایجاد می‌شود که در فیلتر زیر انتخاب کرده‌اید"
             : `واحدهای سازمان ${me.organization?.name ?? "شما"}`
         }
         action={{
@@ -187,7 +187,7 @@ export default function Units() {
             </Select>
             {selectedOrgId == null && (
               <span className="text-xs text-slate-400">
-                برای ساخت واحد جدید، ابتدا سازمان آن را انتخاب کنید.
+                برای ایجاد واحد جدید، ابتدا سازمان مربوط را انتخاب نمایید.
               </span>
             )}
           </div>
@@ -201,7 +201,7 @@ export default function Units() {
         title="افزودن واحد"
         hint={
           isSuper
-            ? `واحد جدید در سازمان «${orgsById[selectedOrgId]?.name ?? ""}» ساخته می‌شود.`
+            ? `واحد جدید در سازمان «${orgsById[selectedOrgId]?.name ?? ""}» ایجاد می‌شود.`
             : undefined
         }
         fieldLabel="نام واحد"
@@ -212,7 +212,7 @@ export default function Units() {
         onSubmit={(name, done) =>
           runAction(
             () => createUnit(isSuper ? { name, organization_id: selectedOrgId } : { name }),
-            `واحد «${name}» ساخته شد.`,
+            `واحد «${name}» ایجاد شد.`,
             done
           )
         }
@@ -221,7 +221,7 @@ export default function Units() {
       <NameDialog
         open={is("edit")}
         title="ویرایش واحد"
-        hint="واحد در همان سازمانی می‌ماند که هست؛ فقط نامش عوض می‌شود و حساب‌های داخل آن دست‌نخورده می‌مانند."
+        hint="واحد در همان سازمان باقی می‌ماند؛ تنها نام آن تغییر می‌کند و حساب‌های داخل آن بدون تغییر می‌مانند."
         fieldLabel="نام واحد"
         placeholder="نام جدید"
         defaultValue={target?.name ?? ""}
@@ -231,7 +231,7 @@ export default function Units() {
         onSubmit={(name, done) =>
           runAction(
             () => renameUnit({ id: target.id, name }),
-            `نام واحد به «${name}» تغییر کرد.`,
+            `نام واحد به «${name}» تغییر یافت.`,
             done
           )
         }
@@ -274,14 +274,14 @@ export default function Units() {
       <CredentialsDialog
         open={is("admin")}
         title="تعریف ادمین واحد"
-        hint={`ادمین واحد «${target?.name ?? ""}» — کاربران عادی این واحد را او می‌سازد. هر واحد فقط یک ادمین دارد.`}
+        hint={`ادمین واحد «${target?.name ?? ""}» — ایجاد کاربران عادی این واحد بر عهده اوست. هر واحد تنها یک ادمین دارد.`}
         submitLabel="ثبت ادمین واحد"
         busy={addingAdmin}
         onClose={close}
         onSubmit={(body, done) =>
           runAction(
             () => createUnitAdmin({ ...body, unit_id: target.id }),
-            `ادمین واحد «${target.name}» ساخته شد.`,
+            `ادمین واحد «${target.name}» ایجاد شد.`,
             done
           )
         }

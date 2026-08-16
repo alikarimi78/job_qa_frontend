@@ -14,7 +14,7 @@ export default function MySuggestions() {
   const { data: items = [], isLoading, error } = useMySuggestionsQuery();
 
   return (
-    <Card title="پیشنهادهای من" hint="وضعیت هر شغلی که پیشنهاد داده‌اید">
+    <Card title="پیشنهادهای من" hint="وضعیت مشاغلی که پیشنهاد داده‌اید">
       {isLoading && <Loader />}
 
       {error && (
@@ -24,7 +24,7 @@ export default function MySuggestions() {
       )}
 
       {!isLoading && !error && items.length === 0 && (
-        <p className="text-sm text-slate-500">هنوز پیشنهادی ثبت نکرده‌اید.</p>
+        <p className="text-sm text-slate-500">تاکنون پیشنهادی ثبت نکرده‌اید.</p>
       )}
 
       <div className="flex flex-col">

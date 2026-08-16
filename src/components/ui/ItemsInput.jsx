@@ -68,7 +68,7 @@ export default function ItemsInput({
         if (!required) return true;
         return (
           (items?.length ?? 0) >= min ||
-          `دست‌کم ${min === 1 ? "یک" : faNumber(min)} مورد وارد کنید`
+          `دست‌کم ${min === 1 ? "یک" : faNumber(min)} مورد وارد نمایید`
         );
       },
     },

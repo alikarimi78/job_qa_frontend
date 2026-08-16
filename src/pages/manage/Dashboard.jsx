@@ -94,7 +94,7 @@ export default function Dashboard() {
           add, so it carries only where you are and how far the numbers reach. */}
       <PageToolbar title="داشبورد مدیریت" hint={scopeNote} />
 
-      <Card title="یک نگاه">
+      <Card title="نمای کلی">
         <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3">
           {isSuper && <StatTile label="سازمان‌ها" value={stats.organizations} />}
           {!isUnitAdmin && <StatTile label="واحدها" value={stats.units} />}
@@ -108,9 +108,9 @@ export default function Dashboard() {
             }
           />
           <StatTile
-            label="مشاغل دیتاست"
+            label="مشاغل پایگاه داده"
             value={stats.jobs.corpus_records}
-            hint="رکوردهای تایید شده‌ای که جستجو روی آن‌ها انجام می‌شود"
+            hint="رکوردهای تاییدشده‌ای که جستجو بر روی آن‌ها انجام می‌شود"
           />
           <StatTile
             label="در انتظار بررسی"
@@ -167,8 +167,8 @@ export default function Dashboard() {
       </div>
 
       <Card
-        title="دیتاست مشاغل"
-        hint="پیشنهادهای زیر، پیشنهادهای حساب‌های زیرمجموعه شماست؛ اندازه دیتاست مشترک همه سازمان‌هاست"
+        title="پایگاه داده مشاغل"
+        hint="پیشنهادهای زیر متعلق به حساب‌های زیرمجموعه شماست؛ حجم پایگاه داده، مشترک میان تمامی سازمان‌هاست"
       >
         <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3 mb-6">
           <StatTile label="تایید شده" value={stats.jobs.approved} />
@@ -185,7 +185,7 @@ export default function Dashboard() {
             label="رکوردهای واردشده در موتور جستجو"
             value={stats.jobs.engine_records}
             total={stats.jobs.corpus_records}
-            note="موتور جستجو با همه رکوردهای تایید شده ساخته شده است."
+            note="موتور جستجو با تمامی رکوردهای تاییدشده ساخته شده است."
           />
         )}
       </Card>

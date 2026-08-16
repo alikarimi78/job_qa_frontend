@@ -97,7 +97,7 @@ export default function QuestionSearch() {
     try {
       await suggestJob(body).unwrap();
       setFiled(true);
-      showMessage.success("پیشنهاد ثبت شد و در انتظار بررسی ادمین است.");
+      showMessage.success("پیشنهاد شما ثبت شد و در انتظار بررسی مدیر سامانه است.");
     } catch (err) {
       showMessage.error(errorMessage(err));
     }
@@ -112,7 +112,9 @@ export default function QuestionSearch() {
   return (
     <>
       <Card className="text-center">
-        <h1 className="text-xl md:text-2xl font-bold text-slate-800">درباره هر شغلی بپرسید</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-slate-800">
+          پرسش درباره مشاغل
+        </h1>
         <p className="text-sm text-slate-500 mt-2">
           وظایف، مهارت‌ها، ابزارها، محیط کاری و مسیر ارتقای بیش از ۱۰۰۰ شغل
         </p>
@@ -134,8 +136,8 @@ export default function QuestionSearch() {
         </form>
 
         <p className="text-xs text-slate-400 mt-4 leading-6">
-          می‌توانید شغل دلخواهتان را هم توصیف کنید؛ اگر در دیتاست نباشد، شغلی متناسب با آن پیشنهاد
-          می‌شود و می‌توانید همین‌جا ویرایش و ثبتش کنید.
+          می‌توانید شغل مورد نظر خود را نیز توصیف کنید؛ چنانچه در پایگاه داده موجود نباشد، شغلی
+          متناسب با آن پیشنهاد می‌شود و امکان ویرایش و ثبت آن در همین صفحه فراهم است.
         </p>
       </Card>
 
@@ -144,7 +146,7 @@ export default function QuestionSearch() {
           <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
             <span>
               {result.mode === "job_generated" ? (
-                <Badge tone="warning">شغل پیشنهادی — هنوز ثبت نشده</Badge>
+                <Badge tone="warning">شغل پیشنهادی؛ ثبت نشده است</Badge>
               ) : result.mode === "out_of_domain" ? (
                 <Badge tone="danger">خارج از دامنه</Badge>
               ) : result.mode === "interdisciplinary" ? (
@@ -192,29 +194,39 @@ export default function QuestionSearch() {
 
           {offered && !declined && !filed && (
             <div className="mt-6 pt-5 border-t border-slate-200">
-              <div className="flex items-start justify-between gap-3 flex-wrap mb-4 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200">
-                <div className="min-w-0">
-                  <strong className="text-sm text-amber-900">
-                    این شغل هنوز در پایگاه داده نیست
-                  </strong>
-                  <p className="text-xs text-amber-800 mt-1 leading-6">
-                    مشخصات پیشنهادی زیر را بررسی و در صورت نیاز ویرایش کنید؛ با ثبت، به صف تایید
-                    ادمین می‌رود.
-                  </p>
-                </div>
-                <Button variant="outline" buttonProps={{ onClick: () => setDeclined(true) }}>
-                  نه، ممنون
-                </Button>
+              <div className="mb-4 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200">
+                <strong className="text-sm text-amber-900">
+                  این شغل در پایگاه داده موجود نیست
+                </strong>
+                <p className="text-xs text-amber-800 mt-1 leading-6">
+                  مشخصات پیشنهادی زیر را بررسی و در صورت نیاز ویرایش نمایید؛ پس از ثبت، جهت بررسی
+                  و تایید به مدیر سامانه ارسال می‌شود.
+                </p>
               </div>
 
               {/* Keyed on the run so a second proposal refills the boxes: JobForm seeds
-                  its defaults once, at mount. */}
+                  its defaults once, at mount. Declining sits in the form's own submit bar,
+                  beside «ثبت پیشنهاد»: the two are the same decision answered either way,
+                  and the person makes it after reading the record, not before. */}
               <JobForm
                 key={runId}
                 initial={result.job_draft}
                 onSubmit={fileSuggestion}
                 submitLabel="ثبت پیشنهاد"
                 busy={isFiling}
+                actions={
+                  <Button
+                    variant="danger-outline"
+                    size="lg"
+                    buttonProps={{
+                      type: "button",
+                      onClick: () => setDeclined(true),
+                      disabled: isFiling,
+                    }}
+                  >
+                    رد پیشنهاد
+                  </Button>
+                }
               />
             </div>
           )}
@@ -222,18 +234,19 @@ export default function QuestionSearch() {
           {offered && filed && (
             <div className="mt-6 pt-5 border-t border-slate-200">
               <div className="px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-sm text-emerald-800 leading-7">
-                پیشنهاد ثبت شد و در انتظار بررسی ادمین است. وضعیت آن را در{" "}
+                پیشنهاد شما ثبت شد و در انتظار بررسی مدیر سامانه است. وضعیت آن از بخش{" "}
                 <Link to="/my-suggestions" className="font-semibold underline">
                   پیشنهادهای من
                 </Link>{" "}
-                می‌بینید.
+                قابل پیگیری است.
               </div>
             </div>
           )}
 
           {offered && declined && (
             <p className="text-xs text-slate-400 mt-5 pt-4 border-t border-slate-200">
-              این پیشنهاد ثبت نشد. با پرسش جدید می‌توانید پیشنهاد دیگری بگیرید.
+              این پیشنهاد رد شد و ثبت نگردید. در صورت نیاز می‌توانید با طرح پرسشی جدید، پیشنهاد
+              دیگری دریافت نمایید.
             </p>
           )}
         </Card>

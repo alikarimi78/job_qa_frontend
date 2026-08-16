@@ -152,7 +152,7 @@ export default function Accounts() {
     };
     return runAction(
       calls[newRole],
-      `حساب «${body.username}» با نقش ${ROLE_LABELS[newRole]} ساخته شد.`,
+      `حساب «${body.username}» با نقش ${ROLE_LABELS[newRole]} ایجاد شد.`,
       done
     );
   }
@@ -164,7 +164,7 @@ export default function Accounts() {
     <>
       <PageToolbar
         title="مدیریت حساب‌ها"
-        hint="می‌توانید برای محدودسازی دسترسی کاربران، آنهارا مسدود کنید."
+        hint="برای محدودسازی دسترسی کاربران، می‌توانید حساب آنان را مسدود نمایید."
         action={
           creatableRoles.length
             ? { label: "افزودن حساب جدید", onClick: openAddDialog }
@@ -262,7 +262,7 @@ export default function Accounts() {
       <CredentialsDialog
         open={adding}
         title="افزودن حساب"
-        hint="نقش تعیین می‌کند حساب کجا می‌نشیند و چه چیزی می‌سازد. فهرست فقط نقش‌هایی را نشان می‌دهد که شما اجازهٔ ساختنشان را دارید."
+        hint="نقش تعیین می‌کند حساب در کدام سطح قرار می‌گیرد و چه حساب‌هایی ایجاد می‌کند. در این فهرست تنها نقش‌هایی نمایش داده می‌شود که مجاز به ایجاد آن‌ها هستید."
         submitLabel="افزودن حساب"
         busy={creating}
         disabled={!canSubmitNew}
@@ -280,7 +280,7 @@ export default function Accounts() {
               }}
               className="w-full h-11"
             >
-              <option value="">— انتخاب کنید —</option>
+              <option value="">— انتخاب نمایید —</option>
               {creatableRoles.map((role) => (
                 <option key={role} value={role}>
                   {ROLE_LABELS[role]}
@@ -299,7 +299,7 @@ export default function Accounts() {
                 onChange={(e) => setNewScopeId(e.target.value)}
                 className="w-full h-11"
               >
-                <option value="">— انتخاب کنید —</option>
+                <option value="">— انتخاب نمایید —</option>
                 {scopeOptions.map((option) => (
                   <option key={option.id} value={option.id}>
                     {option.label}
@@ -309,10 +309,10 @@ export default function Accounts() {
               {scopeOptions.length === 0 && (
                 <span className="text-xs text-amber-600">
                   {newRole === "org_admin"
-                    ? "همهٔ سازمان‌ها ادمین دارند؛ هر سازمان فقط یک ادمین می‌گیرد."
+                    ? "تمامی سازمان‌ها دارای ادمین هستند؛ هر سازمان تنها یک ادمین می‌پذیرد."
                     : newRole === "unit_admin"
-                      ? "همهٔ واحدها ادمین دارند؛ هر واحد فقط یک ادمین می‌گیرد."
-                      : "هنوز واحدی ساخته نشده است."}
+                      ? "تمامی واحدها دارای ادمین هستند؛ هر واحد تنها یک ادمین می‌پذیرد."
+                      : "تاکنون واحدی ایجاد نشده است."}
                 </span>
               )}
             </div>

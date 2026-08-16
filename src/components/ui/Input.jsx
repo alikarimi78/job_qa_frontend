@@ -46,7 +46,7 @@ export default function Input({
         `}
       />
       {error ? (
-        <span className="text-xs text-red-600">{error.message || "این فیلد لازم است"}</span>
+        <span className="text-xs text-red-600">{error.message || "تکمیل این فیلد الزامی است"}</span>
       ) : (
         hint && <span className="text-xs text-slate-400">{hint}</span>
       )}

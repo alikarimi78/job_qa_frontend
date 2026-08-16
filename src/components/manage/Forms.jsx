@@ -540,7 +540,7 @@ export function SelfPasswordDialog({ open, title, hint, busy, onClose, onSubmit 
             name="current_password"
             type="password"
             label="رمز فعلی"
-            placeholder="رمزی که الان با آن وارد می‌شوید"
+            placeholder="رمز عبوری که هم‌اکنون با آن وارد می‌شوید"
             registerProps={{ required: "رمز فعلی لازم است" }}
           />
           <Input
@@ -552,7 +552,7 @@ export function SelfPasswordDialog({ open, title, hint, busy, onClose, onSubmit 
               required: "رمز جدید لازم است",
               minLength: { value: 8, message: "حداقل ۸ نویسه" },
               validate: (value, values) =>
-                value !== values.current_password || "رمز جدید باید با رمز فعلی فرق کند",
+                value !== values.current_password || "رمز جدید باید با رمز فعلی متفاوت باشد",
             }}
           />
         </form>
@@ -571,7 +571,7 @@ export function ConfirmDialog({
   open,
   title,
   message,
-  confirmLabel = "بله حذف شود",
+  confirmLabel = "بله، حذف شود",
   cancelLabel = "انصراف",
   busy,
   onClose,

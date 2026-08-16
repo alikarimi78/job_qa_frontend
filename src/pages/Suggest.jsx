@@ -20,7 +20,7 @@ export default function Suggest() {
       await suggestJob(form).unwrap();
       setDone(true);
       reset();
-      showMessage.success("پیشنهاد ثبت شد و در انتظار بررسی ادمین است.");
+      showMessage.success("پیشنهاد شما ثبت شد و در انتظار بررسی مدیر سامانه است.");
     } catch (err) {
       showMessage.error(errorMessage(err));
     }
@@ -29,11 +29,11 @@ export default function Suggest() {
   return (
     <Card
       title="پیشنهاد شغل جدید"
-      hint="همه فیلدها الزامی‌اند و پیشنهاد پس از تایید ادمین به دیتاست اضافه می‌شود. در فیلدهای چندمقداری هر مورد را جداگانه بنویسید و با + اضافه کنید؛ جداکننده را خودِ سامانه می‌گذارد."
+      hint="تکمیل تمامی فیلدها الزامی است و پیشنهاد پس از تایید مدیر سامانه به پایگاه داده افزوده می‌شود. در فیلدهای چندمقداری، هر مورد را جداگانه وارد و با + اضافه نمایید؛ جداکننده را سامانه اعمال می‌کند."
     >
       {done && (
         <div className="mb-5 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-sm text-emerald-800">
-          پیشنهاد ثبت شد و در انتظار بررسی ادمین است.
+          پیشنهاد شما ثبت شد و در انتظار بررسی مدیر سامانه است.
         </div>
       )}
 

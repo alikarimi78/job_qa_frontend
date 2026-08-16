@@ -88,7 +88,7 @@ export default function Admin() {
       if (open?.id === id) setOpen(null);
       showMessage.success(
         action === "approve"
-          ? `«${title}» تایید شد. برای اعمال در جستجو، بازسازی امبدینگ لازم است.`
+          ? `«${title}» تایید شد؛ برای اعمال در جستجو، بازسازی امبدینگ‌ها لازم است.`
           : `«${title}» رد شد.`
       );
     } catch (err) {
@@ -103,7 +103,7 @@ export default function Admin() {
     try {
       await updateSuggestion({ id, ...body }).unwrap();
       setOpen({ id, mode: "view" });
-      showMessage.success("تغییرات ذخیره شد. پیشنهاد همچنان در انتظار تصمیم شماست.");
+      showMessage.success("تغییرات ذخیره شد؛ پیشنهاد همچنان در انتظار تصمیم شماست.");
     } catch (err) {
       showMessage.error(errorMessage(err));
     }
@@ -112,7 +112,7 @@ export default function Admin() {
   async function rebuildNow() {
     try {
       await startRebuild().unwrap();
-      showMessage.info("بازسازی آغاز شد؛ جستجو در این مدت با نسخه قبلی پاسخ می‌دهد.");
+      showMessage.info("بازسازی آغاز شد؛ جستجو در این مدت با نسخه پیشین پاسخ می‌دهد.");
     } catch (err) {
       showMessage.error(errorMessage(err));
     }
@@ -121,7 +121,7 @@ export default function Admin() {
   async function addDirect(form, reset) {
     try {
       await createJob(form).unwrap();
-      showMessage.success("شغل اضافه شد. برای اعمال در جستجو، بازسازی امبدینگ لازم است.");
+      showMessage.success("شغل ثبت شد؛ برای اعمال در جستجو، بازسازی امبدینگ‌ها لازم است.");
       reset();
       setShowAdd(false);
     } catch (err) {
@@ -133,7 +133,7 @@ export default function Admin() {
     <>
       <Card
         title="بررسی پیشنهادها"
-        hint="پیشنهاد تایید به دیتاست مشترک همه سازمان‌ها اضافه می‌شود"
+        hint="پیشنهاد تاییدشده به پایگاه داده مشترک تمامی سازمان‌ها افزوده می‌شود"
         actions={
           <Badge tone={pending.length ? "warning" : "neutral"}>
             {pending.length.toLocaleString("fa-IR")} پیشنهاد در انتظار
@@ -145,10 +145,10 @@ export default function Admin() {
             <strong className="text-sm text-slate-800">بازسازی امبدینگ‌ها</strong>
             <p className="text-xs text-slate-500 mt-0.5 leading-6">
               {running
-                ? "در حال اجرا... جستجو همچنان با موتور قبلی پاسخ می‌دهد."
+                ? "در حال اجرا؛ جستجو همچنان با نسخه پیشین پاسخ می‌دهد."
                 : rebuild?.last_result
                   ? `آخرین اجرا: ${rebuild.last_result}`
-                  : "تا وقتی بازسازی نشود، رکورد جدید در جستجو دیده نمی‌شود."}
+                  : "تا زمانی که بازسازی انجام نشود، رکورد جدید در جستجو نمایش داده نمی‌شود."}
             </p>
           </div>
           <Button
@@ -220,8 +220,8 @@ export default function Admin() {
               {open?.id === it.id && open.mode === "edit" && (
                 <div className="mb-3 px-4 py-4 rounded-xl bg-blue-50/60 border border-blue-200">
                   <p className="text-xs text-blue-800 leading-6 mb-4">
-                    اصلاح پیشنهاد پیش از تصمیم‌گیری. ذخیره، رکورد را همچنان در صف نگه می‌دارد؛ برای
-                    افزودن به دیتاست باید «تایید» را بزنید.
+                    اصلاح پیشنهاد پیش از تصمیم‌گیری. با ذخیره، رکورد همچنان در صف بررسی باقی
+                    می‌ماند؛ افزودن آن به پایگاه داده مستلزم انتخاب گزینه «تایید» است.
                   </p>
                   {/* Keyed on the row, so opening another suggestion's editor seeds the
                       boxes from that record rather than from the one before it. */}
@@ -241,7 +241,7 @@ export default function Admin() {
 
       <Card
         title="افزودن مستقیم شغل"
-        hint="این فرم رکورد را بدون صف بررسی، مستقیما تاییدشده ثبت می‌کند."
+        hint="این فرم رکورد را بدون قرار گرفتن در صف بررسی، مستقیماً به‌صورت تاییدشده ثبت می‌کند."
         actions={
           <Button variant="outline" buttonProps={{ onClick: () => setShowAdd(!showAdd) }}>
             {showAdd ? "بستن" : "باز کردن فرم"}

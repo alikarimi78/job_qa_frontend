@@ -193,7 +193,7 @@ export default function AccountsTable({
             {me?.id === row.id && (
               <IconButton
                 tone="warning"
-                title="تغییر رمز خودم"
+                title="تغییر رمز عبور خود"
                 disabled={busy}
                 onClick={() => open("self-password", row)}
               >
@@ -238,7 +238,7 @@ export default function AccountsTable({
       <DataTable
         columns={columns}
         rows={accounts}
-        empty="هنوز حسابی در دسترس شما ثبت نشده است."
+        empty="تاکنون حسابی در دسترس شما ثبت نشده است."
       />
 
       <DetailsDialog
@@ -274,7 +274,7 @@ export default function AccountsTable({
       <PasswordDialog
         open={is("password")}
         title="تغییر رمز حساب"
-        hint={`رمز جدید برای «${account?.username ?? ""}». رمز فعلی پرسیده نمی‌شود — این کار برای حسابی است که نمی‌تواند آن را بگوید.`}
+        hint={`تعیین رمز جدید برای «${account?.username ?? ""}». رمز فعلی پرسیده نمی‌شود؛ این گزینه برای حسابی است که امکان اعلام رمز فعلی خود را ندارد.`}
         busy={busy}
         onClose={close}
         onSubmit={(password, done) => onResetPassword(account, password, done)}
@@ -282,8 +282,8 @@ export default function AccountsTable({
 
       <SelfPasswordDialog
         open={is("self-password")}
-        title="تغییر رمز خودم"
-        hint="رمز فعلی پرسیده می‌شود، چون اینجا چیزی جز نشست باز شما ثابت نمی‌کند که صاحب حساب هستید."
+        title="تغییر رمز عبور خود"
+        hint="رمز فعلی پرسیده می‌شود، زیرا در این حالت تنها نشست باز شما گواه مالکیت حساب است."
         busy={busy}
         onClose={close}
         onSubmit={(values, done) => onChangeOwnPassword(values, done)}
@@ -355,8 +355,8 @@ export default function AccountsTable({
           {(movingOrganization || account?.role === "unit_admin") && (
             <span className="text-xs text-slate-400">
               {movingOrganization
-                ? "یک ادمین سازمان فقط به سازمانی می‌رود که ادمین نداشته باشد."
-                : "یک ادمین واحد فقط به واحدی می‌رود که ادمین نداشته باشد."}
+                ? "انتقال ادمین سازمان تنها به سازمانی امکان‌پذیر است که ادمین نداشته باشد."
+                : "انتقال ادمین واحد تنها به واحدی امکان‌پذیر است که ادمین نداشته باشد."}
             </span>
           )}
         </form>
@@ -365,7 +365,7 @@ export default function AccountsTable({
       <ConfirmDialog
         open={is("block")}
         title="مسدودکردن حساب"
-        message={`ورود «${account?.username ?? ""}» از همین لحظه رد می‌شود، حتی اگر توکن معتبری در دست داشته باشد. چیزی حذف نمی‌شود و هر وقت بخواهید می‌توانید رفع مسدودی کنید.`}
+        message={`از این پس ورود «${account?.username ?? ""}» پذیرفته نمی‌شود، حتی اگر توکن معتبری در اختیار داشته باشد. هیچ اطلاعاتی حذف نمی‌شود و در هر زمان امکان رفع مسدودی وجود دارد.`}
         confirmLabel="مسدود شود"
         busy={busy}
         onClose={close}
@@ -375,7 +375,7 @@ export default function AccountsTable({
       <ConfirmDialog
         open={is("delete")}
         title="حذف حساب"
-        message={`آیا از حذف «${account?.username ?? ""}» اطمینان دارید؟ این عملیات قابل بازگشت نیست. پیشنهادهای شغلی این حساب در دیتاست باقی می‌مانند و فقط نام صاحبشان را از دست می‌دهند.`}
+        message={`آیا از حذف «${account?.username ?? ""}» اطمینان دارید؟ این عملیات قابل بازگشت نیست. پیشنهادهای شغلی این حساب در پایگاه داده باقی می‌مانند و تنها انتساب آن‌ها به صاحب حساب حذف می‌شود.`}
         busy={busy}
         onClose={close}
         onConfirm={() => onDelete(account, close)}

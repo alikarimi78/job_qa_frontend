@@ -17,6 +17,11 @@ import { Spinner } from "./Loader";
 //
 // Always the last child of its <form>, and always type=submit: the bar is the form's
 // end, not a floating action, so it scrolls with the fields it belongs to.
+//
+// `actions` is for the *other* answer a form can have — «رد پیشنهاد» beside the green
+// «ثبت پیشنهاد» on a generated record. It sits in the bar rather than above the fields
+// because both are decisions about the same form, and a person who has just read it
+// looks for them in one place: at the end.
 export default function SubmitBar({
   label,
   busy = false,
@@ -24,29 +29,38 @@ export default function SubmitBar({
   disabled,
   icon,
   hint,
+  actions,
   className = "",
 }) {
   return (
     <div className={`mt-6 pt-5 border-t border-slate-200 ${className}`}>
       {hint && <p className="text-xs text-slate-400 leading-6 mb-3">{hint}</p>}
-      <Button
-        variant="submit"
-        size="lg"
-        className="w-full max-w-md"
-        buttonProps={{ type: "submit", disabled: disabled ?? busy }}
-      >
-        {busy ? (
-          <>
-            <Spinner />
-            {busyLabel}
-          </>
-        ) : (
-          <>
-            {label}
-            {icon}
-          </>
-        )}
-      </Button>
+      <div className="flex items-center gap-3 flex-wrap">
+        {/* The cap lives on the wrapper so the button fills it exactly as it did when
+            it was `w-full max-w-md` on its own — a second button changes nothing about
+            the first one's width. */}
+        <div className="flex-1 min-w-48 max-w-md">
+          <Button
+            variant="submit"
+            size="lg"
+            className="w-full"
+            buttonProps={{ type: "submit", disabled: disabled ?? busy }}
+          >
+            {busy ? (
+              <>
+                <Spinner />
+                {busyLabel}
+              </>
+            ) : (
+              <>
+                {label}
+                {icon}
+              </>
+            )}
+          </Button>
+        </div>
+        {actions}
+      </div>
     </div>
   );
 }

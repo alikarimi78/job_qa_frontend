@@ -46,7 +46,10 @@ function toFormValues(initial) {
   return values;
 }
 
-export default function JobForm({ onSubmit, submitLabel, busy, initial }) {
+// `actions` rides through to the SubmitBar: the discovery path puts «رد پیشنهاد» next to
+// the green submit, since accepting and declining a proposed record are two answers to
+// the same form.
+export default function JobForm({ onSubmit, submitLabel, busy, initial, actions }) {
   const methods = useForm({ defaultValues: toFormValues(initial) });
 
   const submit = (values) => {
@@ -66,7 +69,7 @@ export default function JobForm({ onSubmit, submitLabel, busy, initial }) {
               name={key}
               label={label}
               placeholder={placeholder}
-              registerProps={{ required: `${label} را وارد کنید` }}
+              registerProps={{ required: `${label} را وارد نمایید` }}
             />
           ))}
         </div>
@@ -76,7 +79,7 @@ export default function JobForm({ onSubmit, submitLabel, busy, initial }) {
           label="شرح شغل"
           placeholder="توسعه و نگهداری منطق سمت سرور..."
           rows={3}
-          registerProps={{ required: "شرح شغل را وارد کنید" }}
+          registerProps={{ required: "شرح شغل را وارد نمایید" }}
         />
 
         <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-4 items-start">
@@ -87,12 +90,12 @@ export default function JobForm({ onSubmit, submitLabel, busy, initial }) {
               label={label}
               placeholder={placeholder}
               required
-              hint="یک مورد بنویسید و + را بزنید"
+              hint="هر مورد را جداگانه وارد و با + اضافه نمایید"
             />
           ))}
         </div>
 
-        <SubmitBar label={submitLabel} busy={busy} />
+        <SubmitBar label={submitLabel} busy={busy} actions={actions} />
       </form>
     </FormProvider>
   );
