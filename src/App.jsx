@@ -2,9 +2,9 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { useAppSelector } from "@store/hooks";
 import { ADMIN_ROLES } from "@routes/roles";
+import { landingPath } from "@routes/landing";
 import MainLayout from "@components/layout/MainLayout";
 import Search from "@pages/Search";
-import Analyze from "@pages/Analyze";
 import Login from "@pages/Login";
 import Suggest from "@pages/Suggest";
 import MySuggestions from "@pages/MySuggestions";
@@ -20,12 +20,20 @@ function Protected({ children, roles }) {
   const role = useAppSelector((state) => state.auth.role);
   const location = useLocation();
 
-  // Carry the attempted page so login can return the user to it — a job draft
-  // accepted while logged out is waiting on the other side of that redirect.
+  // Carry the attempted page so login can return the user to it: a session that expired
+  // mid-errand comes back to where it was, instead of to wherever a fresh login lands.
   if (!token) return <Navigate to="/login" replace state={{ from: location }} />;
   // A convenience only: the API refuses the same calls regardless of what renders
   if (roles && !roles.includes(role)) return <Navigate to="/" replace />;
   return children;
+}
+
+// «/» is not a page any more, it is where a session opens: the dashboard for anyone who
+// has one, the search for everyone else. Keeping it a redirect rather than pointing the
+// root at one of the two means a reload of «/» lands where a fresh login does.
+function Landing() {
+  const role = useAppSelector((state) => state.auth.role);
+  return <Navigate to={landingPath(role)} replace />;
 }
 
 export default function App() {
@@ -42,10 +50,13 @@ export default function App() {
             </Protected>
           }
         >
-          <Route path="/" element={<Search />} />
-          {/* The other half of searching: a profile in, a ranking out. Open to every
-              signed-in account, exactly as «/» is — the corpus is one shared dataset. */}
-          <Route path="/analyze" element={<Analyze />} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/search" element={<Search />} />
+          {/* Advanced search is no longer a destination of its own — it is the second
+              mode of «جستجوی شغل», reached by the switch on that page. The old route is
+              kept as a redirect that preselects it, so a bookmark still opens the thing
+              it was pointing at. */}
+          <Route path="/analyze" element={<Navigate to="/search?mode=advanced" replace />} />
           <Route path="/suggest" element={<Suggest />} />
           <Route path="/my-suggestions" element={<MySuggestions />} />
           {/* One section per panel rather than one page stacking all of them. The

@@ -12,7 +12,12 @@ import { showMessage } from "@utils/toast";
 // Advanced search: the user describes themselves and the corpus is ranked against it,
 // instead of one question being answered about one job. It is the analytical half of
 // discovery — «کدام شغل‌ها به من می‌خورند» — and it never designs a new record; someone
-// describing a job they *want* is still served by the free-text box on «جستجوی شغل».
+// describing a job they *want* is still served by the free-text box on «جستجوی معمولی»,
+// the other half of this page.
+//
+// It was its own route and its own sidebar item until the customer asked for one search
+// section: it is a panel now, mounted by `pages/Search.jsx` under the mode switch, and
+// nothing about what it sends or shows changed with the move.
 //
 // The fields are `job_qa_service/columns.py:PROFILE_FIELDS` and `app/schemas.py`'s copy
 // of it, read as a form. The three lists must be changed together — a field named here
@@ -38,12 +43,9 @@ const BLANK = Object.fromEntries(FIELDS.map(([key]) => [key, []]));
 const MIN_SKILLS = 2;
 const MIN_FIELDS = 2;
 
-export default function Analyze() {
+export default function AdvancedSearch() {
   const methods = useForm({ defaultValues: BLANK });
   const [result, setResult] = useState(null);
-  // Remounts the detail boxes per run, so a box left open against the previous
-  // ranking does not stay open against the next one.
-  const [runId, setRunId] = useState(0);
   const [advancedSearch, { isLoading }] = useAdvancedSearchMutation();
 
   const values = methods.watch();
@@ -61,7 +63,6 @@ export default function Analyze() {
     try {
       const data = await advancedSearch(profile).unwrap();
       setResult(data);
-      setRunId((n) => n + 1);
     } catch (err) {
       showMessage.error(errorMessage(err));
     }
@@ -102,7 +103,7 @@ export default function Analyze() {
         </form>
       </FormProvider>
 
-      <ProfileMatches result={result} runId={runId} />
+      <ProfileMatches result={result} />
     </Card>
   );
 }

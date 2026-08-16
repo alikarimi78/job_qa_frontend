@@ -11,6 +11,13 @@ export const adminApi = baseApi.injectEndpoints({
       }),
       providesTags: ["Suggestion"],
     }),
+    // A reviewer correcting a record before deciding on it. The whole ten-column body
+    // goes back — the same `JobIn` the suggester filled in — and the server refuses it
+    // for anything already approved or rejected.
+    updateSuggestion: builder.mutation({
+      query: ({ id, ...body }) => ({ url: `/admin/suggestions/${id}`, method: "PUT", body }),
+      invalidatesTags: ["Suggestion", "MySuggestion"],
+    }),
     approveSuggestion: builder.mutation({
       query: (id) => ({ url: `/admin/suggestions/${id}/approve`, method: "POST" }),
       invalidatesTags: ["Suggestion", "MySuggestion", "Stats"],
@@ -42,6 +49,7 @@ export const adminApi = baseApi.injectEndpoints({
 
 export const {
   useSuggestionsQuery,
+  useUpdateSuggestionMutation,
   useApproveSuggestionMutation,
   useRejectSuggestionMutation,
   useCreateJobMutation,

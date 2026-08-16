@@ -56,8 +56,10 @@ function FieldRow({ field }) {
   );
 }
 
-function MatchCard({ match, rank, runId }) {
-  // The leader opens; the rest are one click away. Same bargain the detail boxes make.
+function MatchCard({ match, rank }) {
+  // The leader opens; the rest are one click away. This is the one thing on the page
+  // that still folds, and it folds a *whole job* rather than a field of one — five
+  // records printed in full would bury the ranking that is the point of the page.
   const [open, setOpen] = useState(rank === 0);
 
   return (
@@ -99,12 +101,12 @@ function MatchCard({ match, rank, runId }) {
         {open ? "بستن جزئیات شغل" : "نمایش جزئیات شغل"}
       </button>
 
-      {open && <JobDetails key={runId} details={[match.detail]} />}
+      {open && <JobDetails details={[match.detail]} />}
     </div>
   );
 }
 
-export default function ProfileMatches({ result, runId }) {
+export default function ProfileMatches({ result }) {
   if (!result) return null;
 
   return (
@@ -118,7 +120,7 @@ export default function ProfileMatches({ result, runId }) {
       {result.matches?.length > 0 && (
         <div className="flex flex-col gap-3 mt-4">
           {result.matches.map((match, rank) => (
-            <MatchCard key={match.job_title} match={match} rank={rank} runId={runId} />
+            <MatchCard key={match.job_title} match={match} rank={rank} />
           ))}
         </div>
       )}

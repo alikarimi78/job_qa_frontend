@@ -1,15 +1,17 @@
-// The matched record's own columns, rendered as one box per field beside the
-// generated answer. The prose answer stays what it always was; these boxes are the
-// data it was written from, so someone who asked about tools can still open the
-// duties box without asking a second question.
+// The matched record's own columns, rendered beside the generated answer. The prose
+// answer stays what it always was; these are the data it was written from, so someone
+// who asked about tools can read the duties without asking a second question.
 //
-// Which boxes matter is the backend's call, not this component's: `primary` marks
-// the columns the answer used — what the question's intent asked for — and those
-// open, while the rest of the profile stays one click away.
-
-// Duties are written as sentences; every other list column holds short labels that
-// scan better as chips. Prose columns (شرح شغل، محیط کاری) arrive with no items at
-// all and render as a paragraph.
+// **Nothing here folds.** Every field was a `<details>` box that had to be clicked open,
+// with only the columns the answer used («primary») open to begin with — so the page
+// arrived mostly closed and the reader had to guess which label hid what they wanted.
+// The record is short enough to print in full: label above, content below, all of it on
+// screen. `primary` still means something and is still the backend's call — those fields
+// are tinted and sorted first — but it now decides *emphasis*, not visibility.
+//
+// Duties are written as sentences; every other list column holds short labels that scan
+// better as chips. Prose columns (شرح شغل، محیط کاری) arrive with no items at all and
+// render as a paragraph.
 const LIST_AS_LINES = new Set(["responsibilities"]);
 
 function faCount(n) {
@@ -20,48 +22,39 @@ function FieldBox({ field }) {
   const asChips = field.items.length > 0 && !LIST_AS_LINES.has(field.key);
 
   return (
-    <details
-      open={field.primary}
+    <section
       className={`
-        group rounded-xl border transition-all duration-200
+        rounded-2xl border p-4 transition-colors duration-200
         ${
           field.primary
             ? "bg-blue-50/70 border-blue-200"
-            : "bg-slate-50/80 border-slate-200 hover:border-slate-300"
+            : "bg-white/70 border-slate-200 hover:border-slate-300"
         }
-        ${/* Sentences and paragraphs need the whole row — but only once they are open.
-             Closed, a box is just its label, and a full row for that leaves the grid holed. */ ""}
-        ${asChips ? "" : "open:col-span-full"}
+        ${/* Sentences and paragraphs read badly in a narrow column: they take the row. */ ""}
+        ${asChips ? "" : "md:col-span-2 xl:col-span-3"}
       `}
     >
-      <summary
-        className="flex items-center justify-between gap-3 px-4 py-3 cursor-pointer list-none
-                   [&::-webkit-details-marker]:hidden"
-      >
+      <header className="flex items-center gap-2 mb-3">
         <span
-          className={`text-sm font-semibold ${field.primary ? "text-blue-700" : "text-slate-700"}`}
+          className={`w-1 h-4 rounded-full shrink-0 ${
+            field.primary ? "bg-blue-500" : "bg-slate-300"
+          }`}
+        />
+        <h4
+          className={`text-sm font-bold m-0 ${
+            field.primary ? "text-blue-800" : "text-slate-700"
+          }`}
         >
           {field.label}
-        </span>
-        <span className="flex items-center gap-2 shrink-0">
-          {field.items.length > 0 && (
-            <span className="text-xs text-slate-400">{faCount(field.items.length)} مورد</span>
-          )}
-          <svg
-            className="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            viewBox="0 0 24 24"
-          >
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        </span>
-      </summary>
+        </h4>
+        {field.items.length > 0 && (
+          <span className="text-[11px] text-slate-400 ms-auto shrink-0">
+            {faCount(field.items.length)} مورد
+          </span>
+        )}
+      </header>
 
-      <div className="px-4 pb-4 text-sm text-slate-700">
+      <div className="text-sm text-slate-700">
         {/* Keyed by position: a «|»-joined cell may well repeat a value, and the
             list is fixed for as long as it is on screen. */}
         {asChips && (
@@ -69,7 +62,11 @@ function FieldBox({ field }) {
             {field.items.map((item, i) => (
               <span
                 key={i}
-                className="bg-white border border-slate-200 rounded-full px-3 py-0.5 text-[13px] text-slate-700"
+                className={`rounded-full px-3 py-1 text-[13px] border ${
+                  field.primary
+                    ? "bg-white border-blue-200 text-blue-900"
+                    : "bg-slate-50 border-slate-200 text-slate-700"
+                }`}
               >
                 {item}
               </span>
@@ -77,15 +74,22 @@ function FieldBox({ field }) {
           </div>
         )}
         {!asChips && field.items.length > 0 && (
-          <ul className="list-disc ps-5 space-y-1 leading-7 marker:text-slate-400">
+          <ul className="list-none p-0 m-0 grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-x-6 gap-y-1.5">
             {field.items.map((item, i) => (
-              <li key={i}>{item}</li>
+              <li key={i} className="flex items-start gap-2 leading-7">
+                <span
+                  className={`mt-2.5 w-1.5 h-1.5 rounded-full shrink-0 ${
+                    field.primary ? "bg-blue-400" : "bg-slate-300"
+                  }`}
+                />
+                <span>{item}</span>
+              </li>
             ))}
           </ul>
         )}
         {field.items.length === 0 && <p className="leading-8 m-0">{field.value}</p>}
       </div>
-    </details>
+    </section>
   );
 }
 
@@ -95,11 +99,24 @@ export default function JobDetails({ details, title }) {
 
   return (
     <div className="mt-6 pt-5 border-t border-slate-200">
-      {title && <p className="text-xs text-slate-500 mb-3">{title}</p>}
+      {title && (
+        <p className="text-xs font-medium text-slate-500 mb-3 flex items-center gap-2">
+          <span className="w-6 h-px bg-slate-300" />
+          {title}
+        </p>
+      )}
       {details.map((job) => (
         <div key={job.job_title}>
-          {named && <p className="text-sm font-semibold text-slate-800 mt-4 mb-2">{job.job_title}</p>}
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-3 items-start">
+          {named && (
+            <p className="text-sm font-bold text-slate-800 mt-5 mb-2 pb-2 border-b border-slate-100">
+              {job.job_title}
+            </p>
+          )}
+          {/* Fixed column counts rather than an `auto-fit` track, because the boxes are
+              two widths: a chip column and a full-width paragraph. `dense` is what keeps
+              the second kind from leaving a hole behind it — a later chip box backfills
+              the gap instead of the grid ending in half-empty rows. */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 items-start [grid-auto-flow:dense]">
             {job.fields.map((field) => (
               <FieldBox key={field.key} field={field} />
             ))}

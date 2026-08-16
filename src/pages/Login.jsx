@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Input from "@components/ui/Input";
 import SubmitBar from "@components/ui/SubmitBar";
 import { useLoginMutation, useLazyCurrentUserQuery } from "@services/authApi";
+import { landingPath } from "@routes/landing";
 import { useAppDispatch } from "@store/hooks";
 import { setAuthToken, setRoleUser, setUserInfo } from "@store/slices/authSlice";
 import { showMessage } from "@utils/toast";
@@ -31,8 +32,10 @@ export default function Login() {
   const [getCurrentUser] = useLazyCurrentUserQuery();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Set when the user was redirected here mid-action (e.g. accepting a job draft)
-  const next = location.state?.from?.pathname || "/";
+  // Set when the user was redirected here mid-action — an expired session on the way to
+  // a page. Without one, where the session opens is decided by the role `/auth/me`
+  // answers with, below: the dashboard for an admin, the search for everyone else.
+  const next = location.state?.from?.pathname;
 
   const submitHandler = async (data) => {
     setIsLoading(true);
@@ -53,7 +56,7 @@ export default function Login() {
       dispatch(setUserInfo(me));
 
       showMessage.success(`خوش آمدید به ${APP_TITLE}`);
-      navigate(next, { replace: true });
+      navigate(next ?? landingPath(me.role), { replace: true });
     } catch (err) {
       showMessage.error(errorMessage(err));
     } finally {
