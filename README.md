@@ -1,4 +1,4 @@
-# Job Q&A — React frontend
+# Job Analyse — React frontend
 
 ## Local development
 ```bash
