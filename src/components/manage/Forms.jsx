@@ -24,7 +24,11 @@ import { Spinner } from "@components/ui/Loader";
 // spinner, a form that cannot be submitted yet (no role chosen, no unit chosen) is
 // only greyed out. Folding them into one prop made an untouched dialog claim to be
 // «در حال ثبت...» before anything had been sent.
-function DialogFooter({ formId, label, busy, disabled, tone = "submit" }) {
+//
+// Both of these are exported because the moderation queue's «ویرایش» is a dialog too
+// (`pages/Admin.jsx`), even though it is not one of the management sections: a second
+// copy of the footer is exactly how the app's one-green-button rule starts to drift.
+export function DialogFooter({ formId, label, busy, disabled, tone = "submit" }) {
   return (
     <Button
       variant={tone}
@@ -44,7 +48,7 @@ function DialogFooter({ formId, label, busy, disabled, tone = "submit" }) {
   );
 }
 
-function CloseButton({ onClose, busy, label = "بستن" }) {
+export function CloseButton({ onClose, busy, label = "بستن" }) {
   return (
     <Button variant="outline" size="lg" buttonProps={{ onClick: onClose, disabled: busy }}>
       {label}
@@ -394,7 +398,6 @@ export function PersonNameFields() {
       <Input
         name="first_name"
         label={<Required>نام</Required>}
-        placeholder="مثلاً: زهرا"
         registerProps={{
           required: "نام لازم است",
           maxLength: { value: 64, message: "حداکثر ۶۴ نویسه" },
@@ -403,7 +406,6 @@ export function PersonNameFields() {
       <Input
         name="last_name"
         label={<Required>نام خانوادگی</Required>}
-        placeholder="مثلاً: کریمی"
         registerProps={{
           required: "نام خانوادگی لازم است",
           maxLength: { value: 64, message: "حداکثر ۶۴ نویسه" },

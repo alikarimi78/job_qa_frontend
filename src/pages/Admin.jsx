@@ -4,6 +4,8 @@ import Button from "@components/ui/Button";
 import Badge from "@components/ui/Badge";
 import Loader, { Spinner } from "@components/ui/Loader";
 import JobForm from "@components/JobForm";
+import Modal from "@components/ui/Modal";
+import { CloseButton, DialogFooter } from "@components/manage/Forms";
 import { splitItems } from "@components/ui/ItemsInput";
 import {
   useApproveSuggestionMutation,
@@ -58,10 +60,17 @@ function FieldRow({ label, value, list }) {
   );
 }
 
+// The dialog's <form>, named once so the footer's button and the form itself agree.
+const EDIT_FORM_ID = "suggestion-edit-form";
+
 export default function Admin() {
-  // `{ id, mode }`: one row is open at a time, either read-only or as the form. A single
-  // piece of state for both, so opening the editor closes whatever else was open.
+  // The row whose read-only panel is open, at most one at a time. Editing is no longer
+  // one of its modes — it is a dialog now (`editing`, below), which is why these are two
+  // pieces of state rather than the `{ id, mode }` pair they used to be.
   const [open, setOpen] = useState(null);
+  // The id being corrected. The row itself is looked up in `pending` rather than copied
+  // here, so a queue that refetches under the dialog cannot leave it editing a stale one.
+  const [editing, setEditing] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
 
   const { data: pending = [], isLoading } = useSuggestionsQuery("pending");
@@ -79,13 +88,17 @@ export default function Admin() {
   });
   const running = rebuild?.running ?? false;
 
-  const toggle = (id, mode) =>
-    setOpen((was) => (was?.id === id && was.mode === mode ? null : { id, mode }));
+  const toggle = (id) => setOpen((was) => (was === id ? null : id));
+
+  // Only ever the row the dialog was opened on, and only while it is still pending: a
+  // suggestion decided in another tab simply takes its dialog with it.
+  const editingRow = editing === null ? null : pending.find((it) => it.id === editing);
 
   async function review(id, action, title) {
     try {
       await (action === "approve" ? approve(id) : reject(id)).unwrap();
-      if (open?.id === id) setOpen(null);
+      if (open === id) setOpen(null);
+      if (editing === id) setEditing(null);
       showMessage.success(
         action === "approve"
           ? `«${title}» تایید شد؛ بازسازی امبدینگ‌ها آغاز شد و وضعیت آن در همین صفحه نمایش داده می‌شود.`
@@ -99,10 +112,15 @@ export default function Admin() {
   // The reviewer's own correction of a suggestion, before deciding on it. It is the same
   // form the suggester filled in, so a wrong column is fixed here instead of the record
   // being rejected and the person asked to send it again.
+  //
+  // The dialog is closed only on success — a 409 («این پیشنهاد پیش‌تر بررسی شده») leaves
+  // it open with the corrections still in it — and the row's details are opened in its
+  // place, so what was saved is what the reviewer decides on next.
   async function saveEdit(id, body) {
     try {
       await updateSuggestion({ id, ...body }).unwrap();
-      setOpen({ id, mode: "view" });
+      setEditing(null);
+      setOpen(id);
       showMessage.success("تغییرات ذخیره شد؛ پیشنهاد همچنان در انتظار تصمیم شماست.");
     } catch (err) {
       showMessage.error(errorMessage(err));
@@ -196,48 +214,64 @@ export default function Admin() {
                   </Button>
                   <Button
                     variant="outline"
-                    buttonProps={{ onClick: () => toggle(it.id, "edit") }}
+                    buttonProps={{ onClick: () => setEditing(it.id) }}
                   >
-                    {open?.id === it.id && open.mode === "edit" ? "بستن ویرایش" : "ویرایش"}
+                    ویرایش
                   </Button>
-                  <Button
-                    variant="outline"
-                    buttonProps={{ onClick: () => toggle(it.id, "view") }}
-                  >
-                    {open?.id === it.id && open.mode === "view" ? "بستن" : "جزئیات"}
+                  <Button variant="outline" buttonProps={{ onClick: () => toggle(it.id) }}>
+                    {open === it.id ? "بستن" : "جزئیات"}
                   </Button>
                 </div>
               </div>
 
-              {open?.id === it.id && open.mode === "view" && (
+              {open === it.id && (
                 <div className="mb-3 px-4 py-2 rounded-xl bg-slate-50 border border-slate-200">
                   {DETAIL_ROWS.map(([key, label, list]) => (
                     <FieldRow key={key} label={label} value={it[key]} list={list} />
                   ))}
                 </div>
               )}
-
-              {open?.id === it.id && open.mode === "edit" && (
-                <div className="mb-3 px-4 py-4 rounded-xl bg-blue-50/60 border border-blue-200">
-                  <p className="text-xs text-blue-800 leading-6 mb-4">
-                    اصلاح پیشنهاد پیش از تصمیم‌گیری. با ذخیره، رکورد همچنان در صف بررسی باقی
-                    می‌ماند؛ افزودن آن به پایگاه داده مستلزم انتخاب گزینه «تایید» است.
-                  </p>
-                  {/* Keyed on the row, so opening another suggestion's editor seeds the
-                      boxes from that record rather than from the one before it. */}
-                  <JobForm
-                    key={it.id}
-                    initial={it}
-                    onSubmit={(body) => saveEdit(it.id, body)}
-                    submitLabel="ذخیره تغییرات"
-                    busy={saving}
-                  />
-                </div>
-              )}
             </div>
           ))}
         </div>
       </Card>
+
+      {/* The correction happens in a dialog rather than in a panel under the row: the ten
+          columns are a page of their own, and unfolded in place they pushed the rest of
+          the queue far enough down that the reviewer lost sight of what they were
+          reviewing. The dialog is mounted only while a row is being edited, so `JobForm`
+          seeds its boxes from that record on every open — the `key` says the same thing
+          for the case where one editor is opened directly from another. */}
+      {editingRow && (
+        <Modal
+          open
+          title={`ویرایش «${editingRow.job_title}»`}
+          hint="اصلاح پیشنهاد پیش از تصمیم‌گیری. با ذخیره، رکورد همچنان در صف بررسی باقی می‌ماند؛ افزودن آن به پایگاه داده مستلزم انتخاب گزینه «تایید» است."
+          size="lg"
+          onClose={saving ? undefined : () => setEditing(null)}
+          footer={
+            <>
+              <DialogFooter
+                formId={EDIT_FORM_ID}
+                label="ذخیره تغییرات"
+                busy={saving}
+              />
+              <CloseButton
+                onClose={() => setEditing(null)}
+                busy={saving}
+                label="انصراف"
+              />
+            </>
+          }
+        >
+          <JobForm
+            key={editingRow.id}
+            formId={EDIT_FORM_ID}
+            initial={editingRow}
+            onSubmit={(body) => saveEdit(editingRow.id, body)}
+          />
+        </Modal>
+      )}
 
       <Card
         title="افزودن مستقیم شغل"

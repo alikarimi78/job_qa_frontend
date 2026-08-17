@@ -49,7 +49,13 @@ function toFormValues(initial) {
 // `actions` rides through to the SubmitBar: the discovery path puts «رد پیشنهاد» next to
 // the green submit, since accepting and declining a proposed record are two answers to
 // the same form.
-export default function JobForm({ onSubmit, submitLabel, busy, initial, actions }) {
+//
+// `formId` is for the one call site that renders these ten columns inside `ui/Modal` —
+// the moderation queue's «ویرایش». There the SubmitBar *is* the dialog's footer, reached
+// through the HTML `form=` attribute, so the form must not end in a second one of its
+// own; `submitLabel`, `busy` and `actions` belong to that footer instead. Everywhere else
+// the form sits on the page and ends in its own bar, exactly as before.
+export default function JobForm({ onSubmit, submitLabel, busy, initial, actions, formId }) {
   const methods = useForm({ defaultValues: toFormValues(initial) });
 
   const submit = (values) => {
@@ -61,7 +67,11 @@ export default function JobForm({ onSubmit, submitLabel, busy, initial, actions 
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(submit)} className="flex flex-col gap-4">
+      <form
+        id={formId}
+        onSubmit={methods.handleSubmit(submit)}
+        className="flex flex-col gap-4"
+      >
         <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4">
           {PROSE.map(([key, label, placeholder]) => (
             <Input
@@ -95,7 +105,7 @@ export default function JobForm({ onSubmit, submitLabel, busy, initial, actions 
           ))}
         </div>
 
-        <SubmitBar label={submitLabel} busy={busy} actions={actions} />
+        {!formId && <SubmitBar label={submitLabel} busy={busy} actions={actions} />}
       </form>
     </FormProvider>
   );
