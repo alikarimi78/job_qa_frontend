@@ -8,19 +8,22 @@ import Textarea from "@components/ui/Textarea";
 // backend, so a field missing here fails the whole submit with a 422.
 //
 // They are split the way the dataset splits them, not the way they happen to look on
-// screen: the three PROSE columns — job_title, description, work_context — are text a
-// comma belongs in, and the other seven are «|»-joined lists. That split is now visible
+// screen: the two PROSE columns — job_title and description — are text a comma belongs
+// in, and the other eight are «|»-joined lists. work_context was prose until the second
+// translation pass (2026-08-29) filled it with O*NET's own context factors, 14 per
+// record, and the backend moved it out of PROSE_COLUMNS; a record whose work_context is
+// one sentence is now a one-item list. That split is now visible
 // in the form itself. A list column is collected one item at a time («+»), because
 // asking the user to type the separator was asking them to guess it, and a guessed «،»
 // went into the corpus as one unsplittable cell that no search could ever match.
 // The joining happens here, at the edge, so the request body is exactly what it was.
 const PROSE = [
   ["job_title", "عنوان شغل", "توسعه‌دهنده بک‌اند"],
-  ["work_context", "محیط کاری", "دفتر یا دورکاری"],
 ];
 
 const LISTS = [
   ["aliases", "نام‌های دیگر", "برنامه‌نویس سرور"],
+  ["work_context", "محیط کاری", "کار گروهی"],
   ["tools", "ابزارها", "پایتون"],
   ["skills", "مهارت‌ها", "حل مسئله"],
   ["knowledge", "دانش تخصصی", "ساختمان داده"],
@@ -36,8 +39,8 @@ const KEYS = [...PROSE.map(([k]) => k), "description", ...LISTS.map(([k]) => k)]
 // rejoined on submit. Anything else the draft carried is dropped by projecting onto
 // the ten keys.
 function toFormValues(initial) {
-  const values = { job_title: "", work_context: "", description: "" };
-  for (const key of ["job_title", "work_context", "description"]) {
+  const values = { job_title: "", description: "" };
+  for (const key of ["job_title", "description"]) {
     values[key] = initial?.[key] ?? "";
   }
   for (const [key] of LISTS) {
@@ -59,8 +62,7 @@ export default function JobForm({ onSubmit, submitLabel, busy, initial, actions,
   const methods = useForm({ defaultValues: toFormValues(initial) });
 
   const submit = (values) => {
-    const body = { job_title: values.job_title, work_context: values.work_context,
-                   description: values.description };
+    const body = { job_title: values.job_title, description: values.description };
     for (const [key] of LISTS) body[key] = cellFromItems(values[key]);
     onSubmit(body, () => methods.reset(toFormValues(null)));
   };
