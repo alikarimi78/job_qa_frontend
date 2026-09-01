@@ -38,6 +38,11 @@ const MODE_BADGE = {
   out_of_domain: "danger",
 };
 
+// The two answers that describe no record. `about` is the engine answering a question
+// about itself («کار تو چیه؟») — fixed text, decided before retrieval — and there is
+// as little to print as there is for a question it found nothing for.
+const NO_REPORT = new Set(["out_of_domain", "about"]);
+
 export default function QuestionSearch() {
   const [question, setQuestion] = useState("");
   const [result, setResult] = useState(null);
@@ -149,6 +154,8 @@ export default function QuestionSearch() {
                 <Badge tone="warning">شغل پیشنهادی؛ ثبت نشده است</Badge>
               ) : result.mode === "out_of_domain" ? (
                 <Badge tone="danger">خارج از دامنه</Badge>
+              ) : result.mode === "about" ? (
+                <Badge tone="neutral">راهنمای سامانه</Badge>
               ) : result.mode === "interdisciplinary" ? (
                 <Badge tone="accent">{result.jobs?.join(" + ")}</Badge>
               ) : (
@@ -160,7 +167,7 @@ export default function QuestionSearch() {
                 <span className="text-xs text-slate-400">تطابق: {result.score.toFixed(2)}</span>
               )}
               {/* Nothing to file a report about when the question was not about a job */}
-              {result.mode !== "out_of_domain" && (
+              {!NO_REPORT.has(result.mode) && (
                 <Button
                   variant="outline"
                   size="sm"
