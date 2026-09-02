@@ -14,6 +14,7 @@ import Dashboard from "@pages/manage/Dashboard";
 import Organizations from "@pages/manage/Organizations";
 import Units from "@pages/manage/Units";
 import Accounts from "@pages/manage/Accounts";
+import Jobs from "@pages/manage/Jobs";
 
 function Protected({ children, roles }) {
   const token = useAppSelector((state) => state.auth.token);
@@ -94,6 +95,17 @@ export default function App() {
                 the sidebar of a tab that was open across the change. */}
             <Route path="users" element={<Navigate to="/manage/accounts" replace />} />
             <Route path="accounts" element={<Accounts />} />
+            {/* The corpus itself. Super-admin only for the same reason /admin is: it
+                edits the one dataset every organization searches, which is not an
+                organization-level decision. */}
+            <Route
+              path="jobs"
+              element={
+                <Protected roles={["super_admin"]}>
+                  <Jobs />
+                </Protected>
+              }
+            />
           </Route>
           <Route
             path="/admin"

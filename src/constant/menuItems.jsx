@@ -68,6 +68,14 @@ const BuildingIcon = icon(
   </>
 );
 
+const BriefcaseIcon = icon(
+  <>
+    <rect x="3" y="7" width="18" height="13" rx="2" />
+    <path d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2" />
+    <path d="M3 12h18" />
+  </>
+);
+
 const LayersIcon = icon(
   <>
     <path d="M12 3l9 5-9 5-9-5 9-5z" />
@@ -130,6 +138,15 @@ export const menuItems = [
     label: "مدیریت حساب‌ها",
     icon: UsersIcon,
     roles: ADMIN_ROLES,
+  },
+  // The two sections about the shared corpus, kept next to each other and last: one
+  // decides what enters it, the other corrects what is already in it. Both are
+  // super-admin-only, because the dataset belongs to no single organization.
+  {
+    href: "/manage/jobs",
+    label: "مدیریت مشاغل",
+    icon: BriefcaseIcon,
+    roles: ["super_admin"],
   },
   {
     href: "/admin",

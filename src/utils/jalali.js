@@ -67,6 +67,31 @@ export function bucketByMonth(series, months) {
 }
 
 /** Persian digits, which is what the rest of the interface uses. For *quantities*. */
+// One timestamp as a Persian date. The month buckets above need year and month only;
+// this is for a table cell saying when a record was last written, so it carries the day.
+//
+// The zone is pinned to Tehran rather than left to the browser: a record edited at 23:00
+// must not read as the next day for one viewer and not for another, and this way the
+// cell agrees with the PDF report, whose own clock is fixed at +03:30
+// (`src/reports/jalali.py` in the backend) because the container runs on UTC.
+const PERSIAN_DATE = new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  timeZone: "Asia/Tehran",
+});
+
+/** A backend timestamp as «۱۴۰۵/۰۶/۱۰»; an em dash for a row that has none. */
+export function faDate(value) {
+  if (!value) return "—";
+  // The column is `timestamp without time zone` and holds UTC, but the JSON carries no
+  // marker — and `new Date()` reads an unmarked string as the *viewer's* local time,
+  // which is 3.5 hours out here and lands a late-evening edit on the wrong day.
+  const raw = String(value);
+  const date = new Date(/(?:Z|[+-]\d{2}:?\d{2})$/.test(raw) ? raw : `${raw}Z`);
+  return Number.isNaN(date.getTime()) ? "—" : PERSIAN_DATE.format(date);
+}
+
 export const faNumber = (value) => Number(value ?? 0).toLocaleString("fa-IR");
 
 /**

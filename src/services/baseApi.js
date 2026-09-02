@@ -29,7 +29,10 @@ export const baseApi = createApi({
   // `OrgLogo` is per-id and separate from `Organization` on purpose: the image is
   // fetched by its own endpoint, so editing one organization's logo must not throw away
   // every other one's cached image.
+  // `Job` is the corpus itself — the approved records the admin panel edits — and is
+  // separate from `Suggestion`, which is the queue of records still waiting to become
+  // one. The two lists never hold the same row.
   tagTypes: ["Me", "Account", "Organization", "OrgLogo", "Unit", "Suggestion",
-             "MySuggestion", "Rebuild", "Stats"],
+             "MySuggestion", "Job", "Rebuild", "Stats"],
   endpoints: () => ({}),
 });
