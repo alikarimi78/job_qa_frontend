@@ -5,29 +5,7 @@ import Input from "@components/ui/Input";
 import Modal from "@components/ui/Modal";
 import { Spinner } from "@components/ui/Loader";
 
-// Every write the management sections make now happens in a dialog — the customer's
-// admin_panel.mp4 has no create-form sitting on the page, and neither do we. What used
-// to be `CredentialsForm` (a card with a SubmitBar under it) is the same shape, moved
-// inside `ui/Modal`.
-//
-// The submit lives in the footer and reaches its <form> through the HTML `form=`
-// attribute. That keeps the app's rule intact rather than working around it: a form
-// still ends in a rule across its width with one green button at the start of it, and
-// the rule is now the footer's own border. See the note in ui/Modal.
-//
-// `onSubmit(values, close)` — the dialogs never close themselves. `utils/action.js`
-// reports the server's message and calls `close` only when the request actually
-// succeeded, so a 409 («این سازمان ادمین دارد») leaves the dialog open with what was
-// typed still in it.
 
-// `busy` and `disabled` are deliberately two things: a request in flight shows the
-// spinner, a form that cannot be submitted yet (no role chosen, no organization chosen)
-// is only greyed out. Folding them into one prop made an untouched dialog claim to be
-// «در حال ثبت...» before anything had been sent.
-//
-// Both of these are exported because the moderation queue's «ویرایش» is a dialog too
-// (`pages/Admin.jsx`), even though it is not one of the management sections: a second
-// copy of the footer is exactly how the app's one-green-button rule starts to drift.
 export function DialogFooter({ formId, label, busy, disabled, tone = "submit" }) {
   return (
     <Button
@@ -56,24 +34,14 @@ export function CloseButton({ onClose, busy, label = "بستن" }) {
   );
 }
 
-// ---------- the organization profile ----------
 
-// What `routers/orgs.py:decode_logo` will accept, said again here so the file is
-// refused while it is still on the user's disk rather than after a 512 KB upload.
-// The pair has to be changed together.
 const LOGO_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 const LOGO_MAX_BYTES = 512 * 1024;
 
-// The same shapes the server validates, so a typo is caught next to the box it was
-// typed in instead of coming back as a 422 about a field the form has to go looking for.
 const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/;
 const PHONE_ALLOWED = /^[0-9۰-۹٠-٩+\-() ]+$/;
 const countDigits = (value) => (value.match(/[0-9۰-۹٠-٩]/g) ?? []).length;
 
-// `schemas._validate_password_strength`, said again here: an uppercase letter, a
-// lowercase letter and one character that is neither a letter nor a digit. The three
-// dialogs below that set a password all use it, so the rule cannot drift between them —
-// and the pair with the server has to be changed together.
 const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).+$/;
 const PASSWORD_RULES = {
   minLength: { value: 8, message: "حداقل ۸ نویسه" },
@@ -84,30 +52,12 @@ const PASSWORD_RULES = {
 };
 const PASSWORD_HINT = "حداقل ۸ نویسه، شامل حرف بزرگ و کوچک و نویسه ویژه (مانند @)";
 
-// The reference's red asterisk. `ui/Input` renders whatever `label` is, so this is a
-// node rather than a « *» glued onto the string — which would have been the same colour
-// as the label and read as part of the field's name.
 const Required = ({ children }) => (
   <>
     {children} <span className="text-red-500">*</span>
   </>
 );
 
-/**
- * «افزودن سازمان» / «ویرایش سازمان», field for field from the customer's
- * admin_panel.mp4: name and code on the first row, address and phone on the second,
- * email and the logo picker on the third. Everything but the code and the logo is
- * required — the reference marks them with a red asterisk, and the requirement lives
- * here rather than in the column, because the organizations that predate the profile
- * have none of it and still have to be editable (see `OrganizationProfile` in
- * `app/schemas.py`).
- *
- * The logo is deliberately three states and not two. Untouched means the key is left
- * out of the body entirely, so a PATCH that never opened the picker cannot wipe the
- * image the row already has; cleared sends `""`, which is what removes it; a new file
- * sends the data URI. Folding «untouched» into «empty» is the one change here that
- * would quietly delete data.
- */
 export function OrganizationDialog({
   open,
   title,
@@ -123,7 +73,6 @@ export function OrganizationDialog({
   const blank = { name: "", code: "", address: "", phone: "", email: "" };
   const methods = useForm({ defaultValues: blank });
 
-  // `logo === null` is «untouched»; a string is what will be sent.
   const [logo, setLogo] = useState(null);
   const [logoError, setLogoError] = useState("");
   const fileRef = useRef(null);
@@ -140,9 +89,8 @@ export function OrganizationDialog({
     setLogo(null);
     setLogoError("");
     if (fileRef.current) fileRef.current.value = "";
-  }, [open, organization]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, organization]);
 
-  // What the box shows: the file just picked, else the one already stored, else nothing.
   const preview = logo === null ? initialLogo : logo || null;
 
   const pickFile = (event) => {
@@ -201,10 +149,6 @@ export function OrganizationDialog({
         <form
           id={formId}
           onSubmit={methods.handleSubmit(submit)}
-          // Two columns exactly, not `auto-fit`: the reference pairs the fields —
-          // name beside code, address beside phone, email beside the logo picker — and
-          // an auto-fitting track turns that into three columns at this width and
-          // re-pairs everything wrongly.
           className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4"
         >
           <Input
@@ -271,12 +215,6 @@ export function OrganizationDialog({
   );
 }
 
-/**
- * The reference's «انتخاب لوگو» box — an outlined full-width button in the grid's last
- * cell, so the picker sits where a sixth input would. The chosen image is shown beside
- * it: a logo is the one field on this form whose value cannot be read as text, and
- * picking the wrong file is otherwise invisible until the row is saved.
- */
 function LogoPicker({ preview, error, fileRef, onPick, onClear }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -331,14 +269,6 @@ function LogoPicker({ preview, error, fileRef, onPick, onClear }) {
   );
 }
 
-/**
- * The person behind an account: «نام» and «نام خانوادگی». One component rather than four
- * copies of the same two boxes — it is used when an account is created, when an admin
- * corrects the name on one, and when the caller edits their own from the header menu.
- *
- * `username` is deliberately not next to these: it is the credential, it never changes,
- * and there is no endpoint that would change it.
- */
 export function PersonNameFields() {
   return (
     <>
@@ -362,17 +292,10 @@ export function PersonNameFields() {
   );
 }
 
-/**
- * An existing account's name, corrected. Backs both `POST /accounts/{id}/name` (an admin,
- * over an account below them) and `POST /auth/name` (the caller's own) — the fields and
- * the rules are the same, and only the endpoint the caller passes in differs.
- */
 export function PersonNameDialog({ open, title, hint, initial, busy, onClose, onSubmit }) {
   const formId = "person-name-dialog-form";
   const methods = useForm({ defaultValues: { first_name: "", last_name: "" } });
 
-  // Seeded from the row each time it opens, so this is an edit rather than a re-entry —
-  // and reset on close, or the next account opens holding the previous one's name.
   useEffect(() => {
     if (open) {
       methods.reset({
@@ -380,7 +303,7 @@ export function PersonNameDialog({ open, title, hint, initial, busy, onClose, on
         last_name: initial?.last_name ?? "",
       });
     }
-  }, [open, initial?.first_name, initial?.last_name]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, initial?.first_name, initial?.last_name]);
 
   return (
     <Modal
@@ -409,11 +332,6 @@ export function PersonNameDialog({ open, title, hint, initial, busy, onClose, on
   );
 }
 
-/**
- * Credentials for an account someone else is creating. `children` is where the caller
- * puts whatever the endpoint additionally needs — a role, an organization — because
- * those differ per call and neither of them is a credential.
- */
 export function CredentialsDialog({
   open,
   title,
@@ -426,14 +344,12 @@ export function CredentialsDialog({
   children,
 }) {
   const formId = "credentials-dialog-form";
-  // The name is required by `AccountIn` as well as by this form: an account is a person
-  // as well as a credential now, and the PDF report is headed by the person.
   const blank = { first_name: "", last_name: "", username: "", password: "" };
   const methods = useForm({ defaultValues: blank });
 
   useEffect(() => {
     if (open) methods.reset(blank);
-  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open]);
 
   return (
     <Modal
@@ -489,14 +405,13 @@ export function CredentialsDialog({
   );
 }
 
-/** A new password for an account that cannot supply its old one. */
 export function PasswordDialog({ open, title, hint, busy, onClose, onSubmit }) {
   const formId = "password-dialog-form";
   const methods = useForm({ defaultValues: { password: "" } });
 
   useEffect(() => {
     if (open) methods.reset({ password: "" });
-  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open]);
 
   return (
     <Modal
@@ -528,16 +443,6 @@ export function PasswordDialog({ open, title, hint, busy, onClose, onSubmit }) {
   );
 }
 
-/**
- * The caller's own password. It asks for the current one, which is the whole difference
- * from `PasswordDialog` above and is not a formality: an admin resetting somebody
- * else's password is authorised by being that admin, and an account changing its own
- * has only its session to show for it — so without this box a browser left open on a
- * shared machine would be a permanent takeover rather than an hour of borrowed access.
- *
- * It is the only way a super_admin ever changes their password: `/accounts/{id}/password`
- * refuses one's own row, and there is nobody above a super_admin to ask.
- */
 export function SelfPasswordDialog({ open, title, hint, busy, onClose, onSubmit }) {
   const formId = "self-password-dialog-form";
   const blank = { current_password: "", new_password: "" };
@@ -545,7 +450,7 @@ export function SelfPasswordDialog({ open, title, hint, busy, onClose, onSubmit 
 
   useEffect(() => {
     if (open) methods.reset(blank);
-  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open]);
 
   return (
     <Modal
@@ -593,12 +498,6 @@ export function SelfPasswordDialog({ open, title, hint, busy, onClose, onSubmit 
   );
 }
 
-/**
- * The two-step delete, as the dialog admin_panel.mp4 uses rather than the inline pair
- * of buttons it used to be. The page still does not try to predict whether a container
- * is empty — it asks, and shows the 409 the server answers with, which names what is
- * still inside.
- */
 export function ConfirmDialog({
   open,
   title,
@@ -641,16 +540,6 @@ export function ConfirmDialog({
   );
 }
 
-/**
- * The «مشاهده» dialog. The reference shows the create form again with every input
- * disabled; here it is a plain list instead, because a read-only form is a form you can
- * put the cursor in. It carries what the row is actually consulted for — the profile,
- * plus who administers it and how much sits inside it, which no input on the edit form
- * has anything to say about.
- *
- * `rows` is `[{ label, value }]`; a `value` may be a node, which is how the admin line
- * arrives as a Badge and the logo as an image rather than as text.
- */
 export function DetailsDialog({ open, title, hint, rows, onClose }) {
   return (
     <Modal

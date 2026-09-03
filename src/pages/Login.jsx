@@ -32,17 +32,12 @@ export default function Login() {
   const [getCurrentUser] = useLazyCurrentUserQuery();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Set when the user was redirected here mid-action — an expired session on the way to
-  // a page. Without one, where the session opens is decided by the role `/auth/me`
-  // answers with, below: the dashboard for an admin, the search for everyone else.
   const next = location.state?.from?.pathname;
 
   const submitHandler = async (data) => {
     setIsLoading(true);
     try {
       const token = await loginUser(data).unwrap();
-      // Dispatched before /auth/me is asked for: the request reads the token
-      // straight back out of the store.
       dispatch(
         setAuthToken({
           accessToken: token.access_token,
@@ -66,7 +61,6 @@ export default function Login() {
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center p-4">
-      {/* The campus gate, dimmed enough that white text and the glass card hold up */}
       <img
         src={Campus}
         alt=""

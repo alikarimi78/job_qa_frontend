@@ -1,39 +1,3 @@
-// The matched record's own columns, rendered beside the generated answer. The prose
-// answer stays what it always was; these are the data it was written from, so someone
-// who asked about tools can read the duties without asking a second question.
-//
-// **Nothing here folds.** Every field was a `<details>` box that had to be clicked open,
-// with only the columns the answer used («primary») open to begin with — so the page
-// arrived mostly closed and the reader had to guess which label hid what they wanted.
-// The record is short enough to print in full: label above, content below, all of it on
-// screen. `primary` still means something and is still the backend's call — those fields
-// are tinted and sorted first — but it now decides *emphasis*, not visibility.
-//
-// **And nothing sits beside anything else.** The fields were a `1 / 2 / 3` card grid,
-// which was fine while a record was ~200 tokens; the retranslated corpus fills every
-// taxonomy (22 abilities, 28 context factors, 20 next roles) and no two columns are
-// anywhere near the same height, so the grid drew ragged half-empty cards and the reader
-// had to hunt across three tracks for the next field. Each column is now one full-width
-// section stacked under the last — label as a heading, content beneath it — so the page
-// reads top to bottom in the order the backend sorted the fields, whatever their length.
-// The chips still wrap across the whole width, which is the width they wanted.
-//
-// Duties are written as sentences; every other list column holds short labels that scan
-// better as chips. Prose columns (شرح شغل) arrive with no items at all and render as a
-// paragraph.
-//
-// **And not all of it at once.** The retranslated corpus puts 121 items in a record at
-// the median and 532 in the largest — 293 tools on «برنامه‌نویسان کامپیوتر» alone — so
-// printing every column whole buried the four or five lines the reader came for. Each
-// column now shows `field.preview` items and one button opens the rest. The whole
-// column is in the payload either way, so the toggle is a slice and never a request,
-// and the PDF report still prints all of it.
-//
-// The five that show are chosen, not the first five that happened to be stored: the
-// backend keeps `skills` / `knowledge` / `abilities` / `work_context` in O*NET's own
-// importance order and re-ranks tools, duties and next roles against the question that
-// was asked (`job_qa_service/engine.py:_select_items`). Nothing here re-orders anything
-// — the order the fields arrive in is the answer.
 import { useState } from "react";
 import Button from "@components/ui/Button";
 
@@ -44,8 +8,6 @@ function faCount(n) {
 }
 
 function FieldSection({ field, expanded }) {
-  // A `preview` of 0 on a list column means the backend did not send one; showing the
-  // column whole is the safe reading of that, since it is what the page did before.
   const limit = field.preview > 0 ? field.preview : field.items.length;
   const shown = expanded ? field.items : field.items.slice(0, limit);
   const asChips = shown.length > 0 && !LIST_AS_LINES.has(field.key);
@@ -74,9 +36,6 @@ function FieldSection({ field, expanded }) {
             مورد)
           </span>
         )}
-        {/* The rule fills whatever the heading leaves, so a long label and a short one
-            still end at the same place — which is what makes the stack read as a list
-            of sections rather than as a column of loose paragraphs. */}
         <span
           className={`flex-1 h-px ${field.primary ? "bg-blue-100" : "bg-slate-100"}`}
         />
@@ -89,8 +48,6 @@ function FieldSection({ field, expanded }) {
             : "bg-white/70 border-slate-100"
         }`}
       >
-        {/* Keyed by position: a «|»-joined cell may well repeat a value, and the
-            list is fixed for as long as it is on screen. */}
         {asChips && (
           <div className="flex flex-wrap gap-2">
             {shown.map((item, i) => (
@@ -128,18 +85,10 @@ function FieldSection({ field, expanded }) {
 }
 
 export default function JobDetails({ details, title }) {
-  // One switch for the whole record rather than one per column: «مشاهده کامل اطلاعات»
-  // is a decision about how much of this answer the reader wants, and a page of
-  // twenty of them would be the row of closed `<details>` boxes this component was
-  // built to get rid of. Collapsed to begin with — the point is that the answer and
-  // the few columns it was written from fit on a screen.
   const [expanded, setExpanded] = useState(false);
   if (!details?.length) return null;
-  const named = details.length > 1; // interdisciplinary: say which job is which
+  const named = details.length > 1;
 
-  // Offered only when the short view is actually holding something back. A military
-  // record with seven duties and six tools has nothing behind the button, and a button
-  // that does nothing is worse than none.
   const truncated = details.some((job) =>
     job.fields.some((f) => f.preview > 0 && f.items.length > f.preview),
   );
@@ -154,8 +103,6 @@ export default function JobDetails({ details, title }) {
               {title}
             </p>
           )}
-          {/* `ms-auto` and not `mr-auto`: the page is RTL, so the logical property is
-              what puts this at the far end of the row instead of beside the title. */}
           {truncated && (
             <span className="ms-auto">
               <Button
@@ -180,9 +127,6 @@ export default function JobDetails({ details, title }) {
               {job.job_title}
             </p>
           )}
-          {/* One field per row, in the order the backend sorted them. No grid: the
-              columns differ in length by an order of magnitude and nothing may be
-              made to share a row with something it will not fill. */}
           <div className="divide-y divide-slate-100">
             {job.fields.map((field) => (
               <FieldSection key={field.key} field={field} expanded={expanded} />

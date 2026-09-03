@@ -1,13 +1,3 @@
-// The «عملیات‌ها» column of admin_panel.mp4: a round, solid, colour-coded button per
-// action rather than a row of labelled ones. Four rows of «مسدود کن / تغییر رمز /
-// انتقال / حذف» took more width than every data column put together; a circle costs
-// 36px and the colour carries the meaning.
-//
-// Because the label is gone, `title` is not optional — it is both the tooltip and the
-// accessible name, and the only thing that tells a first-time user which circle is
-// which. The tones are the video's own: red destroys, blue reads, green edits, and
-// slate is for the one action it has no counterpart for (staffing a container).
-
 const TONES = {
   danger: "bg-red-500 hover:bg-red-600 shadow-red-500/25",
   view: "bg-blue-500 hover:bg-blue-600 shadow-blue-500/25",
@@ -47,8 +37,6 @@ export default function IconButton({
   );
 }
 
-// The glyphs the buttons carry, kept here so the four management tables draw the same
-// action with the same picture. Same stroke build as constant/menuItems.jsx.
 const glyph = (path) => (
   <svg
     className="w-4 h-4"
@@ -107,8 +95,6 @@ export const UnlockGlyph = glyph(
   </>
 );
 
-// A key, not a padlock: the padlocks are blocking and unblocking, and three lock
-// shapes in one row would be three ways of saying nothing.
 export const KeyGlyph = glyph(
   <>
     <circle cx="7.5" cy="15.5" r="3.5" />

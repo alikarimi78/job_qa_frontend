@@ -11,11 +11,7 @@ import { downloadBlob, safeFileName } from "@utils/download";
 import { errorMessage } from "@utils/errors";
 import { showMessage } from "@utils/toast";
 
-// The plain half of «جستجوی شغل»: one question, one answer about one job. The other
-// half is `AdvancedSearch`, next to it under the switch on the page.
 
-// Inline and `currentColor`, the same way `constant/menuItems.jsx` draws its icons —
-// no icon assets came with the style files.
 const DownloadIcon = () => (
   <svg
     className="w-3.5 h-3.5"
@@ -38,21 +34,14 @@ const MODE_BADGE = {
   out_of_domain: "danger",
 };
 
-// The two answers that describe no record. `about` is the engine answering a question
-// about itself («کار تو چیه؟») — fixed text, decided before retrieval — and there is
-// as little to print as there is for a question it found nothing for.
 const NO_REPORT = new Set(["out_of_domain", "about"]);
 
 export default function QuestionSearch() {
   const [question, setQuestion] = useState("");
   const [result, setResult] = useState(null);
-  // The question this answer came from, kept apart from the input the user may already
-  // be retyping — the report prints the pair, and they have to be the same pair.
   const [asked, setAsked] = useState("");
   const [declined, setDeclined] = useState(false);
   const [filed, setFiled] = useState(false);
-  // Counts searches, so the draft form below remounts on each one: its fields are seeded
-  // from the offer at mount, and a second proposal has to refill them.
   const [runId, setRunId] = useState(0);
   const [search, { isLoading }] = useSearchMutation();
   const [searchReport, { isLoading: isReporting }] = useSearchReportMutation();
@@ -74,8 +63,6 @@ export default function QuestionSearch() {
     }
   }
 
-  // Sends the answer back to be printed, rather than asking for it to be produced
-  // again: the PDF is meant to be exactly the page it was downloaded from.
   async function downloadReport() {
     try {
       const blob = await searchReport({
@@ -94,10 +81,6 @@ export default function QuestionSearch() {
     }
   }
 
-  // A proposed record is filed from here, on the page it was proposed on. It used to be
-  // stashed and carried to «پیشنهاد شغل» to be edited and submitted there, which made
-  // reviewing an offer a two-page errand for no gain — the same ten-column form is on
-  // this page now, already filled in, and this is the submit at the end of it.
   async function fileSuggestion(body) {
     try {
       await suggestJob(body).unwrap();
@@ -109,7 +92,6 @@ export default function QuestionSearch() {
   }
 
   const offered = result?.mode === "job_generated" && result.job_draft;
-  // related_jobs leads with the matched record itself; showing it twice reads as a bug
   const nearby = result?.related_jobs?.filter((t) => t !== result.job) ?? [];
   const detailsTitle =
     result?.details?.length > 1 ? "اطلاعات این مشاغل در پایگاه داده" : "اطلاعات این شغل در پایگاه داده";
@@ -166,7 +148,6 @@ export default function QuestionSearch() {
               {result.score != null && (
                 <span className="text-xs text-slate-400">تطابق: {result.score.toFixed(2)}</span>
               )}
-              {/* Nothing to file a report about when the question was not about a job */}
               {!NO_REPORT.has(result.mode) && (
                 <Button
                   variant="outline"
@@ -184,8 +165,6 @@ export default function QuestionSearch() {
             {result.answer}
           </p>
 
-          {/* A proposal's own columns are the editable form below, not a second read-only
-              copy of the same values — so the boxes are for records that actually exist. */}
           {!offered && <JobDetails details={result.details} title={detailsTitle} />}
 
           {result.mode === "job_match" && nearby.length > 0 && (
@@ -211,10 +190,6 @@ export default function QuestionSearch() {
                 </p>
               </div>
 
-              {/* Keyed on the run so a second proposal refills the boxes: JobForm seeds
-                  its defaults once, at mount. Declining sits in the form's own submit bar,
-                  beside «ثبت پیشنهاد»: the two are the same decision answered either way,
-                  and the person makes it after reading the record, not before. */}
               <JobForm
                 key={runId}
                 initial={result.job_draft}

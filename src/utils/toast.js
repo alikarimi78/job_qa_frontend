@@ -1,7 +1,5 @@
 import toast from "react-hot-toast";
 
-// One place to keep the toasts looking alike. RTL is not inherited into the portal
-// react-hot-toast renders into, so it is set here rather than on <html>.
 const base = {
   duration: 4000,
   style: {

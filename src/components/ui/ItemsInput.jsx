@@ -2,18 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useController, useFormContext } from "react-hook-form";
 import { faNumber } from "@utils/jalali";
 
-// One list column, collected one item at a time.
-//
-// The dataset stores these columns as a single «|»-joined string, and this field used
-// to ask the user to type that string. That put the separator on them — «،» or «,» or
-// «|»? — and every wrong guess became one long item that matched nothing on either side
-// of the system: the record went into the corpus as a single unsplittable cell, and the
-// same guess in a search matched no record at all. Items are entered here and joined by
-// the caller, so what the user sees is what the model stores.
-//
-// Text that arrives with a separator in it anyway is split rather than refused — that is
-// what pasting from a document does, and it is the one place the old habit still shows
-// up. A space is deliberately not a separator: «حل مسئله» is one item.
 const SEPARATORS = /[،,;؛|\n\t]+/;
 
 const PlusGlyph = (
@@ -50,12 +38,10 @@ export function splitItems(text) {
     .filter(Boolean);
 }
 
-/** A «|»-joined cell as the dataset stores it, back into items. */
 export function itemsFromCell(cell) {
   return splitItems(cell);
 }
 
-/** Items back into the cell the dataset stores. */
 export function cellFromItems(items) {
   return (items ?? []).join(" | ");
 }
@@ -89,16 +75,9 @@ export default function ItemsInput({
   });
 
   const [draft, setDraft] = useState("");
-  // The item being corrected in place, by position, and the text of it. Editing was a
-  // delete followed by a retype until now: fixing one letter of a twelve-word duty meant
-  // typing the whole statement again, and the item lost its place in the column while
-  // that happened — which matters, because four of these columns are stored in a
-  // deliberate order (see «Five per column» in the backend's CLAUDE.md).
   const [editing, setEditing] = useState(null);
   const [editDraft, setEditDraft] = useState("");
   const editRef = useRef(null);
-  // Escape cancels, and the box then blurs — without this flag the blur handler would
-  // commit the very edit that was just abandoned.
   const cancelled = useRef(false);
 
   const full = value.length >= max;
@@ -140,14 +119,9 @@ export default function ItemsInput({
     setEditing(null);
   };
 
-  // The edited text replaces the item where it stands, so the column keeps its order.
-  // Pasted separators split here exactly as they do in `add` — one item can become
-  // several — and the position is what they take.
   const commitEdit = (index, text) => {
     setEditing(null);
     const incoming = splitItems(text);
-    // An emptied box is an abandoned edit, not a deletion: the chip has its own «×», and
-    // clearing the field by accident must not take the item with it.
     if (!incoming.length) return;
 
     const others = new Set(
@@ -159,9 +133,6 @@ export default function ItemsInput({
       others.add(item.toLowerCase());
       kept.push(item);
     }
-    // Room is counted against the item being replaced, so an edit can never overflow the
-    // column; `kept` empty means the text is already somewhere else in it, and the
-    // duplicate is dropped rather than written twice.
     const room = Math.max(max - (value.length - 1), 0);
     const next = [
       ...value.slice(0, index),
@@ -182,18 +153,12 @@ export default function ItemsInput({
           disabled={full}
           placeholder={full ? `حداکثر ${faNumber(max)} مورد` : placeholder}
           onChange={(event) => setDraft(event.target.value)}
-          // Enter adds an item and must not reach the form: this field sits in a form
-          // with a submit button, and the browser's default would file the whole record
-          // the first time someone finishes typing a skill.
           onKeyDown={(event) => {
             if (event.key === "Enter") {
               event.preventDefault();
               add(draft);
             }
           }}
-          // What is typed but not yet added is still the user's answer. Without this,
-          // typing the last skill and going straight for the green button silently drops
-          // it — the click blurs the box before the submit reads the value.
           onBlur={() => add(draft)}
           className={`
             flex-1 h-11 px-4 rounded-xl bg-white text-sm text-slate-800
@@ -225,9 +190,6 @@ export default function ItemsInput({
       </div>
 
       {value.length > 0 && (
-        // Keyed by position, not by text: two items can never be equal here (`add` and
-        // `commitEdit` both drop duplicates) but position is what `remove` and the
-        // in-place edit work on either way.
         <div className="flex flex-wrap gap-2 pt-1">
           {value.map((item, index) =>
             editing === index ? (
@@ -246,9 +208,6 @@ export default function ItemsInput({
                     cancelEdit();
                   }
                 }}
-                // The same rule the add box follows: what is typed and then clicked away
-                // from is still the user's answer, so a blur commits rather than
-                // discards — unless Escape has already said otherwise.
                 onBlur={() => {
                   if (cancelled.current) {
                     cancelled.current = false;
@@ -257,10 +216,6 @@ export default function ItemsInput({
                   commitEdit(index, editDraft);
                 }}
                 aria-label={`ویرایش ${item}`}
-                // Sized to its own text so the chip keeps roughly the width it had.
-                // `ch` is the width of a «0» and Persian glyphs run wider than that, so
-                // the count is scaled rather than taken literally; the cap is what stops
-                // one long duty statement from pushing the field off the row.
                 style={{
                   width: `${Math.min(Math.max(editDraft.length * 1.4 + 4, 12), 52)}ch`,
                 }}
@@ -275,8 +230,6 @@ export default function ItemsInput({
                            bg-blue-50 border border-blue-200 rounded-full
                            ps-3 pe-1.5 py-1 text-[13px] text-blue-900"
               >
-                {/* The item's own text is the edit affordance — one target rather than a
-                    pencil beside a label, which at chip size is two things to hit. */}
                 <button
                   type="button"
                   onClick={() => startEdit(index)}

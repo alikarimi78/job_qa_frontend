@@ -2,23 +2,12 @@ import { baseApi } from "./baseApi";
 
 export const jobsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    // A mutation rather than a query: the question is the input, there is nothing to
-    // cache across questions, and the page fires it on submit.
     search: builder.mutation({
       query: (question) => ({ url: "/search", method: "POST", body: { question } }),
     }),
-    // Advanced search: a profile in, a ranking out. Items travel as arrays, never as a
-    // «|»-joined string — the separator was the user's guess to make and is now nobody's.
     advancedSearch: builder.mutation({
       query: (profile) => ({ url: "/search/advanced", method: "POST", body: { profile } }),
     }),
-    // The answer on screen, posted back to be printed. The server does not re-run the
-    // search: that would spend a second LLM call and could hand back different prose
-    // from the report's own first page.
-    //
-    // `responseHandler` has to be spelled out because the body is a PDF, and it branches
-    // on `response.ok` — a 401 or 422 still arrives through here, and reading *that* as a
-    // blob would hide the `detail` string `errorMessage` prints.
     searchReport: builder.mutation({
       query: (result) => ({
         url: "/reports/search",

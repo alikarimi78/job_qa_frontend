@@ -1,7 +1,5 @@
 @import "tailwindcss";
 
-/* Vazirmatn is loaded from the CDN in index.html; naming it here is what makes
-   every Tailwind `font-sans` (and therefore the whole app) use it. */
 @theme {
   --font-sans: Vazirmatn, ui-sans-serif, system-ui, sans-serif;
 }
@@ -17,15 +15,10 @@ body {
   line-height: 1.8;
 }
 
-/* Persian digits read better than Latin ones in an all-Persian UI, and the
-   dataset's own numbers are Persian already. */
 .fa-nums {
   font-feature-settings: "ss02";
 }
 
-/* The one animation declared by hand: ui/Modal opens with it. Tailwind v4 has no
-   config file here to register a keyframe in, and the utility (`animate-[modal-in…]`)
-   only names an animation — the keyframes themselves have to exist somewhere. */
 @keyframes modal-in {
   from {
     opacity: 0;
@@ -37,9 +30,6 @@ body {
   }
 }
 
-/* The reference sheets style the scrollbar nowhere, but the sidebar and the
-   result panes both scroll — an unstyled one is the single loudest thing on the
-   page against the glass chrome. */
 * {
   scrollbar-width: thin;
   scrollbar-color: rgb(148 163 184 / 0.5) transparent;

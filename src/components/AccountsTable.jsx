@@ -24,9 +24,6 @@ import { ROLE_LABELS } from "@routes/roles";
 
 export { ROLE_LABELS };
 
-// Mirrors the backend's rule (src/accounts.py:assert_can_manage_account) so the table
-// only offers buttons that would succeed. The server enforces it either way — this is
-// about not showing an action that will come back 403.
 function canManage(me, target) {
   if (!me || me.id === target.id) return false;
   if (me.role === "super_admin") return true;
@@ -36,12 +33,6 @@ function canManage(me, target) {
   return false;
 }
 
-// Moving is narrower than the rest, and it is the same move for every row now that an
-// org_admin and an ordinary user both sit in an organization directly: only a
-// super_admin makes one, because an org_admin has no second organization to move anyone
-// into. It used to be the whole of what «ویرایش» meant for a row; a row now also
-// carries the person's name, which anyone who can manage it may correct — so the pencil
-// opens on the name, and the destination is the part of the dialog that comes and goes.
 function canMoveOrganization(me, target) {
   return (
     canManage(me, target) &&
@@ -69,23 +60,15 @@ export default function AccountsTable({
   onSaveAccount,
   onDelete,
 }) {
-  // One dialog at a time: {kind: view|password|self-password|edit|delete|block, account}
   const [dialog, setDialog] = useState(null);
   const [destination, setDestination] = useState("");
-  // The name half of the edit dialog. The destination stays plain state below — `ui/Select`
-  // is a controlled input by design, and one form of two shapes would be worse than this.
   const editForm = useForm({ defaultValues: { first_name: "", last_name: "" } });
   const close = () => setDialog(null);
   const is = (kind) => dialog?.kind === kind;
   const account = dialog?.account ?? null;
-  // Whether the dialog offers a destination at all: an org_admin may correct the name of
-  // a user in their organization but may not move them, and nobody moves their own row.
   const movable = !!account && canMoveOrganization(me, account);
 
   function open(kind, target) {
-    // Seeded with what the row already holds — this is an edit, not a re-entry. The last
-    // fallback is for a super_admin, which sits in no organization, and for a legacy row
-    // that has no name either.
     if (kind === "edit") {
       setDestination(String(target.organization_id ?? orgs[0]?.id ?? ""));
       editForm.reset({
@@ -105,8 +88,6 @@ export default function AccountsTable({
     {
       key: "person",
       header: "نام و نام خانوادگی",
-      // Null for an account created before the columns existed (migration 0007); the
-      // pencil is how it gets filled in.
       cell: (row) => (
         <span className={row.full_name ? "text-slate-800" : "text-slate-400"}>
           {row.full_name || "—"}
@@ -159,15 +140,9 @@ export default function AccountsTable({
                 disabled={busy}
                 onClick={() => (row.is_active ? open("block", row) : onUnblock(row))}
               >
-                {/* The glyph is the action, not the state: an active account offers a
-                    closing padlock, a blocked one an open padlock. */}
                 {row.is_active ? LockGlyph : UnlockGlyph}
               </IconButton>
             )}
-            {/* Someone else's password is set outright; the caller's own is changed
-                against the current one, through the endpoint that asks for it. That
-                second case is the only way a super_admin ever changes their password —
-                nobody may act on their own row here, and nobody sits above them. */}
             {manageable && (
               <IconButton
                 tone="warning"
@@ -188,9 +163,6 @@ export default function AccountsTable({
                 {KeyGlyph}
               </IconButton>
             )}
-            {/* Shown for every row the caller may act on, and for their own: the name
-                is editable in both cases (`/accounts/{id}/name` and `/auth/name`), while
-                the destination inside the dialog appears only when a move is allowed. */}
             {(manageable || me?.id === row.id) && (
               <IconButton
                 tone="edit"
@@ -281,10 +253,6 @@ export default function AccountsTable({
         onSubmit={(values, done) => onChangeOwnPassword(values, done)}
       />
 
-      {/* «ویرایش کاربر» is the person's name, plus which organization the account sits
-          in when the caller may move it. Neither the role nor the username is edited:
-          the role decides which scope column the row carries, and the username is the
-          credential you log in with. */}
       <Modal
         open={is("edit")}
         title="ویرایش کاربر"
@@ -315,9 +283,6 @@ export default function AccountsTable({
           <form
             id="account-edit-form"
             onSubmit={editForm.handleSubmit((values) => {
-              // Only what actually changed is sent: the page turns each part into its own
-              // request, and re-submitting the organization an account already sits in
-              // would be a move for nothing (and, for an admin, a 409 against its own seat).
               const target = Number(destination);
               const moved =
                 movable && String(target) !== String(account.organization_id ?? "");
@@ -348,8 +313,6 @@ export default function AccountsTable({
                     </option>
                   ))}
                 </Select>
-                {/* The seat may already be taken, and this does not try to predict it —
-                    the page asks and shows the 409, which names the admin sitting there. */}
                 {account?.role === "org_admin" && (
                   <span className="text-xs text-slate-400">
                     انتقال ادمین سازمان تنها به سازمانی امکان‌پذیر است که ادمین نداشته باشد.

@@ -10,12 +10,6 @@ import {
 import { AXIS_TICK, BAR, INK, SERIES } from "./theme";
 import { ChartEmpty, ChartLegend, ChartTooltip, HOVER_CURSOR } from "./parts";
 
-// New records per Persian month, one group of columns per month.
-//
-// The x axis is `reversed` and the y axis sits on the right: the months read from the
-// right, like the rest of the page. Values are not printed on the columns — a number
-// on all thirty-six of them is unreadable, so the legend names the series and the
-// hover carries the figures.
 export default function MonthlyBars({ months, series, height = 280 }) {
   const rows = months.map((month, index) => {
     const row = { label: month.label, full: month.full };

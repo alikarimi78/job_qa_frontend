@@ -1,5 +1,3 @@
-// Not driven by react-hook-form: the selects in the app are the role and organization
-// pickers on the accounts page, which live and die with one open dialog.
 export default function Select({ value, onChange, children, className = "", selectProps = {} }) {
   return (
     <select

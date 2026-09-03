@@ -5,11 +5,8 @@ import { fileURLToPath, URL } from "node:url";
 
 const src = (path) => fileURLToPath(new URL(`./src/${path}`, import.meta.url));
 
-// Dev server proxies /api to the FastAPI backend -> no CORS setup needed
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  // The same aliases the reference components are written against, so their
-  // imports (@components/…, @store/…) carry over unchanged.
   resolve: {
     alias: {
       "@components": src("components"),

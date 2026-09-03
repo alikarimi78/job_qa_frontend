@@ -24,22 +24,12 @@ import { useChangeOwnNameMutation, useChangeOwnPasswordMutation } from "@service
 import { runAction } from "@utils/action";
 import { faNumber } from "@utils/jalali";
 
-// Every user the caller may act on, in one table — and the one place any of them is
-// created. The three creation endpoints differ only in which scope they need, so they
-// are one dialog with a role picker rather than three forms on three pages.
-//
-// The filter is about what to look at, not about privacy: the server has already scoped
-// the list, so an org_admin's «همه سازمان‌ها» is only ever its own.
 
-// Which roles each role may create — the provisioning chain of src/routers/accounts.py,
-// read as a table. An org_admin staffs its own organization and nothing else.
 const CREATABLE = {
   super_admin: ["super_admin", "org_admin", "user"],
   org_admin: ["user"],
 };
 
-// What each new role has to be given besides a username and a password. A super_admin
-// belongs to nothing, so it needs neither.
 const SCOPE_OF = {
   super_admin: null,
   org_admin: "organization",
@@ -83,9 +73,6 @@ export default function Accounts() {
   const creatableRoles = CREATABLE[me.role] ?? [];
   const scopeNeeded = newRole ? SCOPE_OF[newRole] : null;
 
-  // Organizations that already have an admin are left out of the picker rather than
-  // offered and refused with a 409. An ordinary user has no such rule — an organization
-  // takes one admin and any number of users.
   const scopeOptions = useMemo(() => {
     if (scopeNeeded !== "organization") return [];
     const taken = new Set(
@@ -96,8 +83,6 @@ export default function Accounts() {
       .map((org) => ({ id: org.id, label: org.name }));
   }, [scopeNeeded, newRole, accounts, orgs]);
 
-  // The caller's own organization is the answer when the endpoint lets them leave it
-  // out — an org_admin making a user.
   const scopeIsImplicit = scopeNeeded === "organization" && !isSuper;
 
   function openAddDialog() {
@@ -121,15 +106,9 @@ export default function Accounts() {
     );
   }
 
-  // «ویرایش کاربر» is one dialog over as many as two endpoints — the name, and the move
-  // the dialog only offers when the caller may make one. They are separate requests
-  // because they are separate decisions on the server; the dialog closes when both have
-  // gone through, and stays open on the first failure with the server's own message.
   async function saveAccount(a, { first_name, last_name, organizationId }, done) {
     const renamed =
       first_name !== (a.first_name ?? "") || last_name !== (a.last_name ?? "");
-    // An account fixes its own name through `/auth/name`; nobody may act on their own
-    // row through `/accounts/{id}/*`, which is the rule this one endpoint exists beside.
     const rename = () =>
       a.id === me.id
         ? changeOwnName({ first_name, last_name })
@@ -144,7 +123,6 @@ export default function Accounts() {
       );
       if (!moved) return;
     } else if (!renamed) {
-      // Nothing was touched: close quietly rather than report a change that never happened.
       done?.();
       return;
     }

@@ -7,7 +7,6 @@ export default function Loader({ label = "در حال بارگذاری...", clas
   );
 }
 
-// The inline version, for a button that is mid-request.
 export function Spinner({ className = "" }) {
   return (
     <span

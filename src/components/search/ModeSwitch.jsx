@@ -1,12 +1,5 @@
 import SegmentedSwitch from "@components/ui/SegmentedSwitch";
 
-// The two ways of searching, as one control. They used to be two sidebar items and are
-// one page now: the same errand — «کدام شغل؟» — asked either as a sentence or as a list
-// of what the person can do, so the choice belongs beside the search box rather than in
-// the navigation.
-//
-// The pill itself is `ui/SegmentedSwitch`, shared with «پیشنهادها»; what stays here is
-// this page's own pair of values.
 
 const Magnifier = (
   <svg

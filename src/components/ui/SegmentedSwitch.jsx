@@ -1,10 +1,3 @@
-// Two (or three) values of one setting, as one control — the raised segment says which
-// value is on without a legend.
-//
-// It began as `search/ModeSwitch` and was lifted here when «پیشنهادها» needed the same
-// thing: a page that is one errand asked two ways puts the choice on the page rather
-// than in the navigation, and there is now more than one such page. The options table
-// stays with the caller, since the labels and the glyphs are what each page is about.
 export default function SegmentedSwitch({ options, value, onChange, label }) {
   return (
     <div

@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
-// Ported from the reference MenuItem, state for state: a direct link, a parent that
-// expands, and a second level under that. The only change is that `icon` is a node
-// rather than an image path — see constant/menuItems.jsx.
 
 const Chevron = ({ className = "" }) => (
   <svg
@@ -38,8 +35,6 @@ export default function MenuItem({ href, icon, label, submenuItems }) {
         item.secondMenuItems?.some((second) => second.href === location.pathname)
     );
 
-  // A parent opens itself when the page inside it is the one being shown, so a reload
-  // on /admin does not present a collapsed menu with no sign of where you are.
   useEffect(() => {
     if (isSubmenuActive) setSubmenuOpen(true);
   }, [isSubmenuActive]);
@@ -48,7 +43,6 @@ export default function MenuItem({ href, icon, label, submenuItems }) {
 
   return (
     <li>
-      {/* آیتم با لینک مستقیم */}
       {href && !hasSubmenu && (
         <Link
           to={href}
@@ -83,7 +77,6 @@ export default function MenuItem({ href, icon, label, submenuItems }) {
         </Link>
       )}
 
-      {/* آیتم والد با زیرمنو */}
       {hasSubmenu && (
         <>
           <button
@@ -130,7 +123,6 @@ export default function MenuItem({ href, icon, label, submenuItems }) {
             </div>
           </button>
 
-          {/* زیرمنو */}
           <div
             className={`
               overflow-hidden transition-all duration-300 ease-out

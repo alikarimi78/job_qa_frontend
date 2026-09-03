@@ -4,8 +4,6 @@ const SIZES = {
   large: "p-6 md:p-8",
 };
 
-// The surface every page sits on: the same glass panel the login form uses, so the
-// content area reads as one material against the gradient behind it.
 export default function Card({ children, size = "medium", className = "", title, hint, actions }) {
   return (
     <section

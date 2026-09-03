@@ -1,6 +1,5 @@
 import { useFormContext } from "react-hook-form";
 
-// Input's counterpart for the two prose columns of a job record (شرح شغل، وظایف).
 export default function Textarea({
   name,
   label,

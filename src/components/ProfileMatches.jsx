@@ -2,14 +2,6 @@ import { useState } from "react";
 import Badge from "@components/ui/Badge";
 import JobDetails from "@components/JobDetails";
 
-// The ranking `POST /search/advanced` answers with. Deliberately not the search page's
-// result card: that one shows an answer *about* a job, and this shows how far each of
-// several jobs accounts for what the user said they can do — so the per-item breakdown
-// is the content, and the prose sits above the list rather than inside it.
-//
-// Every item shown here is in the user's own words, because the point of the two lists
-// is that they can be checked against what was typed. The server returns them that way;
-// nothing is re-derived here.
 
 function faPercent(ratio) {
   return `${Math.round(ratio * 100).toLocaleString("fa-IR")}٪`;
@@ -41,8 +33,6 @@ function FieldRow({ field }) {
           {item}
         </span>
       ))}
-      {/* Struck through rather than hidden: what a job does *not* cover is the other
-          half of an analysis — it is the gap the user would have to close. */}
       {field.missing.map((item, i) => (
         <span
           key={`x${i}`}
@@ -57,9 +47,6 @@ function FieldRow({ field }) {
 }
 
 function MatchCard({ match, rank }) {
-  // The leader opens; the rest are one click away. This is the one thing on the page
-  // that still folds, and it folds a *whole job* rather than a field of one — five
-  // records printed in full would bury the ranking that is the point of the page.
   const [open, setOpen] = useState(rank === 0);
 
   return (

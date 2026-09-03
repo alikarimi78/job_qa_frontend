@@ -1,9 +1,5 @@
 import { ADMIN_ROLES } from "@routes/roles";
 
-// The reference menu points `iconSrc` at an svg file and recolours it with
-// `brightness-0 invert` filters. No icon assets came with the style files, so the icon
-// is a node here instead and takes its colour from `currentColor` — the same two states,
-// without a filter stack.
 const icon = (path) => (
   <svg
     className="w-4 h-4"
@@ -70,41 +66,18 @@ const BriefcaseIcon = icon(
   </>
 );
 
-// `roles` is the gate the sidebar filters on; an item with none is open to anyone
-// signed in. `MenuItem` still knows how to draw a parent that expands (`submenuItems`,
-// which `SideBar` filters on `roles` too) — the reference component was ported whole —
-// but nothing here declares one: every section is one page, reached in one click.
-//
-// The management sections used to sit under one «مدیریت» parent. They are top level
-// now, at the customer's request: each is a destination in its own right, and one
-// accordion standing between the sidebar and every one of them meant two clicks to
-// reach the page an admin spends the day on. A role that cannot enter a section does
-// not see its item, so the list is short for everyone — an org_admin gets the dashboard
-// and the users, and an ordinary user none at all.
 export const menuItems = [
-  // The dashboard leads for anyone who has one — it is the overview the other sections
-  // are read from. An ordinary user is not in `ADMIN_ROLES`, so for them the list still
-  // opens on «جستجوی شغل».
   {
     href: "/manage/dashboard",
     label: "داشبورد",
     icon: ChartIcon,
     roles: ADMIN_ROLES,
   },
-  // One item for both ways of searching. «جستجوی پیشرفته» used to sit under this one and
-  // is not a destination any more: it is the same errand asked a different way, so it is
-  // now a switch on the search page itself rather than a second line in the sidebar.
   {
     href: "/search",
     label: "جستجوی شغل",
     icon: SearchIcon,
   },
-  // «پیشنهاد شغل» and «پیشنهادهای من» were two items here and are one now, at the
-  // customer's request: they are the two halves of the same errand — a record is filed
-  // and then its decision is waited on — so they are one entry onto one page, where the
-  // halves are a switch beside each other. Not a parent that expands: the ask was for
-  // one section, and an accordion would be the two lines back with a click in front of
-  // them. Same shape as «جستجوی شغل» above.
   {
     href: "/suggestions",
     label: "پیشنهادها",
@@ -122,9 +95,6 @@ export const menuItems = [
     icon: UsersIcon,
     roles: ADMIN_ROLES,
   },
-  // The two sections about the shared corpus, kept next to each other and last: one
-  // decides what enters it, the other corrects what is already in it. Both are
-  // super-admin-only, because the dataset belongs to no single organization.
   {
     href: "/manage/jobs",
     label: "مدیریت مشاغل",

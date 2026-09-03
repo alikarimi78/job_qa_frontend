@@ -1,7 +1,6 @@
 import { faNumber } from "@utils/jalali";
 import { SERIES } from "./theme";
 
-// A single number is a stat tile, not a one-bar chart. The KPI row is five of them.
 export function StatTile({ label, value, hint, tone = "default" }) {
   const accent =
     tone === "warning" ? "text-amber-600" : tone === "muted" ? "text-slate-500" : "text-slate-900";
@@ -15,14 +14,6 @@ export function StatTile({ label, value, hint, tone = "default" }) {
   );
 }
 
-/**
- * A ratio against a limit — how much of the approved corpus the running engine has
- * actually been built from. The track is a lighter step of the fill's own ramp, so the
- * state reads across the whole bar rather than only where it is filled.
- *
- * `value` above `total` is not possible here; `value` below it is exactly the approvals
- * still waiting on a rebuild, which is the number this is drawn to show.
- */
 export function Meter({ label, value, total, note }) {
   const ratio = total > 0 ? Math.min(1, value / total) : 0;
   const remaining = Math.max(0, total - value);

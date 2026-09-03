@@ -12,11 +12,6 @@ import { useStatsQuery } from "@services/statsApi";
 import { bucketByMonth, faNumber, lastPersianMonths } from "@utils/jalali";
 import { errorMessage } from "@utils/errors";
 
-// The dashboard reads one endpoint. `/stats` is scoped by the server exactly as
-// `/accounts` is, so nothing on this page filters by role for privacy — the role only
-// decides which of these panels is worth showing at all. An org_admin has one
-// organization, so the panel counting them is simply absent rather than drawn as a
-// chart of one bar.
 export default function Dashboard() {
   const me = useOutletContext();
   const isSuper = me.role === "super_admin";
@@ -28,7 +23,6 @@ export default function Dashboard() {
 
   const growth = useMemo(() => {
     if (!stats) return [];
-    // Fixed order, so a series keeps its colour whichever of them this role sees.
     const all = [
       { key: "accounts", label: "کاربران جدید", series: stats.accounts_series },
       { key: "organizations", label: "سازمان‌های جدید", series: stats.organizations_series },
@@ -63,10 +57,6 @@ export default function Dashboard() {
     );
   }
 
-  // Below a super_admin, the two admin roles cannot appear in the caller's own scope at
-  // all — `visible_users` leaves the caller's row out, so an org_admin's own chart would
-  // report «ادمین سازمان: ۰» about itself. Only the roles that can actually be counted
-  // here are plotted.
   const countableRoles = isSuper ? ["super_admin", "org_admin", "user"] : ["user"];
   const roleRows = stats.accounts_by_role
     .filter((row) => countableRoles.includes(row.role))
@@ -81,8 +71,6 @@ export default function Dashboard() {
 
   return (
     <>
-      {/* The same strip the other three sections open with — this one has nothing to
-          add, so it carries only where you are and how far the numbers reach. */}
       <PageToolbar title="داشبورد مدیریت" hint={scopeNote} />
 
       <Card title="نمای کلی">

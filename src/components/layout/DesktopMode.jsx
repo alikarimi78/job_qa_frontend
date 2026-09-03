@@ -57,15 +57,6 @@ export default function DesktopMode({
             />
           </div>
 
-          {/* Rendered only while open, never as data-active="false": Tailwind's bare
-              `data-active:` variant tests for the attribute, not its value, so a
-              literal "false" would leave the panel permanently visible.
-
-              Anchored left, not right as the reference has it. The user chip sits at
-              the far left of an RTL header, so pinning the panel's right edge to it
-              hangs the panel off the side of the page — 23px of horizontal scroll on
-              every route, since the panel is always in the layout and only hidden by
-              opacity. The reference's own mobile header anchors left already. */}
           <div
             data-active={isOpen || undefined}
             className={`

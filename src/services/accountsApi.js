@@ -1,11 +1,5 @@
 import { baseApi } from "./baseApi";
 
-// The provisioning chain, endpoint for endpoint. Every list the server returns is
-// already scoped to the caller, so nothing here filters for privacy.
-//
-// Creating an account invalidates Organization as well as Account: the «ادمین ندارد»
-// line beside each organization is read off the account list, so it has to move the
-// moment an admin is created.
 export const accountsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     accounts: builder.query({
@@ -32,8 +26,6 @@ export const accountsApi = baseApi.injectEndpoints({
       query: (id) => ({ url: `/accounts/${id}/unblock`, method: "POST" }),
       invalidatesTags: ["Account", "Stats"],
     }),
-    // Deliberately does not ask for the old password — it exists for the account
-    // that cannot supply it.
     resetPassword: builder.mutation({
       query: ({ id, password }) => ({
         url: `/accounts/${id}/password`,
@@ -42,16 +34,10 @@ export const accountsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Account"],
     }),
-    // The person's name, not the credential: `username` is what you log in with and has
-    // no endpoint at all. Fills in an account created before the columns existed, too.
     renameAccount: builder.mutation({
       query: ({ id, ...body }) => ({ url: `/accounts/${id}/name`, method: "POST", body }),
       invalidatesTags: ["Account"],
     }),
-    // The only move there is: an org_admin and an ordinary user both sit in an
-    // organization directly. Invalidates Organization too — the «ادمین ندارد» line
-    // beside a row is read off the account list, and this moves it for two
-    // organizations at once.
     moveAccountOrganization: builder.mutation({
       query: ({ id, organizationId }) => ({
         url: `/accounts/${id}/organization`,
@@ -65,21 +51,14 @@ export const accountsApi = baseApi.injectEndpoints({
       invalidatesTags: ["Account", "Organization", "Stats"],
     }),
 
-    // ---------- organizations ----------
     organizations: builder.query({
       query: () => "/orgs",
       providesTags: ["Organization"],
     }),
-    // An organization is a name plus the contact detail admin_panel.mp4 asks for —
-    // شناسه، آدرس، شماره تماس، پست الکترونیکی and a logo. The whole form goes up as one
-    // body; the server takes what it is sent and leaves the rest alone.
     createOrganization: builder.mutation({
       query: (body) => ({ url: "/orgs", method: "POST", body }),
       invalidatesTags: ["Organization", "Stats"],
     }),
-    // PATCH applies only the fields present in the body, so this backs both the whole
-    // edit dialog and a one-box correction. `Logo` is invalidated separately because the
-    // image lives behind its own endpoint and is not in the row this returns.
     updateOrganization: builder.mutation({
       query: ({ id, ...body }) => ({ url: `/orgs/${id}`, method: "PATCH", body }),
       invalidatesTags: (result, error, { id }) => [
@@ -87,14 +66,10 @@ export const accountsApi = baseApi.injectEndpoints({
         { type: "OrgLogo", id },
       ],
     }),
-    // The image, fetched per organization rather than carried in the list — see
-    // `OrganizationOut.has_logo`. It arrives as a data URI because an `<img src>` cannot
-    // send the Authorization header this endpoint needs like every other one.
     organizationLogo: builder.query({
       query: (id) => `/orgs/${id}/logo`,
       providesTags: (result, error, id) => [{ type: "OrgLogo", id }],
     }),
-    // Refused with a 409 naming what is still inside; there is no cascade on purpose.
     deleteOrganization: builder.mutation({
       query: (id) => ({ url: `/orgs/${id}`, method: "DELETE" }),
       invalidatesTags: ["Organization", "Account", "Stats"],

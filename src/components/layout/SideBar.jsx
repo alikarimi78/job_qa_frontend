@@ -8,8 +8,6 @@ import { APP_TITLE, APP_SUBTITLE, ORGANISATION } from "@constant/config";
 export default function SideBar({ isOpen, setIsOpen }) {
   const role = useAppSelector((state) => state.auth.role);
 
-  // A parent whose children are all filtered out disappears with them, so an
-  // org_admin never sees an empty «مدیریت» that opens onto nothing.
   const visibleMenuItems = menuItems
     .map((item) => {
       if (!hasRole(role, item.roles)) return null;
@@ -44,7 +42,6 @@ export default function SideBar({ isOpen, setIsOpen }) {
           overflow-hidden
         `}
       >
-        {/* Header */}
         <div className="flex flex-col gap-4 px-2 py-4 flex-1 min-h-0">
           <div className="flex flex-col items-center gap-2 border-b border-slate-300/50 pb-4">
             <img
@@ -62,7 +59,6 @@ export default function SideBar({ isOpen, setIsOpen }) {
             </h1>
           </div>
 
-          {/* Menu */}
           <nav className="flex-1 min-h-0 overflow-y-auto">
             <ul className="flex flex-col gap-2">
               {visibleMenuItems.map((item, index) => (

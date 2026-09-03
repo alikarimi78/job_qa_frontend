@@ -4,19 +4,6 @@ import ItemsInput, { cellFromItems, itemsFromCell } from "@components/ui/ItemsIn
 import SubmitBar from "@components/ui/SubmitBar";
 import Textarea from "@components/ui/Textarea";
 
-// The dataset's ten canonical columns. Every one is required by JobIn on the
-// backend, so a field missing here fails the whole submit with a 422.
-//
-// They are split the way the dataset splits them, not the way they happen to look on
-// screen: the two PROSE columns — job_title and description — are text a comma belongs
-// in, and the other eight are «|»-joined lists. work_context was prose until the second
-// translation pass (2026-08-29) filled it with O*NET's own context factors, 14 per
-// record, and the backend moved it out of PROSE_COLUMNS; a record whose work_context is
-// one sentence is now a one-item list. That split is now visible
-// in the form itself. A list column is collected one item at a time («+»), because
-// asking the user to type the separator was asking them to guess it, and a guessed «،»
-// went into the corpus as one unsplittable cell that no search could ever match.
-// The joining happens here, at the edge, so the request body is exactly what it was.
 const PROSE = [
   ["job_title", "عنوان شغل", "توسعه‌دهنده بک‌اند"],
 ];
@@ -34,10 +21,6 @@ const LISTS = [
 
 const KEYS = [...PROSE.map(([k]) => k), "description", ...LISTS.map(([k]) => k)];
 
-// A draft from the discovery path arrives in the dataset's own shape — «|»-joined
-// strings — so the list columns are split back into items to fill the boxes, and
-// rejoined on submit. Anything else the draft carried is dropped by projecting onto
-// the ten keys.
 function toFormValues(initial) {
   const values = { job_title: "", description: "" };
   for (const key of ["job_title", "description"]) {
@@ -49,15 +32,6 @@ function toFormValues(initial) {
   return values;
 }
 
-// `actions` rides through to the SubmitBar: the discovery path puts «رد پیشنهاد» next to
-// the green submit, since accepting and declining a proposed record are two answers to
-// the same form.
-//
-// `formId` is for the one call site that renders these ten columns inside `ui/Modal` —
-// the moderation queue's «ویرایش». There the SubmitBar *is* the dialog's footer, reached
-// through the HTML `form=` attribute, so the form must not end in a second one of its
-// own; `submitLabel`, `busy` and `actions` belong to that footer instead. Everywhere else
-// the form sits on the page and ends in its own bar, exactly as before.
 export default function JobForm({ onSubmit, submitLabel, busy, initial, actions, formId }) {
   const methods = useForm({ defaultValues: toFormValues(initial) });
 

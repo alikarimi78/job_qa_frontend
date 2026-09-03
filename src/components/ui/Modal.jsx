@@ -1,25 +1,6 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 
-// The dialog the management sections do their work in. The customer's admin_panel.mp4
-// files every create and edit through one of these rather than through a card sitting
-// on the page, and the shape is taken from it: title at the start of a ruled header,
-// a round ✕ at the end, the fields in the body, and the actions in a ruled footer.
-//
-// Two things are worth keeping when editing.
-//
-// It renders through a **portal onto <body>**. `MainLayout` scrolls the content area
-// rather than the page (`overflow-y-auto` on the div around the outlet), so a dialog
-// declared inside a page would be clipped by that box and would scroll away with the
-// row it was opened from. On body it covers the sidebar too — which is the point, and
-// why its z-index has to clear the sidebar's `z-[9999999]`. The toaster is above it in
-// turn, at 99999999: a failed submit reports itself over the dialog it failed in.
-//
-// The **footer is the form's SubmitBar**, not a substitute for it. The app's rule is
-// that a form ends in a rule across its width and one green button at the start of it;
-// a footer is exactly that, moved to the bottom of the panel so it stays put while a
-// long body scrolls. The button reaches its <form> through the HTML `form` attribute
-// (see `formId` at the call sites), so the fields do not have to live inside it.
 
 const SIZES = {
   sm: "max-w-md",
@@ -37,9 +18,6 @@ export default function Modal({
   size = "md",
   tone = "default",
 }) {
-  // Escape closes, and the page behind does not scroll under the overlay. Both are
-  // wired only while a dialog is actually open — this component is mounted per call
-  // site, so an always-on listener would be one per closed dialog on the page.
   useEffect(() => {
     if (!open) return undefined;
     const onKey = (event) => {
@@ -58,7 +36,6 @@ export default function Modal({
 
   return createPortal(
     <div className="fixed inset-0 z-[99999990] flex items-start justify-center overflow-y-auto p-4 md:p-8">
-      {/* The scrim is the close target as well as the dimmer */}
       <div
         className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm"
         onClick={onClose}

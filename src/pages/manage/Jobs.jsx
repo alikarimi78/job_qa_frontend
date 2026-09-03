@@ -18,32 +18,12 @@ import {
 import { runAction } from "@utils/action";
 import { faDate, faNumber } from "@utils/jalali";
 
-// The corpus, and the one place it can be corrected after the fact.
-//
-// «بررسی پیشنهادها» next door decides what *enters* the dataset; this page is about the
-// 1118 records already in it, and the difference is why they are two sections rather
-// than two tabs: a queue is worked through and emptied, a corpus is looked something up
-// in. Hence the pager and the search box, which no other management table has — the
-// others hold tens of rows and print whole.
-//
-// Built on the same pattern as the other management sections (`admin_panel.mp4`): a
-// toolbar, a table under it, and a «عملیات‌ها» column of round buttons that open a
-// dialog. There is one button, and it opens the same ten-column `JobForm` the suggester
-// and the reviewer both fill in — a record has no summary worth reading that the form
-// does not already show, so «مشاهده» would be the same dialog with the inputs disabled.
-//
-// **Saving starts a rebuild on the server**, the third path that does (with approving a
-// suggestion and adding a record directly). It costs what an approval costs rather than
-// what a re-encode costs — the embedding store is keyed on each record's text, so only
-// this record's own texts are encoded — but it is not instant, and the badge in the
-// toolbar is what says so while it runs.
 
 const PAGE_SIZE = 20;
 const SEARCH_DEBOUNCE_MS = 300;
 const EDIT_FORM_ID = "corpus-edit-form";
 const EMPTY_PAGE = { items: [], total: 0, page: 1, page_size: PAGE_SIZE };
 
-// How many of a record's other names the row shows before it stops being a table cell.
 const ALIAS_CHIPS = 2;
 
 function AliasCell({ value }) {
@@ -71,20 +51,14 @@ function AliasCell({ value }) {
 }
 
 export default function Jobs() {
-  // Two pieces of state for one box: what is being typed, and what has been asked for.
-  // The request is the second, so a title is not searched once per keystroke.
   const [term, setTerm] = useState("");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
-  // The id being edited, never the row itself: the listing refetches under the dialog
-  // after every save, and a copied row would leave it editing what the record used to
-  // say. Same reason the moderation queue keeps only an id.
   const [editing, setEditing] = useState(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setQuery(term.trim());
-      // A narrower result has fewer pages, and page 7 of 3 is an empty table.
       setPage(1);
     }, SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(timer);
@@ -92,26 +66,18 @@ export default function Jobs() {
 
   const { data, isFetching, isLoading } = useJobsQuery({ q: query, page, pageSize: PAGE_SIZE });
 
-  // A new page is a new cache entry, so `data` is undefined until it arrives and the
-  // table would blank between pages — taking the pager under the pointer with it. The
-  // last answer is kept and shown until the next one lands; `isFetching` is what says
-  // it is stale, and the buttons are disabled meanwhile.
   const previous = useRef(EMPTY_PAGE);
   if (data) previous.current = data;
   const shown = data ?? previous.current;
 
   const [updateJob, { isLoading: saving }] = useUpdateJobMutation();
 
-  // Only while one is running: the rebuild happens on a daemon thread with the old
-  // engine still serving, so there is nothing to report except that it has not finished.
   const { data: rebuild } = useRebuildStatusQuery(undefined, {
     pollingInterval: 3000,
     skipPollingIfUnfocused: true,
   });
   const rebuilding = rebuild?.running ?? false;
 
-  // Looked up rather than stored — see `editing` above. A record that has moved off the
-  // page (its title was edited and it sorted elsewhere) simply takes its dialog with it.
   const row = editing === null ? null : shown.items.find((it) => it.id === editing);
 
   async function save(body) {
@@ -119,8 +85,6 @@ export default function Jobs() {
       () => updateJob({ id: editing, ...body }),
       `«${body.job_title}» ذخیره شد؛ بازسازی امبدینگ‌ها آغاز شد.`
     );
-    // Closed only on success: a 409 («این رکورد در پایگاه داده نیست») leaves the dialog
-    // open with the corrections still in it.
     if (done) setEditing(null);
   }
 
@@ -166,8 +130,6 @@ export default function Jobs() {
         title="مدیریت مشاغل"
         hint="مشاغل ثبت‌شده در پایگاه داده. با ذخیره هر ویرایش، بازسازی امبدینگ‌ها بی‌درنگ آغاز می‌شود و جستجو در این مدت با نسخه پیشین پاسخ می‌دهد."
       >
-        {/* The search is the server's: what is being looked for is almost always on some
-            other page, so filtering the twenty rows in hand would find nothing. */}
         <input
           value={term}
           onChange={(event) => setTerm(event.target.value)}
@@ -213,9 +175,6 @@ export default function Jobs() {
         )}
       </Card>
 
-      {/* Mounted only while a row is being edited, so `JobForm` seeds its boxes from that
-          record on every open; the `key` says the same thing for the case where one
-          editor is opened straight from another. */}
       {row && (
         <Modal
           open

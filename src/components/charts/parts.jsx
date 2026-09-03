@@ -1,12 +1,6 @@
 import { INK } from "./theme";
 import { faNumber } from "@utils/jalali";
 
-// The pieces the charts share: the hover tooltip, the legend, and the empty state.
-//
-// Both the tooltip and the legend are written here rather than taken from recharts'
-// defaults, for the same reason: they are the two places a chart puts *text*, and the
-// defaults lay it out left-to-right with Latin digits, which is wrong twice over in
-// this interface.
 
 export function ChartTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
@@ -32,7 +26,6 @@ export function ChartTooltip({ active, payload, label }) {
   );
 }
 
-/** Present whenever a chart plots two or more series — identity is never colour alone. */
 export function ChartLegend({ items }) {
   if (items.length < 2) return null;
   return (
@@ -56,7 +49,6 @@ export function ChartEmpty({ children }) {
   );
 }
 
-/** The cursor wash behind a hovered column: a tint of the ink, never of a series. */
 export const HOVER_CURSOR = { fill: "rgba(15, 23, 42, 0.04)" };
 
 export { INK };

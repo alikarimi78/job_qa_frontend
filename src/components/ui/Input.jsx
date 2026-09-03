@@ -1,8 +1,5 @@
 import { useFormContext } from "react-hook-form";
 
-// Reads `register` off the surrounding FormProvider, exactly as login.tsx expects —
-// the call site passes a `name` and validation through `registerProps`, never a
-// value/onChange pair.
 export default function Input({
   name,
   label,

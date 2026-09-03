@@ -9,24 +9,6 @@ import { faNumber } from "@utils/jalali";
 import { errorMessage } from "@utils/errors";
 import { showMessage } from "@utils/toast";
 
-// Advanced search: the user describes themselves and the corpus is ranked against it,
-// instead of one question being answered about one job. It is the analytical half of
-// discovery — «کدام شغل‌ها به من می‌خورند» — and it never designs a new record; someone
-// describing a job they *want* is still served by the free-text box on «جستجوی معمولی»,
-// the other half of this page.
-//
-// It was its own route and its own sidebar item until the customer asked for one search
-// section: it is a panel now, mounted by `pages/Search.jsx` under the mode switch, and
-// nothing about what it sends or shows changed with the move.
-//
-// The fields are `job_qa_service/columns.py:PROFILE_FIELDS` and `app/schemas.py`'s copy
-// of it, read as a form. The three lists must be changed together — a field named here
-// and not there comes back as a 422 that names a key this page has no box for.
-//
-// `tools` is missing on purpose and is not an oversight to fix: 1099 of the 1116 tool
-// cells in the dataset are untranslated English («AutoCAD | Revit»), so a Persian item
-// could never match one and the box would report a permanent 0%. It is still on the
-// suggestion form, where the user is writing the record rather than searching it.
 const FIELDS = [
   ["skills", "مهارت‌ها و شایستگی‌ها", "حل مسئله", true],
   ["knowledge", "دانش تخصصی", "مکانیک خودرو", false],
@@ -38,8 +20,6 @@ const FIELDS = [
 
 const BLANK = Object.fromEntries(FIELDS.map(([key]) => [key, []]));
 
-// The server's own rule, repeated here so the form can say what is missing before it
-// spends a request on a 422 (`app/schemas.py`: PROFILE_MIN_ITEMS / PROFILE_MIN_FIELDS).
 const MIN_SKILLS = 2;
 const MIN_FIELDS = 2;
 
@@ -54,8 +34,6 @@ export default function AdvancedSearch() {
   const ready = enoughSkills && filled >= MIN_FIELDS;
 
   async function submit(form) {
-    // Empty lists are dropped rather than sent: the server counts *filled* fields, and
-    // a key carrying [] would otherwise look like a field the user answered.
     const profile = Object.fromEntries(
       Object.entries(form).filter(([, items]) => items?.length)
     );

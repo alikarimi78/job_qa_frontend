@@ -27,25 +27,11 @@ import {
 import { runAction } from "@utils/action";
 import { faDigits, faNumber } from "@utils/jalali";
 
-// A profile cell that may be empty — an organization created before these columns
-// existed has none of them, and an em dash says so more quietly than a blank does.
 const Cell = ({ children }) => (
   <span className="text-sm text-slate-600 fa-nums">{children}</span>
 );
 
-// The top of the tenancy, and only a super_admin's business — the route is gated on
-// that, and the API refuses it anyway.
-//
-// Built on the pattern the customer's admin_panel.mp4 uses everywhere: a toolbar whose
-// one green button opens a dialog, a table under it, and a «عملیات‌ها» column of round
-// buttons that each open a dialog of their own. Nothing is edited in place.
-//
-// An organization's admin is still created from the row it belongs to rather than from
-// a form asking which organization: the row already is the answer, and the API accepts
-// exactly one admin per organization — so the fourth button appears only while the
-// seat is empty.
 export default function Organizations() {
-  // One dialog at a time: {kind: create|edit|view|delete|admin, org}
   const [dialog, setDialog] = useState(null);
   const close = () => setDialog(null);
   const is = (kind) => dialog?.kind === kind;
@@ -66,9 +52,6 @@ export default function Organizations() {
   const target = dialog?.org ?? null;
   const targetAdmin = target ? adminOf(target.id) : null;
 
-  // Only the two dialogs that draw the image ask for it, and only for a row that says
-  // it has one — `has_logo` rides along in the list precisely so that neither the table
-  // nor a closed dialog costs a request per organization.
   const showsLogo = is("edit") || is("view");
   const { data: logoData } = useOrganizationLogoQuery(target?.id, {
     skip: !showsLogo || !target?.has_logo,
@@ -81,9 +64,6 @@ export default function Organizations() {
       header: "عنوان سازمان",
       cell: (org) => <strong className="text-sm text-slate-800">{org.name}</strong>,
     },
-    // The two profile columns admin_panel.mp4's own table carries. The rest of the
-    // profile — address, email, logo — is read in «مشاهده»: a table is scanned, and an
-    // address is not something anyone scans a column of.
     {
       key: "code",
       header: "کد سازمانی",
@@ -222,9 +202,6 @@ export default function Organizations() {
                 },
                 {
                   label: "لوگوی سازمان",
-                  // `has_logo` is what the row knows; `targetLogo` arrives a moment
-                  // later from its own endpoint, so the line says «دارد» in between
-                  // rather than flashing «ندارد» at an organization that has one.
                   value: !target.has_logo ? (
                     "—"
                   ) : targetLogo ? (

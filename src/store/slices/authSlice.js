@@ -1,8 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-// What survives a reload. `role` arrives with the token from POST /auth/login and is
-// enough to decide what to render; `userInfo` is the fuller answer from GET /auth/me
-// (id, organization) and is refetched rather than trusted after a rehydrate.
 const initialState = {
   token: null,
   role: null,
@@ -22,9 +19,6 @@ const authSlice = createSlice({
     setUserInfo(state, action) {
       state.userInfo = action.payload;
     },
-    // The role is re-read from the database on every backend request, so a token
-    // minted before a change carries no stale rights — but the copy kept here is
-    // what the menu renders from, and it has to follow /auth/me.
     setRoleUser(state, action) {
       state.role = action.payload;
     },

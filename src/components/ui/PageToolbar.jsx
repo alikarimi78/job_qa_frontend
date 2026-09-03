@@ -1,15 +1,6 @@
 import Button from "./Button";
 import { PlusGlyph } from "./IconButton";
 
-// The strip above the card in admin_panel.mp4: where you are at the start of the row,
-// and the one button that adds something at the end of it. Under `dir="rtl"` that puts
-// the title on the right and the green «افزودن … جدید» on the left, which is where the
-// reference has it.
-//
-// It sits *outside* the card on purpose. Creating is no longer a form on the page — it
-// is a dialog — so there is nothing for the card to hold but the table, and a button
-// floating inside a card headed «سازمان‌ها» reads as acting on the list rather than
-// adding to it.
 export default function PageToolbar({ title, hint, action, children }) {
   return (
     <div className="flex items-end justify-between gap-4 flex-wrap">

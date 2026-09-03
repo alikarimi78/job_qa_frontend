@@ -18,19 +18,7 @@ import {
 import { errorMessage } from "@utils/errors";
 import { showMessage } from "@utils/toast";
 
-// The moderation queue, and nothing else. «افزودن مستقیم شغل» — the same ten-column
-// form posted to `POST /admin/jobs`, which inserts as `approved` without a review —
-// used to sit under it and was removed at the customer's request: a super_admin can
-// already fill in «پیشنهاد شغل» and approve the row here, so the second form was the
-// same record entered twice with nothing to choose between them. The endpoint is still
-// on the server and `adminApi.createJob` still describes it; what is gone is the
-// second way in.
 
-// The record columns as the queue shows them when a row is opened. `job_title` is
-// already the row's heading, so it is not repeated here. The `list` flag is the
-// dataset's own split: seven «|»-joined list columns and three prose ones, where a
-// comma is punctuation — the same split `JobForm` reads and the reason the values are
-// shown as chips rather than as the raw cell with its separators in it.
 const DETAIL_ROWS = [
   ["aliases", "نام‌های دیگر", true],
   ["tools", "ابزارها", true],
@@ -67,16 +55,10 @@ function FieldRow({ label, value, list }) {
   );
 }
 
-// The dialog's <form>, named once so the footer's button and the form itself agree.
 const EDIT_FORM_ID = "suggestion-edit-form";
 
 export default function Admin() {
-  // The row whose read-only panel is open, at most one at a time. Editing is no longer
-  // one of its modes — it is a dialog now (`editing`, below), which is why these are two
-  // pieces of state rather than the `{ id, mode }` pair they used to be.
   const [open, setOpen] = useState(null);
-  // The id being corrected. The row itself is looked up in `pending` rather than copied
-  // here, so a queue that refetches under the dialog cannot leave it editing a stale one.
   const [editing, setEditing] = useState(null);
 
   const { data: pending = [], isLoading } = useSuggestionsQuery("pending");
@@ -85,8 +67,6 @@ export default function Admin() {
   const [updateSuggestion, { isLoading: saving }] = useUpdateSuggestionMutation();
   const [startRebuild, { isLoading: starting }] = useRebuildMutation();
 
-  // The rebuild runs on a daemon thread and the old engine keeps serving throughout,
-  // so the only way to know it finished is to ask — and only while it is running.
   const { data: rebuild } = useRebuildStatusQuery(undefined, {
     pollingInterval: 3000,
     skipPollingIfUnfocused: true,
@@ -95,8 +75,6 @@ export default function Admin() {
 
   const toggle = (id) => setOpen((was) => (was === id ? null : id));
 
-  // Only ever the row the dialog was opened on, and only while it is still pending: a
-  // suggestion decided in another tab simply takes its dialog with it.
   const editingRow = editing === null ? null : pending.find((it) => it.id === editing);
 
   async function review(id, action, title) {
@@ -114,13 +92,6 @@ export default function Admin() {
     }
   }
 
-  // The reviewer's own correction of a suggestion, before deciding on it. It is the same
-  // form the suggester filled in, so a wrong column is fixed here instead of the record
-  // being rejected and the person asked to send it again.
-  //
-  // The dialog is closed only on success — a 409 («این پیشنهاد پیش‌تر بررسی شده») leaves
-  // it open with the corrections still in it — and the row's details are opened in its
-  // place, so what was saved is what the reviewer decides on next.
   async function saveEdit(id, body) {
     try {
       await updateSuggestion({ id, ...body }).unwrap();
@@ -230,12 +201,6 @@ export default function Admin() {
         </div>
       </Card>
 
-      {/* The correction happens in a dialog rather than in a panel under the row: the ten
-          columns are a page of their own, and unfolded in place they pushed the rest of
-          the queue far enough down that the reviewer lost sight of what they were
-          reviewing. The dialog is mounted only while a row is being edited, so `JobForm`
-          seeds its boxes from that record on every open — the `key` says the same thing
-          for the case where one editor is opened directly from another. */}
       {editingRow && (
         <Modal
           open

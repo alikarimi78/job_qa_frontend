@@ -1,7 +1,3 @@
-// The Button the reference pages import but that was not among the style files.
-// Its API is taken from the calls in login.tsx and the two header modes:
-// `variant`, `className` for per-call overrides, and everything else through
-// `buttonProps` rather than spread props.
 const VARIANTS = {
   primary:
     "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 border border-blue-600",
@@ -13,24 +9,15 @@ const VARIANTS = {
     "bg-transparent hover:bg-slate-200/60 text-slate-600 border border-transparent",
   danger:
     "bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/20 border border-red-600",
-  // The button that *opens* a delete confirmation, as against the one that carries it
-  // out. A row of solid red triggers reads as though the page were mid-destruction.
   "danger-outline":
     "bg-white/80 hover:bg-red-50 text-red-600 border border-red-200 hover:border-red-300",
   success:
     "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20 border border-emerald-600",
-  // The one that commits a form — see ui/SubmitBar. Green, and a shade deeper than
-  // `success`, so the button that files something is not the same object as the
-  // «تایید» sitting next to a «رد» in the moderation queue.
   submit:
     "bg-gradient-to-l from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 " +
     "text-white font-semibold shadow-lg shadow-emerald-700/25 border border-emerald-700/60",
 };
 
-// Height, padding and text size travel together, so they are a *prop* rather than
-// something a caller layers on through `className`. Tailwind emits `.h-8` ahead of
-// `.h-10`, which means a smaller height passed as a class never beat the base one —
-// the accounts table's small row actions were silently rendering at the default 40px.
 const SIZES = {
   sm: "h-8 px-3 text-xs",
   md: "h-10 px-4 text-sm",
