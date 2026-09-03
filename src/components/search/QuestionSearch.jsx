@@ -242,7 +242,7 @@ export default function QuestionSearch() {
             <div className="mt-6 pt-5 border-t border-slate-200">
               <div className="px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-sm text-emerald-800 leading-7">
                 پیشنهاد شما ثبت شد و در انتظار بررسی مدیر سامانه است. وضعیت آن از بخش{" "}
-                <Link to="/my-suggestions" className="font-semibold underline">
+                <Link to="/suggestions?tab=mine" className="font-semibold underline">
                   پیشنهادهای من
                 </Link>{" "}
                 قابل پیگیری است.

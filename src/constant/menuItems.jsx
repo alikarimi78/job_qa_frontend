@@ -25,12 +25,6 @@ const SearchIcon = icon(
   </>
 );
 
-const PlusIcon = icon(
-  <>
-    <path d="M12 5v14M5 12h14" />
-  </>
-);
-
 const ListIcon = icon(
   <>
     <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
@@ -77,8 +71,9 @@ const BriefcaseIcon = icon(
 );
 
 // `roles` is the gate the sidebar filters on; an item with none is open to anyone
-// signed in. `MenuItem` still knows how to draw a parent that expands — the reference
-// component was ported whole — but nothing here declares one any more.
+// signed in. `MenuItem` still knows how to draw a parent that expands (`submenuItems`,
+// which `SideBar` filters on `roles` too) — the reference component was ported whole —
+// but nothing here declares one: every section is one page, reached in one click.
 //
 // The management sections used to sit under one «مدیریت» parent. They are top level
 // now, at the customer's request: each is a destination in its own right, and one
@@ -104,14 +99,15 @@ export const menuItems = [
     label: "جستجوی شغل",
     icon: SearchIcon,
   },
+  // «پیشنهاد شغل» and «پیشنهادهای من» were two items here and are one now, at the
+  // customer's request: they are the two halves of the same errand — a record is filed
+  // and then its decision is waited on — so they are one entry onto one page, where the
+  // halves are a switch beside each other. Not a parent that expands: the ask was for
+  // one section, and an accordion would be the two lines back with a click in front of
+  // them. Same shape as «جستجوی شغل» above.
   {
-    href: "/suggest",
-    label: "پیشنهاد شغل",
-    icon: PlusIcon,
-  },
-  {
-    href: "/my-suggestions",
-    label: "پیشنهادهای من",
+    href: "/suggestions",
+    label: "پیشنهادها",
     icon: ListIcon,
   },
   {

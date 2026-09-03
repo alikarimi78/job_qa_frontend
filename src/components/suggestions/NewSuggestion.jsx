@@ -5,12 +5,14 @@ import { useSuggestJobMutation } from "@services/jobsApi";
 import { errorMessage } from "@utils/errors";
 import { showMessage } from "@utils/toast";
 
-// A record written from scratch. It used to be the second half of the discovery path as
-// well — an accepted proposal was stashed in sessionStorage on the search page and this
-// form was where it could finally be edited and sent. The offer is editable where it is
-// made now (`components/search/QuestionSearch.jsx`), so the stash is gone and this page
-// is the blank form it always looked like.
-export default function Suggest() {
+// A record written from scratch — one of the two halves of «پیشنهادها» (`pages/Suggestions.jsx`).
+//
+// It used to be the second half of the discovery path as well — an accepted proposal was
+// stashed in sessionStorage on the search page and this form was where it could finally be
+// edited and sent. The offer is editable where it is made now
+// (`components/search/QuestionSearch.jsx`), so the stash is gone and this is the blank form
+// it always looked like.
+export default function NewSuggestion() {
   const [done, setDone] = useState(false);
   const [suggestJob, { isLoading }] = useSuggestJobMutation();
 

@@ -10,6 +10,7 @@ const STATUS = {
   rejected: ["رد شده", "danger"],
 };
 
+// The other half of «پیشنهادها»: what the person has already sent, and what became of it.
 export default function MySuggestions() {
   const { data: items = [], isLoading, error } = useMySuggestionsQuery();
 

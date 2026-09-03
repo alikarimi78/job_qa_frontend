@@ -32,6 +32,11 @@ export const adminApi = baseApi.injectEndpoints({
     // Same as an approval from the corpus's point of view — an approved row goes in and
     // the server rebuilds — so it invalidates the same tags, `Job` among them: the new
     // record belongs in the corpus listing below.
+    //
+    // Nothing calls it any more: the «افزودن مستقیم شغل» form was taken off /admin (see
+    // `pages/Admin.jsx`), since a super_admin reaches the same row by suggesting it and
+    // approving it. It is kept here because this file is the API surface of
+    // `src/routers/admin.py`, and the endpoint is still there.
     createJob: builder.mutation({
       query: (body) => ({ url: "/admin/jobs", method: "POST", body }),
       invalidatesTags: ["Suggestion", "Job", "Stats", "Rebuild"],

@@ -9,7 +9,6 @@ import { CloseButton, DialogFooter } from "@components/manage/Forms";
 import { splitItems } from "@components/ui/ItemsInput";
 import {
   useApproveSuggestionMutation,
-  useCreateJobMutation,
   useRebuildMutation,
   useRebuildStatusQuery,
   useRejectSuggestionMutation,
@@ -18,6 +17,14 @@ import {
 } from "@services/adminApi";
 import { errorMessage } from "@utils/errors";
 import { showMessage } from "@utils/toast";
+
+// The moderation queue, and nothing else. «افزودن مستقیم شغل» — the same ten-column
+// form posted to `POST /admin/jobs`, which inserts as `approved` without a review —
+// used to sit under it and was removed at the customer's request: a super_admin can
+// already fill in «پیشنهاد شغل» and approve the row here, so the second form was the
+// same record entered twice with nothing to choose between them. The endpoint is still
+// on the server and `adminApi.createJob` still describes it; what is gone is the
+// second way in.
 
 // The record columns as the queue shows them when a row is opened. `job_title` is
 // already the row's heading, so it is not repeated here. The `list` flag is the
@@ -71,13 +78,11 @@ export default function Admin() {
   // The id being corrected. The row itself is looked up in `pending` rather than copied
   // here, so a queue that refetches under the dialog cannot leave it editing a stale one.
   const [editing, setEditing] = useState(null);
-  const [showAdd, setShowAdd] = useState(false);
 
   const { data: pending = [], isLoading } = useSuggestionsQuery("pending");
   const [approve] = useApproveSuggestionMutation();
   const [reject] = useRejectSuggestionMutation();
   const [updateSuggestion, { isLoading: saving }] = useUpdateSuggestionMutation();
-  const [createJob, { isLoading: adding }] = useCreateJobMutation();
   const [startRebuild, { isLoading: starting }] = useRebuildMutation();
 
   // The rebuild runs on a daemon thread and the old engine keeps serving throughout,
@@ -131,17 +136,6 @@ export default function Admin() {
     try {
       await startRebuild().unwrap();
       showMessage.info("بازسازی آغاز شد؛ جستجو در این مدت با نسخه پیشین پاسخ می‌دهد.");
-    } catch (err) {
-      showMessage.error(errorMessage(err));
-    }
-  }
-
-  async function addDirect(form, reset) {
-    try {
-      await createJob(form).unwrap();
-      showMessage.success("شغل ثبت شد؛ بازسازی امبدینگ‌ها آغاز شد.");
-      reset();
-      setShowAdd(false);
     } catch (err) {
       showMessage.error(errorMessage(err));
     }
@@ -272,18 +266,6 @@ export default function Admin() {
           />
         </Modal>
       )}
-
-      <Card
-        title="افزودن مستقیم شغل"
-        hint="این فرم رکورد را بدون قرار گرفتن در صف بررسی، مستقیماً به‌صورت تاییدشده ثبت می‌کند."
-        actions={
-          <Button variant="outline" buttonProps={{ onClick: () => setShowAdd(!showAdd) }}>
-            {showAdd ? "بستن" : "باز کردن فرم"}
-          </Button>
-        }
-      >
-        {showAdd && <JobForm onSubmit={addDirect} submitLabel="افزودن" busy={adding} />}
-      </Card>
     </>
   );
 }

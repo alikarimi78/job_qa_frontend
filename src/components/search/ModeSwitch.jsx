@@ -1,10 +1,12 @@
+import SegmentedSwitch from "@components/ui/SegmentedSwitch";
+
 // The two ways of searching, as one control. They used to be two sidebar items and are
 // one page now: the same errand — «کدام شغل؟» — asked either as a sentence or as a list
 // of what the person can do, so the choice belongs beside the search box rather than in
 // the navigation.
 //
-// A segmented pill rather than two plain buttons: the pair is one setting with two
-// values, and the raised white segment says which value is on without a legend.
+// The pill itself is `ui/SegmentedSwitch`, shared with «پیشنهادها»; what stays here is
+// this page's own pair of values.
 
 const Magnifier = (
   <svg
@@ -45,37 +47,6 @@ const MODES = [
 
 export default function ModeSwitch({ value, onChange }) {
   return (
-    <div
-      role="tablist"
-      aria-label="نوع جستجو"
-      className="inline-flex flex-wrap justify-center items-center gap-1 p-1 max-w-full rounded-2xl
-                 bg-white/70 backdrop-blur-sm border border-white/60 shadow-lg shadow-slate-900/5"
-    >
-      {MODES.map(([mode, label, glyph]) => {
-        const active = value === mode;
-        return (
-          <button
-            key={mode}
-            type="button"
-            role="tab"
-            aria-selected={active}
-            onClick={() => onChange(mode)}
-            className={`
-              inline-flex items-center gap-2 h-10 px-4 md:px-5 rounded-xl
-              text-sm font-medium whitespace-nowrap cursor-pointer
-              transition-all duration-200 ease-out
-              ${
-                active
-                  ? "bg-gradient-to-l from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25"
-                  : "text-slate-600 hover:text-slate-800 hover:bg-white/80"
-              }
-            `}
-          >
-            {glyph}
-            {label}
-          </button>
-        );
-      })}
-    </div>
+    <SegmentedSwitch options={MODES} value={value} onChange={onChange} label="نوع جستجو" />
   );
 }

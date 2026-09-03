@@ -6,8 +6,7 @@ import { landingPath } from "@routes/landing";
 import MainLayout from "@components/layout/MainLayout";
 import Search from "@pages/Search";
 import Login from "@pages/Login";
-import Suggest from "@pages/Suggest";
-import MySuggestions from "@pages/MySuggestions";
+import Suggestions from "@pages/Suggestions";
 import Admin from "@pages/Admin";
 import ManageLayout from "@pages/manage/ManageLayout";
 import Dashboard from "@pages/manage/Dashboard";
@@ -57,8 +56,15 @@ export default function App() {
               kept as a redirect that preselects it, so a bookmark still opens the thing
               it was pointing at. */}
           <Route path="/analyze" element={<Navigate to="/search?mode=advanced" replace />} />
-          <Route path="/suggest" element={<Suggest />} />
-          <Route path="/my-suggestions" element={<MySuggestions />} />
+          {/* «پیشنهادها» is one page with two halves — filing a record and following the
+              ones already filed. They were two routes, so both old paths are kept as
+              redirects onto the half they used to be. */}
+          <Route path="/suggestions" element={<Suggestions />} />
+          <Route path="/suggest" element={<Navigate to="/suggestions" replace />} />
+          <Route
+            path="/my-suggestions"
+            element={<Navigate to="/suggestions?tab=mine" replace />}
+          />
           {/* One section per panel rather than one page stacking all of them. The
               layout resolves the caller once; each child is gated on the same roles
               the matching endpoints are, so a route nobody can use is never reachable
