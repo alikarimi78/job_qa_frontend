@@ -9,11 +9,11 @@ import { errorMessage } from "@utils/errors";
 // is the one call that decides whether the section can be shown at all.
 //
 // The pages read it back through the outlet context, so none of them re-derives the
-// caller's organization or unit from the account list.
+// caller's organization from the account list.
 //
 // It used to draw a strip of badges naming the caller above every page. Each page now
 // opens with its own `ui/PageToolbar`, and the header's dropdown already answers who
-// you are and which organization and unit you are in — two headers stacked above one
+// you are and which organization you are in — two headers stacked above one
 // table was one more than the section needed.
 export default function ManageLayout() {
   const { data: me, isLoading, error } = useCurrentUserQuery();

@@ -23,7 +23,6 @@ import {
   useOrganizationLogoQuery,
   useOrganizationsQuery,
   useUpdateOrganizationMutation,
-  useUnitsQuery,
 } from "@services/accountsApi";
 import { runAction } from "@utils/action";
 import { faDigits, faNumber } from "@utils/jalali";
@@ -52,7 +51,6 @@ export default function Organizations() {
   const is = (kind) => dialog?.kind === kind;
 
   const { data: orgs = [] } = useOrganizationsQuery();
-  const { data: units = [] } = useUnitsQuery();
   const { data: accounts = [] } = useAccountsQuery();
 
   const [createOrganization, { isLoading: creating }] = useCreateOrganizationMutation();
@@ -62,13 +60,8 @@ export default function Organizations() {
 
   const adminOf = (id) =>
     accounts.find((a) => a.role === "org_admin" && a.organization_id === id);
-  const unitCountOf = (id) => units.filter((u) => u.organization_id === id).length;
-  const accountCountOf = (id) => {
-    const own = new Set(units.filter((u) => u.organization_id === id).map((u) => u.id));
-    return accounts.filter(
-      (a) => a.organization_id === id || (a.unit_id != null && own.has(a.unit_id))
-    ).length;
-  };
+  const accountCountOf = (id) =>
+    accounts.filter((a) => a.organization_id === id).length;
 
   const target = dialog?.org ?? null;
   const targetAdmin = target ? adminOf(target.id) : null;
@@ -102,15 +95,8 @@ export default function Organizations() {
       cell: (org) => <Cell>{org.phone ? faDigits(org.phone) : "—"}</Cell>,
     },
     {
-      key: "units",
-      header: "تعداد واحد",
-      cell: (org) => (
-        <span className="text-sm text-slate-600 fa-nums">{faNumber(unitCountOf(org.id))}</span>
-      ),
-    },
-    {
       key: "accounts",
-      header: "تعداد حساب",
+      header: "تعداد کاربر",
       cell: (org) => (
         <span className="text-sm text-slate-600 fa-nums">{faNumber(accountCountOf(org.id))}</span>
       ),
@@ -172,7 +158,7 @@ export default function Organizations() {
     <>
       <PageToolbar
         title="مدیریت سازمان‌ها"
-        hint="سازمان بالاترین سطح است؛ واحدها و ادمین سازمان ذیل آن ایجاد می‌شوند"
+        hint="سازمان بالاترین سطح است؛ ادمین سازمان و کاربران آن ذیل سازمان ایجاد می‌شوند"
         action={{ label: "افزودن سازمان جدید", onClick: () => setDialog({ kind: "create" }) }}
       >
         <Badge tone="neutral">{faNumber(orgs.length)} سازمان</Badge>
@@ -204,7 +190,7 @@ export default function Organizations() {
       <OrganizationDialog
         open={is("edit")}
         title="ویرایش سازمان"
-        hint="مشخصات سازمان تغییر می‌کند؛ واحدها و حساب‌های ذیل آن بدون تغییر باقی می‌مانند."
+        hint="مشخصات سازمان تغییر می‌کند؛ کاربران ذیل آن بدون تغییر باقی می‌مانند."
         submitLabel="ویرایش سازمان"
         organization={target}
         initialLogo={targetLogo}
@@ -259,8 +245,7 @@ export default function Organizations() {
                     <Badge tone="warning">ادمین ندارد</Badge>
                   ),
                 },
-                { label: "تعداد واحد", value: faNumber(unitCountOf(target.id)) },
-                { label: "تعداد حساب", value: faNumber(accountCountOf(target.id)) },
+                { label: "تعداد کاربر", value: faNumber(accountCountOf(target.id)) },
               ]
             : []
         }
@@ -269,7 +254,7 @@ export default function Organizations() {
       <ConfirmDialog
         open={is("delete")}
         title="حذف سازمان"
-        message={`آیا از حذف سازمان «${target?.name ?? ""}» اطمینان دارید؟ این عملیات قابل بازگشت نیست. حذف تنها وقتی ممکن است که هیچ واحد و هیچ حسابی در آن نمانده باشد.`}
+        message={`آیا از حذف سازمان «${target?.name ?? ""}» اطمینان دارید؟ این عملیات قابل بازگشت نیست. حذف تنها وقتی ممکن است که هیچ کاربری — ادمین آن هم — در سازمان نمانده باشد.`}
         busy={deleting}
         onClose={close}
         onConfirm={() =>
@@ -284,7 +269,7 @@ export default function Organizations() {
       <CredentialsDialog
         open={is("admin")}
         title="تعریف ادمین سازمان"
-        hint={`ادمین سازمان «${target?.name ?? ""}» — ایجاد واحدهای این سازمان و ادمین هر واحد بر عهده اوست. هر سازمان تنها یک ادمین دارد.`}
+        hint={`ادمین سازمان «${target?.name ?? ""}» — ایجاد کاربران این سازمان بر عهده اوست. هر سازمان تنها یک ادمین دارد.`}
         submitLabel="ثبت ادمین سازمان"
         busy={addingAdmin}
         onClose={close}

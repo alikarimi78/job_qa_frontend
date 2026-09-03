@@ -6,8 +6,8 @@ export const authApi = baseApi.injectEndpoints({
     login: builder.mutation({
       query: (body) => ({ url: "/auth/login", method: "POST", body }),
     }),
-    // Role plus where the caller sits — a unit_admin's organization is resolved
-    // through its unit here rather than stored twice.
+    // Role plus where the caller sits — the organization the account belongs to,
+    // resolved from its own `organization_id`.
     currentUser: builder.query({
       query: () => "/auth/me",
       providesTags: ["Me"],

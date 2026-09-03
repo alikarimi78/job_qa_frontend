@@ -7,8 +7,8 @@ import { Spinner } from "@components/ui/Loader";
 
 // Every write the management sections make now happens in a dialog — the customer's
 // admin_panel.mp4 has no create-form sitting on the page, and neither do we. What used
-// to be `NameForm` and `CredentialsForm` (a card with a SubmitBar under it) are the
-// same two shapes, moved inside `ui/Modal`.
+// to be `CredentialsForm` (a card with a SubmitBar under it) is the same shape, moved
+// inside `ui/Modal`.
 //
 // The submit lives in the footer and reaches its <form> through the HTML `form=`
 // attribute. That keeps the app's rule intact rather than working around it: a form
@@ -21,8 +21,8 @@ import { Spinner } from "@components/ui/Loader";
 // typed still in it.
 
 // `busy` and `disabled` are deliberately two things: a request in flight shows the
-// spinner, a form that cannot be submitted yet (no role chosen, no unit chosen) is
-// only greyed out. Folding them into one prop made an untouched dialog claim to be
+// spinner, a form that cannot be submitted yet (no role chosen, no organization chosen)
+// is only greyed out. Folding them into one prop made an untouched dialog claim to be
 // «در حال ثبت...» before anything had been sent.
 //
 // Both of these are exported because the moderation queue's «ویرایش» is a dialog too
@@ -56,73 +56,6 @@ export function CloseButton({ onClose, busy, label = "بستن" }) {
   );
 }
 
-/**
- * A unit's whole editable surface: its name. Backs both create and rename, because
- * `PATCH /units/{id}` accepts exactly what `POST` does minus the parent, and the parent
- * is never chosen here.
- *
- * Organizations used this too until they gained a profile — they have `OrganizationDialog`
- * below now. A unit still has nothing but a name and the organization it was made in.
- */
-export function NameDialog({
-  open,
-  title,
-  hint,
-  fieldLabel,
-  placeholder,
-  defaultValue = "",
-  submitLabel,
-  busy,
-  onClose,
-  onSubmit,
-  children,
-}) {
-  const formId = "name-dialog-form";
-  const methods = useForm({ defaultValues: { name: defaultValue } });
-
-  // The dialog stays mounted while closed, so `defaultValues` is only ever read once.
-  // Re-seeding on open is what makes «ویرایش» of a second row show that row's name
-  // rather than the previous one's.
-  useEffect(() => {
-    if (open) methods.reset({ name: defaultValue });
-  }, [open, defaultValue]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  return (
-    <Modal
-      open={open}
-      title={title}
-      hint={hint}
-      onClose={busy ? undefined : onClose}
-      size="md"
-      footer={
-        <>
-          <DialogFooter formId={formId} label={submitLabel} busy={busy} />
-          <CloseButton onClose={onClose} busy={busy} />
-        </>
-      }
-    >
-      <FormProvider {...methods}>
-        <form
-          id={formId}
-          onSubmit={methods.handleSubmit(({ name }) => onSubmit(name.trim(), onClose))}
-        >
-          <Input
-            name="name"
-            label={fieldLabel}
-            placeholder={placeholder}
-            registerProps={{
-              required: "نام لازم است",
-              minLength: { value: 2, message: "حداقل ۲ نویسه" },
-              maxLength: { value: 128, message: "حداکثر ۱۲۸ نویسه" },
-            }}
-          />
-          {children}
-        </form>
-      </FormProvider>
-    </Modal>
-  );
-}
-
 // ---------- the organization profile ----------
 
 // What `routers/orgs.py:decode_logo` will accept, said again here so the file is
@@ -136,6 +69,20 @@ const LOGO_MAX_BYTES = 512 * 1024;
 const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/;
 const PHONE_ALLOWED = /^[0-9۰-۹٠-٩+\-() ]+$/;
 const countDigits = (value) => (value.match(/[0-9۰-۹٠-٩]/g) ?? []).length;
+
+// `schemas._validate_password_strength`, said again here: an uppercase letter, a
+// lowercase letter and one character that is neither a letter nor a digit. The three
+// dialogs below that set a password all use it, so the rule cannot drift between them —
+// and the pair with the server has to be changed together.
+const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).+$/;
+const PASSWORD_RULES = {
+  minLength: { value: 8, message: "حداقل ۸ نویسه" },
+  pattern: {
+    value: PASSWORD_PATTERN,
+    message: "رمز باید شامل حرف بزرگ، حرف کوچک و نویسه ویژه (مانند @) باشد",
+  },
+};
+const PASSWORD_HINT = "حداقل ۸ نویسه، شامل حرف بزرگ و کوچک و نویسه ویژه (مانند @)";
 
 // The reference's red asterisk. `ui/Input` renders whatever `label` is, so this is a
 // node rather than a « *» glued onto the string — which would have been the same colour
@@ -464,8 +411,8 @@ export function PersonNameDialog({ open, title, hint, initial, busy, onClose, on
 
 /**
  * Credentials for an account someone else is creating. `children` is where the caller
- * puts whatever the endpoint additionally needs — a role, an organization, a unit —
- * because those differ per call and none of them is a credential.
+ * puts whatever the endpoint additionally needs — a role, an organization — because
+ * those differ per call and neither of them is a credential.
  */
 export function CredentialsDialog({
   open,
@@ -531,11 +478,9 @@ export function CredentialsDialog({
               name="password"
               type="password"
               label="رمز عبور"
-              placeholder="حداقل ۸ نویسه"
-              registerProps={{
-                required: "رمز عبور لازم است",
-                minLength: { value: 8, message: "حداقل ۸ نویسه" },
-              }}
+              placeholder="رمز عبور"
+              hint={PASSWORD_HINT}
+              registerProps={{ required: "رمز عبور لازم است", ...PASSWORD_RULES }}
             />
           </div>
         </form>
@@ -573,11 +518,9 @@ export function PasswordDialog({ open, title, hint, busy, onClose, onSubmit }) {
             name="password"
             type="password"
             label="رمز جدید"
-            placeholder="حداقل ۸ نویسه"
-            registerProps={{
-              required: "رمز عبور لازم است",
-              minLength: { value: 8, message: "حداقل ۸ نویسه" },
-            }}
+            placeholder="رمز جدید"
+            hint={PASSWORD_HINT}
+            registerProps={{ required: "رمز عبور لازم است", ...PASSWORD_RULES }}
           />
         </form>
       </FormProvider>
@@ -635,10 +578,11 @@ export function SelfPasswordDialog({ open, title, hint, busy, onClose, onSubmit 
             name="new_password"
             type="password"
             label="رمز جدید"
-            placeholder="حداقل ۸ نویسه"
+            placeholder="رمز جدید"
+            hint={PASSWORD_HINT}
             registerProps={{
               required: "رمز جدید لازم است",
-              minLength: { value: 8, message: "حداقل ۸ نویسه" },
+              ...PASSWORD_RULES,
               validate: (value, values) =>
                 value !== values.current_password || "رمز جدید باید با رمز فعلی متفاوت باشد",
             }}

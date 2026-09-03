@@ -127,7 +127,7 @@ export default function Login() {
               busy={isLoading}
               busyLabel="در حال ورود..."
               className="mt-1"
-              hint="ایجاد حساب کاربری بر عهده مدیر واحد شماست؛ امکان ثبت‌نام آزاد وجود ندارد."
+              hint="ایجاد حساب کاربری بر عهده مدیر سازمان شماست؛ امکان ثبت‌نام آزاد وجود ندارد."
             />
           </form>
         </FormProvider>

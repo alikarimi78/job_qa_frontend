@@ -12,7 +12,6 @@ import Admin from "@pages/Admin";
 import ManageLayout from "@pages/manage/ManageLayout";
 import Dashboard from "@pages/manage/Dashboard";
 import Organizations from "@pages/manage/Organizations";
-import Units from "@pages/manage/Units";
 import Accounts from "@pages/manage/Accounts";
 import Jobs from "@pages/manage/Jobs";
 
@@ -79,14 +78,6 @@ export default function App() {
               element={
                 <Protected roles={["super_admin"]}>
                   <Organizations />
-                </Protected>
-              }
-            />
-            <Route
-              path="units"
-              element={
-                <Protected roles={["super_admin", "org_admin"]}>
-                  <Units />
                 </Protected>
               }
             />

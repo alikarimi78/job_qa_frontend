@@ -5,7 +5,7 @@ import { ROLE_LABELS } from "@routes/roles";
 // — and `UserOut` carries no name or gender to build one from — so the same panel shows
 // what /auth/me actually answers: the username, the role, and where the account sits.
 export function AccountSummary({ username, role, userInfo }) {
-  const place = [userInfo?.organization?.name, userInfo?.unit?.name].filter(Boolean).join(" / ");
+  const place = userInfo?.organization?.name ?? "";
 
   return (
     <div className="px-4 py-3 border-b border-slate-600/40">

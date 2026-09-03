@@ -76,23 +76,16 @@ const BriefcaseIcon = icon(
   </>
 );
 
-const LayersIcon = icon(
-  <>
-    <path d="M12 3l9 5-9 5-9-5 9-5z" />
-    <path d="M3 13l9 5 9-5" />
-  </>
-);
-
 // `roles` is the gate the sidebar filters on; an item with none is open to anyone
 // signed in. `MenuItem` still knows how to draw a parent that expands — the reference
 // component was ported whole — but nothing here declares one any more.
 //
-// The four management sections used to sit under one «مدیریت» parent. They are top
-// level now, at the customer's request: each is a destination in its own right, and
-// one accordion standing between the sidebar and every one of them meant two clicks to
+// The management sections used to sit under one «مدیریت» parent. They are top level
+// now, at the customer's request: each is a destination in its own right, and one
+// accordion standing between the sidebar and every one of them meant two clicks to
 // reach the page an admin spends the day on. A role that cannot enter a section does
-// not see its item, so the list is short for everyone — a unit_admin gets two of the
-// four, and an ordinary user none at all.
+// not see its item, so the list is short for everyone — an org_admin gets the dashboard
+// and the users, and an ordinary user none at all.
 export const menuItems = [
   // The dashboard leads for anyone who has one — it is the overview the other sections
   // are read from. An ordinary user is not in `ADMIN_ROLES`, so for them the list still
@@ -128,14 +121,8 @@ export const menuItems = [
     roles: ["super_admin"],
   },
   {
-    href: "/manage/units",
-    label: "مدیریت واحدها",
-    icon: LayersIcon,
-    roles: ["super_admin", "org_admin"],
-  },
-  {
     href: "/manage/accounts",
-    label: "مدیریت حساب‌ها",
+    label: "مدیریت کاربران",
     icon: UsersIcon,
     roles: ADMIN_ROLES,
   },

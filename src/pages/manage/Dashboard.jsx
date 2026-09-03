@@ -14,13 +14,12 @@ import { errorMessage } from "@utils/errors";
 
 // The dashboard reads one endpoint. `/stats` is scoped by the server exactly as
 // `/accounts` is, so nothing on this page filters by role for privacy — the role only
-// decides which of these panels is worth showing at all. A unit_admin has one unit and
-// no organizations, so the two panels about them are simply absent rather than drawn
-// as a chart of one bar.
+// decides which of these panels is worth showing at all. An org_admin has one
+// organization, so the panel counting them is simply absent rather than drawn as a
+// chart of one bar.
 export default function Dashboard() {
   const me = useOutletContext();
   const isSuper = me.role === "super_admin";
-  const isUnitAdmin = me.role === "unit_admin";
 
   const [range, setRange] = useState(12);
   const { data: stats, isLoading, error } = useStatsQuery();
@@ -31,17 +30,16 @@ export default function Dashboard() {
     if (!stats) return [];
     // Fixed order, so a series keeps its colour whichever of them this role sees.
     const all = [
-      { key: "accounts", label: "حساب‌های جدید", series: stats.accounts_series },
-      { key: "units", label: "واحدهای جدید", series: stats.units_series },
+      { key: "accounts", label: "کاربران جدید", series: stats.accounts_series },
       { key: "organizations", label: "سازمان‌های جدید", series: stats.organizations_series },
     ];
-    const shown = isUnitAdmin ? all.slice(0, 1) : isSuper ? all : all.slice(0, 2);
+    const shown = isSuper ? all : all.slice(0, 1);
     return shown.map((item) => ({
       key: item.key,
       label: item.label,
       values: bucketByMonth(item.series, months),
     }));
-  }, [stats, months, isSuper, isUnitAdmin]);
+  }, [stats, months, isSuper]);
 
   const suggestions = useMemo(() => {
     if (!stats) return [];
@@ -65,21 +63,14 @@ export default function Dashboard() {
     );
   }
 
-  // Below a super_admin, the two roles above a unit cannot appear in the caller's own
-  // scope at all — `visible_users` leaves the caller's row out, so an org_admin's own
-  // chart would report «ادمین سازمان: ۰» about itself. Only the roles that can actually
-  // be counted here are plotted.
-  const countableRoles = isSuper
-    ? ["super_admin", "org_admin", "unit_admin", "user"]
-    : ["unit_admin", "user"];
+  // Below a super_admin, the two admin roles cannot appear in the caller's own scope at
+  // all — `visible_users` leaves the caller's row out, so an org_admin's own chart would
+  // report «ادمین سازمان: ۰» about itself. Only the roles that can actually be counted
+  // here are plotted.
+  const countableRoles = isSuper ? ["super_admin", "org_admin", "user"] : ["user"];
   const roleRows = stats.accounts_by_role
     .filter((row) => countableRoles.includes(row.role))
     .map((row) => ({ name: ROLE_LABELS[row.role] ?? row.role, value: row.count }));
-
-  const unitRows = stats.accounts_per_unit.map((row) => ({
-    name: row.name,
-    value: row.accounts,
-  }));
 
   const scopeNote =
     stats.scope === "global"
@@ -97,13 +88,12 @@ export default function Dashboard() {
       <Card title="نمای کلی">
         <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3">
           {isSuper && <StatTile label="سازمان‌ها" value={stats.organizations} />}
-          {!isUnitAdmin && <StatTile label="واحدها" value={stats.units} />}
           <StatTile
-            label="حساب‌ها"
+            label="کاربران"
             value={stats.accounts}
             hint={
               stats.accounts_blocked > 0
-                ? `${faNumber(stats.accounts_blocked)} حساب مسدود`
+                ? `${faNumber(stats.accounts_blocked)} کاربر مسدود`
                 : "همه فعال"
             }
           />
@@ -116,7 +106,7 @@ export default function Dashboard() {
             label="در انتظار بررسی"
             value={stats.jobs.pending}
             tone={stats.jobs.pending > 0 ? "warning" : "muted"}
-            hint={isSuper ? "صف بررسی شما" : "از حساب‌های زیرمجموعه شما"}
+            hint={isSuper ? "صف بررسی شما" : "از کاربران زیرمجموعه شما"}
           />
         </div>
       </Card>
@@ -143,32 +133,24 @@ export default function Dashboard() {
       </Card>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <Card title="حساب‌ها به تفکیک نقش" hint={scopeNote}>
-          <CategoryBars rows={roleRows} valueLabel="حساب" />
+        <Card title="کاربران به تفکیک نقش" hint={scopeNote}>
+          <CategoryBars rows={roleRows} valueLabel="کاربر" />
         </Card>
 
-        {!isUnitAdmin && (
-          <Card title="حساب‌های هر واحد" hint="واحدهای بدون حساب هم نشان داده می‌شوند">
-            <CategoryBars rows={unitRows} valueLabel="حساب" minHeight={160} />
-          </Card>
-        )}
-
-        {isUnitAdmin && (
-          <Card title="وضعیت حساب‌های واحد">
-            <CategoryBars
-              rows={[
-                { name: "فعال", value: stats.accounts_active },
-                { name: "مسدود", value: stats.accounts_blocked },
-              ]}
-              valueLabel="حساب"
-            />
-          </Card>
-        )}
+        <Card title="وضعیت کاربران" hint={scopeNote}>
+          <CategoryBars
+            rows={[
+              { name: "فعال", value: stats.accounts_active },
+              { name: "مسدود", value: stats.accounts_blocked },
+            ]}
+            valueLabel="کاربر"
+          />
+        </Card>
       </div>
 
       <Card
         title="پایگاه داده مشاغل"
-        hint="پیشنهادهای زیر متعلق به حساب‌های زیرمجموعه شماست؛ حجم پایگاه داده، مشترک میان تمامی سازمان‌هاست"
+        hint="پیشنهادهای زیر متعلق به کاربران زیرمجموعه شماست؛ حجم پایگاه داده، مشترک میان تمامی سازمان‌هاست"
       >
         <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3 mb-6">
           <StatTile label="تایید شده" value={stats.jobs.approved} />

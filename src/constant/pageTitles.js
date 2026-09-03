@@ -4,8 +4,7 @@ export const PAGE_TITLES = {
   "/my-suggestions": "پیشنهادهای من",
   "/manage/dashboard": "داشبورد مدیریت",
   "/manage/organizations": "مدیریت سازمان‌ها",
-  "/manage/units": "مدیریت واحدها",
-  "/manage/accounts": "مدیریت حساب‌ها",
+  "/manage/accounts": "مدیریت کاربران",
   "/admin": "بررسی پیشنهادها",
   "/login": "ورود",
 };

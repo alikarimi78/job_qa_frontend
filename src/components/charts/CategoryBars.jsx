@@ -86,7 +86,7 @@ function makeCategoryTick(rows) {
   };
 }
 
-// One measure across named categories — accounts per role, accounts per unit.
+// One measure across named categories — users per role, active against blocked.
 //
 // One series, so one colour for every bar and no legend: the card's title already says
 // what is plotted, and shading each bar by its own length would double-encode the only

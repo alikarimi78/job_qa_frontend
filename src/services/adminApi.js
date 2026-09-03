@@ -1,6 +1,6 @@
 import { baseApi } from "./baseApi";
 
-// Moderation is super-admin only, including for org and unit admins: approving a
+// Moderation is super-admin only, including for an org_admin: approving a
 // suggestion writes into the one global corpus every organization searches.
 export const adminApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({

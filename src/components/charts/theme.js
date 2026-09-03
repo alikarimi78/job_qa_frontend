@@ -6,7 +6,7 @@
 // every pair (worst ΔE 13.0, deutan), the normal-vision floor (16.3) and 3:1 contrast,
 // so nothing here leans on a viewer telling blue from green.
 //
-// Three is also the ceiling this dashboard needs — organizations, units, accounts. A
+// Three is also the ceiling this dashboard needs — organizations, users, jobs. A
 // fourth series would mean folding one into "other" or splitting the chart, never
 // inventing a fourth hue.
 export const SERIES = ["#2a78d6", "#eb6834", "#4a3aa7"];

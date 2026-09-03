@@ -1,5 +1,5 @@
-// Not driven by react-hook-form: the only select in the app is the destination unit
-// in the accounts table's inline move panel, which lives and dies with one open row.
+// Not driven by react-hook-form: the selects in the app are the role and organization
+// pickers on the accounts page, which live and die with one open dialog.
 export default function Select({ value, onChange, children, className = "", selectProps = {} }) {
   return (
     <select

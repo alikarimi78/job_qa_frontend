@@ -2,7 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 // What survives a reload. `role` arrives with the token from POST /auth/login and is
 // enough to decide what to render; `userInfo` is the fuller answer from GET /auth/me
-// (id, organization, unit) and is refetched rather than trusted after a rehydrate.
+// (id, organization) and is refetched rather than trusted after a rehydrate.
 const initialState = {
   token: null,
   role: null,

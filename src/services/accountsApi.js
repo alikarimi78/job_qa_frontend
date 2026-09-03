@@ -3,9 +3,9 @@ import { baseApi } from "./baseApi";
 // The provisioning chain, endpoint for endpoint. Every list the server returns is
 // already scoped to the caller, so nothing here filters for privacy.
 //
-// Creating an account invalidates Organization and Unit as well as Account: the
-// «ادمین ندارد» line beside each organization and unit is read off the account list,
-// so it has to move the moment an admin is created.
+// Creating an account invalidates Organization as well as Account: the «ادمین ندارد»
+// line beside each organization is read off the account list, so it has to move the
+// moment an admin is created.
 export const accountsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     accounts: builder.query({
@@ -19,10 +19,6 @@ export const accountsApi = baseApi.injectEndpoints({
     createOrgAdmin: builder.mutation({
       query: (body) => ({ url: "/accounts/org-admins", method: "POST", body }),
       invalidatesTags: ["Account", "Organization", "Stats"],
-    }),
-    createUnitAdmin: builder.mutation({
-      query: (body) => ({ url: "/accounts/unit-admins", method: "POST", body }),
-      invalidatesTags: ["Account", "Unit", "Stats"],
     }),
     createUser: builder.mutation({
       query: (body) => ({ url: "/accounts/users", method: "POST", body }),
@@ -52,18 +48,10 @@ export const accountsApi = baseApi.injectEndpoints({
       query: ({ id, ...body }) => ({ url: `/accounts/${id}/name`, method: "POST", body }),
       invalidatesTags: ["Account"],
     }),
-    moveAccount: builder.mutation({
-      query: ({ id, unitId }) => ({
-        url: `/accounts/${id}/unit`,
-        method: "POST",
-        body: { unit_id: unitId },
-      }),
-      invalidatesTags: ["Account", "Unit", "Stats"],
-    }),
-    // The same move for an org_admin, which sits in an organization rather than in a
-    // unit and has nowhere to go through the endpoint above. Invalidates Organization
-    // too: the «ادمین ندارد» line beside a row is read off the account list, and this
-    // moves it for two organizations at once.
+    // The only move there is: an org_admin and an ordinary user both sit in an
+    // organization directly. Invalidates Organization too — the «ادمین ندارد» line
+    // beside a row is read off the account list, and this moves it for two
+    // organizations at once.
     moveAccountOrganization: builder.mutation({
       query: ({ id, organizationId }) => ({
         url: `/accounts/${id}/organization`,
@@ -74,7 +62,7 @@ export const accountsApi = baseApi.injectEndpoints({
     }),
     deleteAccount: builder.mutation({
       query: (id) => ({ url: `/accounts/${id}`, method: "DELETE" }),
-      invalidatesTags: ["Account", "Organization", "Unit", "Stats"],
+      invalidatesTags: ["Account", "Organization", "Stats"],
     }),
 
     // ---------- organizations ----------
@@ -109,25 +97,7 @@ export const accountsApi = baseApi.injectEndpoints({
     // Refused with a 409 naming what is still inside; there is no cascade on purpose.
     deleteOrganization: builder.mutation({
       query: (id) => ({ url: `/orgs/${id}`, method: "DELETE" }),
-      invalidatesTags: ["Organization", "Unit", "Account", "Stats"],
-    }),
-
-    // ---------- units ----------
-    units: builder.query({
-      query: (params) => ({ url: "/units", params }),
-      providesTags: ["Unit"],
-    }),
-    createUnit: builder.mutation({
-      query: (body) => ({ url: "/units", method: "POST", body }),
-      invalidatesTags: ["Unit", "Stats"],
-    }),
-    renameUnit: builder.mutation({
-      query: ({ id, name }) => ({ url: `/units/${id}`, method: "PATCH", body: { name } }),
-      invalidatesTags: ["Unit"],
-    }),
-    deleteUnit: builder.mutation({
-      query: (id) => ({ url: `/units/${id}`, method: "DELETE" }),
-      invalidatesTags: ["Unit", "Account", "Stats"],
+      invalidatesTags: ["Organization", "Account", "Stats"],
     }),
   }),
 });
@@ -136,13 +106,11 @@ export const {
   useAccountsQuery,
   useCreateSuperAdminMutation,
   useCreateOrgAdminMutation,
-  useCreateUnitAdminMutation,
   useCreateUserMutation,
   useBlockAccountMutation,
   useUnblockAccountMutation,
   useResetPasswordMutation,
   useRenameAccountMutation,
-  useMoveAccountMutation,
   useMoveAccountOrganizationMutation,
   useDeleteAccountMutation,
   useOrganizationsQuery,
@@ -150,8 +118,4 @@ export const {
   useUpdateOrganizationMutation,
   useOrganizationLogoQuery,
   useDeleteOrganizationMutation,
-  useUnitsQuery,
-  useCreateUnitMutation,
-  useRenameUnitMutation,
-  useDeleteUnitMutation,
 } = accountsApi;
