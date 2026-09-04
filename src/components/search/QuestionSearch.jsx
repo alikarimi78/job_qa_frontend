@@ -27,9 +27,9 @@ const DownloadIcon = () => (
 );
 
 const MODE_BADGE = {
-  single: "accent",
   job_match: "success",
   job_generated: "warning",
+  job_adapted: "warning",
   interdisciplinary: "accent",
   out_of_domain: "danger",
 };
@@ -47,20 +47,31 @@ export default function QuestionSearch() {
   const [searchReport, { isLoading: isReporting }] = useSearchReportMutation();
   const [suggestJob, { isLoading: isFiling }] = useSuggestJobMutation();
 
-  async function submit(e) {
-    e.preventDefault();
-    if (!question.trim()) return;
+  async function runSearch(text) {
+    const asking = text.trim();
+    if (!asking) return;
     setResult(null);
     setDeclined(false);
     setFiled(false);
     try {
-      const data = await search(question).unwrap();
+      const data = await search(asking).unwrap();
       setResult(data);
-      setAsked(question.trim());
+      setAsked(asking);
       setRunId((n) => n + 1);
     } catch (err) {
       showMessage.error(errorMessage(err));
     }
+  }
+
+  function submit(e) {
+    e.preventDefault();
+    runSearch(question);
+  }
+
+  function askRelated(title) {
+    setQuestion(title);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    runSearch(title);
   }
 
   async function downloadReport() {
@@ -92,9 +103,22 @@ export default function QuestionSearch() {
   }
 
   const offered = result?.mode === "job_generated" && result.job_draft;
-  const nearby = result?.related_jobs?.filter((t) => t !== result.job) ?? [];
+  // The engine resolves a question to the job it is about before answering it, so the
+  // record under a `job_adapted` answer describes that job and is *not* in the database —
+  // it was composed from the question and the nearest records. Every other mode's boxes
+  // are the stored record, and the heading names it rather than saying «این شغل» and
+  // leaving the reader to guess which of the two it means.
+  const composed = result?.mode === "job_adapted";
+  const nearby = result?.related_jobs ?? [];
+  const subject = result?.details?.[0]?.job_title ?? result?.job;
   const detailsTitle =
-    result?.details?.length > 1 ? "اطلاعات این مشاغل در پایگاه داده" : "اطلاعات این شغل در پایگاه داده";
+    result?.details?.length > 1
+      ? "اطلاعات این مشاغل در پایگاه داده"
+      : composed
+        ? `مشخصات تدوین‌شده «${subject}»`
+        : subject
+          ? `اطلاعات «${subject}» در پایگاه داده`
+          : "اطلاعات این شغل در پایگاه داده";
 
   return (
     <>
@@ -131,7 +155,7 @@ export default function QuestionSearch() {
       {result && (
         <Card>
           <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
-            <span>
+            <span className="min-w-0">
               {result.mode === "job_generated" ? (
                 <Badge tone="warning">شغل پیشنهادی؛ ثبت نشده است</Badge>
               ) : result.mode === "out_of_domain" ? (
@@ -141,7 +165,14 @@ export default function QuestionSearch() {
               ) : result.mode === "interdisciplinary" ? (
                 <Badge tone="accent">{result.jobs?.join(" + ")}</Badge>
               ) : (
-                result.job && <Badge tone={MODE_BADGE[result.mode] ?? "accent"}>{result.job}</Badge>
+                // The job the question was about — the one the engine resolved it to,
+                // not the question itself and not the nearest record it was ranked
+                // against. A title can be long enough to need two lines.
+                result.job && (
+                  <Badge tone={MODE_BADGE[result.mode] ?? "accent"} wrap className="max-w-full">
+                    {result.job}
+                  </Badge>
+                )
               )}
             </span>
             <span className="flex items-center gap-3">
@@ -161,22 +192,23 @@ export default function QuestionSearch() {
             </span>
           </div>
 
+          {composed && (
+            <div className="mb-4 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200">
+              <strong className="text-sm text-amber-900">
+                این شغل در پایگاه داده ثبت نشده است
+              </strong>
+              <p className="text-xs text-amber-800 mt-1 leading-6">
+                مشخصات زیر بر اساس پرسش شما و نزدیک‌ترین رکوردهای پایگاه داده تدوین شده است و
+                بخشی از پایگاه داده به شمار نمی‌رود.
+              </p>
+            </div>
+          )}
+
           <p className="whitespace-pre-wrap text-[15px] leading-9 text-slate-800 m-0">
             {result.answer}
           </p>
 
           {!offered && <JobDetails details={result.details} title={detailsTitle} />}
-
-          {result.mode === "job_match" && nearby.length > 0 && (
-            <div className="flex items-center gap-2 flex-wrap mt-4">
-              <span className="text-xs text-slate-400">مشاغل مرتبط:</span>
-              {nearby.map((title) => (
-                <Badge key={title} tone="neutral">
-                  {title}
-                </Badge>
-              ))}
-            </div>
-          )}
 
           {offered && !declined && !filed && (
             <div className="mt-6 pt-5 border-t border-slate-200">
@@ -230,6 +262,34 @@ export default function QuestionSearch() {
               این پیشنهاد رد شد و ثبت نگردید. در صورت نیاز می‌توانید با طرح پرسشی جدید، پیشنهاد
               دیگری دریافت نمایید.
             </p>
+          )}
+
+          {nearby.length > 0 && (
+            <div className="mt-6 pt-5 border-t border-slate-200">
+              <p className="text-xs text-slate-500 leading-6 m-0">
+                نزدیک‌ترین مشاغل موجود در پایگاه داده
+                {offered && "؛ شغل پیشنهادی بالا از هیچ‌یک از آن‌ها برداشته نشده است"}
+              </p>
+              <div className="flex items-center gap-2 flex-wrap mt-3">
+                {nearby.map((title) => (
+                  <button
+                    key={title}
+                    type="button"
+                    onClick={() => askRelated(title)}
+                    disabled={isLoading}
+                    title={`جست‌وجوی «${title}»`}
+                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
+                               border bg-slate-100 text-slate-600 border-slate-200
+                               transition-colors duration-200 cursor-pointer
+                               hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200
+                               focus:outline-none focus:ring-2 focus:ring-blue-500/30
+                               disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {title}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
         </Card>
       )}
