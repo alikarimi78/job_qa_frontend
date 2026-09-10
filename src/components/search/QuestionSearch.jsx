@@ -34,7 +34,8 @@ const MODE_BADGE = {
   out_of_domain: "danger",
 };
 
-const NO_REPORT = new Set(["out_of_domain", "about"]);
+// `needs_detail` carries no record either: the question named a field, not a job.
+const NO_REPORT = new Set(["out_of_domain", "about", "needs_detail"]);
 
 export default function QuestionSearch() {
   const [question, setQuestion] = useState("");
@@ -43,6 +44,7 @@ export default function QuestionSearch() {
   const [declined, setDeclined] = useState(false);
   const [filed, setFiled] = useState(false);
   const [runId, setRunId] = useState(0);
+  const [openNearest, setOpenNearest] = useState(false);
   const [search, { isLoading }] = useSearchMutation();
   const [searchReport, { isLoading: isReporting }] = useSearchReportMutation();
   const [suggestJob, { isLoading: isFiling }] = useSuggestJobMutation();
@@ -53,6 +55,7 @@ export default function QuestionSearch() {
     setResult(null);
     setDeclined(false);
     setFiled(false);
+    setOpenNearest(false);
     try {
       const data = await search(asking).unwrap();
       setResult(data);
@@ -66,12 +69,6 @@ export default function QuestionSearch() {
   function submit(e) {
     e.preventDefault();
     runSearch(question);
-  }
-
-  function askRelated(title) {
-    setQuestion(title);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    runSearch(title);
   }
 
   async function downloadReport() {
@@ -105,20 +102,22 @@ export default function QuestionSearch() {
   const offered = result?.mode === "job_generated" && result.job_draft;
   // The engine resolves a question to the job it is about before answering it, so the
   // record under a `job_adapted` answer describes that job and is *not* in the database —
-  // it was composed from the question and the nearest records. Every other mode's boxes
+  // it was composed from the question and the nearest record. Every other mode's boxes
   // are the stored record, and the heading names it rather than saying «این شغل» and
   // leaving the reader to guess which of the two it means.
   const composed = result?.mode === "job_adapted";
-  const nearby = result?.related_jobs ?? [];
+  // The single nearest stored record, sent whole beside the answer so a click opens it
+  // here rather than starting another search.
+  const nearest = result?.nearest ?? null;
   const subject = result?.details?.[0]?.job_title ?? result?.job;
   const detailsTitle =
     result?.details?.length > 1
-      ? "اطلاعات این مشاغل در پایگاه داده"
+      ? "اطلاعات این مشاغل"
       : composed
         ? `مشخصات تدوین‌شده «${subject}»`
         : subject
-          ? `اطلاعات «${subject}» در پایگاه داده`
-          : "اطلاعات این شغل در پایگاه داده";
+          ? `اطلاعات «${subject}»`
+          : "اطلاعات این شغل";
 
   return (
     <>
@@ -160,6 +159,8 @@ export default function QuestionSearch() {
                 <Badge tone="warning">شغل پیشنهادی؛ ثبت نشده است</Badge>
               ) : result.mode === "out_of_domain" ? (
                 <Badge tone="danger">خارج از دامنه</Badge>
+              ) : result.mode === "needs_detail" ? (
+                <Badge tone="warning">نیازمند توضیح دقیق‌تر</Badge>
               ) : result.mode === "about" ? (
                 <Badge tone="neutral">راهنمای سامانه</Badge>
               ) : result.mode === "interdisciplinary" ? (
@@ -198,7 +199,7 @@ export default function QuestionSearch() {
                 این شغل در پایگاه داده ثبت نشده است
               </strong>
               <p className="text-xs text-amber-800 mt-1 leading-6">
-                مشخصات زیر بر اساس پرسش شما و نزدیک‌ترین رکوردهای پایگاه داده تدوین شده است و
+                مشخصات زیر بر اساس پرسش شما و نزدیک‌ترین رکورد پایگاه داده تدوین شده است و
                 بخشی از پایگاه داده به شمار نمی‌رود.
               </p>
             </div>
@@ -264,31 +265,44 @@ export default function QuestionSearch() {
             </p>
           )}
 
-          {nearby.length > 0 && (
+          {nearest && (
             <div className="mt-6 pt-5 border-t border-slate-200">
               <p className="text-xs text-slate-500 leading-6 m-0">
-                نزدیک‌ترین مشاغل موجود در پایگاه داده
-                {offered && "؛ شغل پیشنهادی بالا از هیچ‌یک از آن‌ها برداشته نشده است"}
+                نزدیک‌ترین شغل موجود در پایگاه داده
+                {offered && "؛ شغل پیشنهادی بالا از آن برداشته نشده است"}
               </p>
               <div className="flex items-center gap-2 flex-wrap mt-3">
-                {nearby.map((title) => (
-                  <button
-                    key={title}
-                    type="button"
-                    onClick={() => askRelated(title)}
-                    disabled={isLoading}
-                    title={`جست‌وجوی «${title}»`}
-                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
-                               border bg-slate-100 text-slate-600 border-slate-200
-                               transition-colors duration-200 cursor-pointer
-                               hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200
-                               focus:outline-none focus:ring-2 focus:ring-blue-500/30
-                               disabled:opacity-60 disabled:cursor-not-allowed"
+                <button
+                  type="button"
+                  onClick={() => setOpenNearest((was) => !was)}
+                  aria-expanded={openNearest}
+                  title={`نمایش اطلاعات «${nearest.job_title}»`}
+                  className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium
+                             border bg-slate-100 text-slate-600 border-slate-200
+                             transition-colors duration-200 cursor-pointer
+                             hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200
+                             focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                >
+                  {nearest.job_title}
+                  <svg
+                    className={`w-3 h-3 shrink-0 transition-transform duration-200 ${
+                      openNearest ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    viewBox="0 0 24 24"
                   >
-                    {title}
-                  </button>
-                ))}
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </button>
               </div>
+
+              {openNearest && (
+                <JobDetails details={[nearest]} title={`اطلاعات «${nearest.job_title}»`} />
+              )}
             </div>
           )}
         </Card>
