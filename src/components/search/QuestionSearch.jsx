@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import Card from "@components/ui/Card";
 import Button from "@components/ui/Button";
 import Badge from "@components/ui/Badge";
-import Select from "@components/ui/Select";
+import Modal from "@components/ui/Modal";
 import { Spinner } from "@components/ui/Loader";
 import JobDetails from "@components/JobDetails";
 import JobForm, { PUBLIC_OWNER } from "@components/JobForm";
@@ -71,6 +71,7 @@ export default function QuestionSearch() {
   const [filed, setFiled] = useState(false);
   const [editing, setEditing] = useState(false);
   const [owner, setOwner] = useState(PUBLIC_OWNER);
+  const [choosing, setChoosing] = useState(false);
   const [runId, setRunId] = useState(0);
   const [openNearest, setOpenNearest] = useState(false);
   const [search, { isLoading }] = useSearchMutation();
@@ -78,7 +79,7 @@ export default function QuestionSearch() {
   const [suggestJob, { isLoading: isFiling }] = useSuggestJobMutation();
   // The owner choice the suggestion page offers, so a job composed here can be filed for the
   // caller's own organization too; without it this page could only ever file public records.
-  const { owners, allowPublic } = useSuggestionOwners();
+  const { owners, allowPublic, loading: ownersLoading } = useSuggestionOwners();
 
   async function runSearch(text) {
     const asking = text.trim();
@@ -88,6 +89,7 @@ export default function QuestionSearch() {
     setFiled(false);
     setEditing(false);
     setOwner(PUBLIC_OWNER);
+    setChoosing(false);
     setOpenNearest(false);
     try {
       const data = await search(asking).unwrap();
@@ -127,6 +129,7 @@ export default function QuestionSearch() {
       await suggestJob(body).unwrap();
       setFiled(true);
       setEditing(false);
+      setChoosing(false);
       showMessage.success("پیشنهاد شما ثبت شد و در انتظار بررسی مدیر سامانه است.");
     } catch (err) {
       showMessage.error(errorMessage(err));
@@ -153,11 +156,38 @@ export default function QuestionSearch() {
           ? `اطلاعات «${subject}»`
           : "اطلاعات این شغل";
 
-  // «پذیرش» files the record exactly as shown. The owner is the one thing a suggestion adds to
-  // it, chosen beside the buttons when there is a choice at all — the rule JobForm follows.
+  // «پذیرش» files the record exactly as shown, after one question: where it belongs. The public
+  // corpus, then every organization the caller may file for — each one for a super_admin, their
+  // own for anyone else — the same choices JobForm's owner field offers under «ویرایش».
+  const ownerChoices = [
+    ...(allowPublic
+      ? [{
+          value: PUBLIC_OWNER,
+          title: "عمومی — همه سازمان‌ها",
+          hint: "این شغل در جست‌وجوی کاربران تمامی سازمان‌ها دیده می‌شود.",
+        }]
+      : []),
+    ...owners.map((organization) => ({
+      value: String(organization.id),
+      title: `اختصاصی — ${organization.name}`,
+      hint: "این شغل تنها در جست‌وجوی کاربران همین سازمان دیده می‌شود.",
+    })),
+  ];
+  const ownerBody = owner === PUBLIC_OWNER ? null : Number(owner);
+
+  // The owner of the stored record a match answered from. A record the caller cannot see could
+  // not have matched, so its organization is always among the ones they may name.
+  const stored = mode === "single" || mode === "job_match";
+  const ownerId = result?.organization_id ?? null;
+  const ownerName =
+    ownerId == null
+      ? null
+      : (owners.find((organization) => organization.id === ownerId)?.name ??
+        `سازمان شماره ${ownerId}`);
+
   function accept() {
     const body = { ...draft };
-    if (owners.length) body.organization_id = owner === PUBLIC_OWNER ? null : Number(owner);
+    if (owners.length) body.organization_id = ownerBody;
     fileSuggestion(body);
   }
 
@@ -233,6 +263,23 @@ export default function QuestionSearch() {
             </span>
           </div>
 
+          {stored && (
+            <div className="mb-4 flex items-center gap-2 flex-wrap">
+              {ownerId == null ? (
+                <Badge tone="neutral">شغل عمومی</Badge>
+              ) : (
+                <Badge tone="accent" wrap>
+                  شغل اختصاصی سازمان «{ownerName}»
+                </Badge>
+              )}
+              <span className="text-xs text-slate-500 leading-6">
+                {ownerId == null
+                  ? "این شغل در جست‌وجوی تمامی سازمان‌ها دیده می‌شود."
+                  : "این شغل تنها در جست‌وجوی کاربران همین سازمان دیده می‌شود."}
+              </span>
+            </div>
+          )}
+
           {composed && (
             <Notice title="این شغل در پایگاه داده ثبت نشده است">
               مشخصات زیر بر اساس ورودی شما و نزدیک‌ترین رکورد پایگاه داده تدوین شده است و تا پیش
@@ -268,7 +315,7 @@ export default function QuestionSearch() {
             <div className="mt-6 pt-5 border-t border-slate-200">
               <JobForm
                 key={`${runId}-edit`}
-                initial={draft}
+                initial={{ ...draft, organization_id: ownerBody }}
                 onSubmit={fileSuggestion}
                 submitLabel="ثبت پیشنهاد"
                 busy={isFiling}
@@ -298,27 +345,16 @@ export default function QuestionSearch() {
                 می‌شود.
               </p>
               <div className="flex items-center gap-2 flex-wrap">
-                {owners.length > 0 && (
-                  <Select
-                    value={owner}
-                    onChange={(event) => setOwner(event.target.value)}
-                    className="min-w-44"
-                    selectProps={{ "aria-label": "دامنه شغل", disabled: isFiling }}
-                  >
-                    {allowPublic && <option value={PUBLIC_OWNER}>عمومی — همه سازمان‌ها</option>}
-                    {owners.map((organization) => (
-                      <option key={organization.id} value={String(organization.id)}>
-                        اختصاصی — {organization.name}
-                      </option>
-                    ))}
-                  </Select>
-                )}
                 <Button
                   variant="success"
                   size="sm"
-                  buttonProps={{ type: "button", onClick: accept, disabled: isFiling }}
+                  buttonProps={{
+                    type: "button",
+                    onClick: () => setChoosing(true),
+                    disabled: isFiling || ownersLoading,
+                  }}
                 >
-                  {isFiling ? <Spinner /> : "پذیرش"}
+                  پذیرش
                 </Button>
                 <Button
                   variant="danger-outline"
@@ -394,6 +430,72 @@ export default function QuestionSearch() {
               )}
             </div>
           )}
+
+          <Modal
+            open={offered && choosing}
+            onClose={() => !isFiling && setChoosing(false)}
+            size="sm"
+            title="محل ثبت پیشنهاد"
+            hint={`شغل «${draft?.job_title ?? ""}» در کدام بخش پایگاه داده ثبت شود؟`}
+            footer={
+              <>
+                <Button
+                  variant="success"
+                  size="lg"
+                  buttonProps={{ type: "button", onClick: accept, disabled: isFiling }}
+                >
+                  {isFiling ? <Spinner /> : "ثبت پیشنهاد"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  buttonProps={{
+                    type: "button",
+                    onClick: () => setChoosing(false),
+                    disabled: isFiling,
+                  }}
+                >
+                  انصراف
+                </Button>
+              </>
+            }
+          >
+            <fieldset className="flex flex-col gap-2 m-0 p-0 border-0">
+              <legend className="sr-only">دامنه شغل</legend>
+              {ownerChoices.map((choice) => (
+                <label
+                  key={choice.value}
+                  className={`flex items-start gap-3 px-4 py-3 rounded-xl border cursor-pointer
+                              transition-colors duration-200 ${
+                                owner === choice.value
+                                  ? "border-blue-400 bg-blue-50"
+                                  : "border-slate-200 hover:border-slate-300"
+                              }`}
+                >
+                  <input
+                    type="radio"
+                    name="suggestion-owner"
+                    value={choice.value}
+                    checked={owner === choice.value}
+                    onChange={() => setOwner(choice.value)}
+                    disabled={isFiling}
+                    className="mt-1.5 accent-blue-600"
+                  />
+                  <span>
+                    <span className="block text-sm font-medium text-slate-800">
+                      {choice.title}
+                    </span>
+                    <span className="block text-xs text-slate-500 mt-0.5 leading-6">
+                      {choice.hint}
+                    </span>
+                  </span>
+                </label>
+              ))}
+            </fieldset>
+            <p className="text-xs text-slate-400 mt-4 leading-6">
+              ثبت نهایی پس از تایید مدیر سامانه انجام می‌شود.
+            </p>
+          </Modal>
         </Card>
       )}
     </>

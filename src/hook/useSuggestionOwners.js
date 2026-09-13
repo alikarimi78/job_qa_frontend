@@ -11,13 +11,15 @@ export function suggestionOwners(me, organizations = []) {
 }
 
 export function useSuggestionOwners() {
-  const { data: me } = useCurrentUserQuery();
+  const { data: me, isLoading: meLoading } = useCurrentUserQuery();
   // `GET /orgs` answers a super_admin with every organization; anyone else needs none, their
   // own arriving on `/auth/me`, and a plain user would only be refused.
-  const { data: organizations = [] } = useOrganizationsQuery(undefined, {
+  const { data: organizations = [], isLoading: orgsLoading } = useOrganizationsQuery(undefined, {
     skip: me?.role !== "super_admin",
   });
-  return suggestionOwners(me, organizations);
+  // Until both have arrived the choice would offer the public corpus alone, and a super_admin
+  // filing in that moment could not pick an organization at all.
+  return { ...suggestionOwners(me, organizations), loading: meLoading || orgsLoading };
 }
 
 export default useSuggestionOwners;
