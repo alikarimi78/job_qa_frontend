@@ -3,11 +3,13 @@ import { useOutletContext } from "react-router-dom";
 import Card from "@components/ui/Card";
 import Button from "@components/ui/Button";
 import Loader from "@components/ui/Loader";
+import Select from "@components/ui/Select";
 import PageToolbar from "@components/ui/PageToolbar";
 import CategoryBars from "@components/charts/CategoryBars";
 import MonthlyBars from "@components/charts/MonthlyBars";
 import { Meter, StatTile } from "@components/charts/StatTile";
 import { ROLE_LABELS } from "@routes/roles";
+import { useOrganizationsQuery } from "@services/accountsApi";
 import { useStatsQuery } from "@services/statsApi";
 import { bucketByMonth, faNumber, lastPersianMonths } from "@utils/jalali";
 import { errorMessage } from "@utils/errors";
@@ -17,7 +19,14 @@ export default function Dashboard() {
   const isSuper = me.role === "super_admin";
 
   const [range, setRange] = useState(12);
-  const { data: stats, isLoading, error } = useStatsQuery();
+  // Every number on the page is the filter's: the accounts, the series and the job
+  // records alike. An org_admin is narrowed to their own organization by the server and
+  // is shown no filter.
+  const [orgFilter, setOrgFilter] = useState("");
+  const { data: orgs = [] } = useOrganizationsQuery();
+  const { data: stats, isLoading, error } = useStatsQuery(
+    orgFilter ? Number(orgFilter) : undefined
+  );
 
   const months = useMemo(() => lastPersianMonths(range), [range]);
 
@@ -27,13 +36,13 @@ export default function Dashboard() {
       { key: "accounts", label: "کاربران جدید", series: stats.accounts_series },
       { key: "organizations", label: "سازمان‌های جدید", series: stats.organizations_series },
     ];
-    const shown = isSuper ? all : all.slice(0, 1);
+    const shown = isSuper && !orgFilter ? all : all.slice(0, 1);
     return shown.map((item) => ({
       key: item.key,
       label: item.label,
       values: bucketByMonth(item.series, months),
     }));
-  }, [stats, months, isSuper]);
+  }, [stats, months, isSuper, orgFilter]);
 
   const suggestions = useMemo(() => {
     if (!stats) return [];
@@ -69,13 +78,35 @@ export default function Dashboard() {
         ? `محدود به ${stats.scope_name}`
         : "محدود به دامنه شما";
 
+  const orgRows = stats.jobs_by_organization.map((row) => ({
+    name: row.name,
+    value: row.count,
+  }));
+
   return (
     <>
-      <PageToolbar title="داشبورد مدیریت" hint={scopeNote} />
+      <PageToolbar title="داشبورد مدیریت" hint={scopeNote}>
+        {isSuper && (
+          <Select
+            value={orgFilter}
+            onChange={(event) => setOrgFilter(event.target.value)}
+            className="h-11 min-w-44"
+          >
+            <option value="">همه سازمان‌ها</option>
+            {orgs.map((org) => (
+              <option key={org.id} value={org.id}>
+                {org.name}
+              </option>
+            ))}
+          </Select>
+        )}
+      </PageToolbar>
 
       <Card title="نمای کلی">
         <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3">
-          {isSuper && <StatTile label="سازمان‌ها" value={stats.organizations} />}
+          {isSuper && !orgFilter && (
+            <StatTile label="سازمان‌ها" value={stats.organizations} />
+          )}
           <StatTile
             label="کاربران"
             value={stats.accounts}
@@ -138,12 +169,22 @@ export default function Dashboard() {
 
       <Card
         title="پایگاه داده مشاغل"
-        hint="پیشنهادهای زیر متعلق به کاربران زیرمجموعه شماست؛ حجم پایگاه داده، مشترک میان تمامی سازمان‌هاست"
+        hint="پیشنهادهای زیر متعلق به دامنه شماست؛ مشاغل عمومی میان تمامی سازمان‌ها مشترک است و مشاغل اختصاصی تنها در جست‌وجوی سازمان خودشان دیده می‌شود"
       >
         <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3 mb-6">
           <StatTile label="تایید شده" value={stats.jobs.approved} />
           <StatTile label="در انتظار" value={stats.jobs.pending} tone="warning" />
           <StatTile label="رد شده" value={stats.jobs.rejected} tone="muted" />
+          <StatTile
+            label="مشاغل عمومی"
+            value={stats.jobs.public_records}
+            hint="در دسترس تمامی سازمان‌ها"
+          />
+          <StatTile
+            label="مشاغل اختصاصی"
+            value={stats.jobs.organization_records}
+            hint={stats.scope === "global" ? "مجموع همه سازمان‌ها" : "ویژه سازمان شما"}
+          />
         </div>
 
         {stats.jobs.engine_records == null ? (
@@ -159,6 +200,15 @@ export default function Dashboard() {
           />
         )}
       </Card>
+
+      {orgRows.length > 0 && (
+        <Card
+          title="مشاغل اختصاصی به تفکیک سازمان"
+          hint="رکوردهای تاییدشده‌ای که تنها در جست‌وجوی همان سازمان دیده می‌شوند"
+        >
+          <CategoryBars rows={orgRows} valueLabel="شغل" />
+        </Card>
+      )}
 
       <Card title="پیشنهادهای شغلی در هر ماه" hint="بر پایه تاریخ ثبت پیشنهاد">
         <MonthlyBars months={months} series={suggestions} height={220} />

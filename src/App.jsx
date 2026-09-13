@@ -71,19 +71,12 @@ export default function App() {
             />
             <Route path="users" element={<Navigate to="/manage/accounts" replace />} />
             <Route path="accounts" element={<Accounts />} />
-            <Route
-              path="jobs"
-              element={
-                <Protected roles={["super_admin"]}>
-                  <Jobs />
-                </Protected>
-              }
-            />
+            <Route path="jobs" element={<Jobs />} />
           </Route>
           <Route
             path="/admin"
             element={
-              <Protected roles={["super_admin"]}>
+              <Protected roles={ADMIN_ROLES}>
                 <Admin />
               </Protected>
             }

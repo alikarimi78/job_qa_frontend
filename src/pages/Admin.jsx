@@ -5,8 +5,11 @@ import Badge from "@components/ui/Badge";
 import Loader, { Spinner } from "@components/ui/Loader";
 import JobForm from "@components/JobForm";
 import Modal from "@components/ui/Modal";
+import Select from "@components/ui/Select";
 import { CloseButton, DialogFooter } from "@components/manage/Forms";
 import { splitItems } from "@components/ui/ItemsInput";
+import { useCurrentUserQuery } from "@services/authApi";
+import { useOrganizationsQuery } from "@services/accountsApi";
 import {
   useApproveSuggestionMutation,
   useRebuildMutation,
@@ -57,11 +60,25 @@ function FieldRow({ label, value, list }) {
 
 const EDIT_FORM_ID = "suggestion-edit-form";
 
+// «همه» for a super_admin, «عمومی» for the records that belong to no organization, and
+// one entry per organization. An org_admin is handed their own organization's queue by
+// the server whatever they ask for, so they are shown no filter at all.
+const PUBLIC = "public";
+
 export default function Admin() {
   const [open, setOpen] = useState(null);
   const [editing, setEditing] = useState(null);
+  const [scope, setScope] = useState("");
 
-  const { data: pending = [], isLoading } = useSuggestionsQuery("pending");
+  const { data: me } = useCurrentUserQuery();
+  const { data: orgs = [] } = useOrganizationsQuery();
+  const isSuper = me?.role === "super_admin";
+
+  const { data: pending = [], isLoading } = useSuggestionsQuery({
+    jobStatus: "pending",
+    organizationId: isSuper && scope && scope !== PUBLIC ? Number(scope) : undefined,
+    publicOnly: isSuper && scope === PUBLIC,
+  });
   const [approve] = useApproveSuggestionMutation();
   const [reject] = useRejectSuggestionMutation();
   const [updateSuggestion, { isLoading: saving }] = useUpdateSuggestionMutation();
@@ -74,6 +91,13 @@ export default function Admin() {
   const running = rebuild?.running ?? false;
 
   const toggle = (id) => setOpen((was) => (was === id ? null : id));
+
+  const orgsById = Object.fromEntries(orgs.map((org) => [org.id, org]));
+  const scopeOf = (item) =>
+    item.organization_id == null
+      ? ["عمومی", "neutral"]
+      : [`اختصاصی — ${orgsById[item.organization_id]?.name ?? item.organization_id}`,
+         "accent"];
 
   const editingRow = editing === null ? null : pending.find((it) => it.id === editing);
 
@@ -116,7 +140,7 @@ export default function Admin() {
     <>
       <Card
         title="بررسی پیشنهادها"
-        hint="پیشنهاد تاییدشده به پایگاه داده مشترک تمامی سازمان‌ها افزوده می‌شود"
+        hint="پیشنهاد عمومی تاییدشده به پایگاه داده مشترک تمامی سازمان‌ها افزوده می‌شود و پیشنهاد اختصاصی تنها در جست‌وجوی همان سازمان دیده می‌شود"
         actions={
           <Badge tone={pending.length ? "warning" : "neutral"}>
             {pending.length.toLocaleString("fa-IR")} پیشنهاد در انتظار
@@ -134,20 +158,41 @@ export default function Admin() {
                   : "تا زمانی که بازسازی انجام نشود، رکورد جدید در جستجو نمایش داده نمی‌شود."}
             </p>
           </div>
-          <Button
-            variant="secondary"
-            buttonProps={{ onClick: rebuildNow, disabled: running || starting }}
-          >
-            {running || starting ? (
-              <>
-                <Spinner />
-                در حال اجرا...
-              </>
-            ) : (
-              "بازسازی"
-            )}
-          </Button>
+          {isSuper && (
+            <Button
+              variant="secondary"
+              buttonProps={{ onClick: rebuildNow, disabled: running || starting }}
+            >
+              {running || starting ? (
+                <>
+                  <Spinner />
+                  در حال اجرا...
+                </>
+              ) : (
+                "بازسازی"
+              )}
+            </Button>
+          )}
         </div>
+
+        {isSuper && (
+          <div className="flex items-center gap-2 flex-wrap mb-4">
+            <label className="text-sm text-slate-600">دامنه:</label>
+            <Select
+              value={scope}
+              onChange={(event) => setScope(event.target.value)}
+              className="min-w-44"
+            >
+              <option value="">همه</option>
+              <option value={PUBLIC}>عمومی</option>
+              {orgs.map((org) => (
+                <option key={org.id} value={org.id}>
+                  {org.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+        )}
 
         {isLoading && <Loader />}
         {!isLoading && pending.length === 0 && (
@@ -160,8 +205,11 @@ export default function Admin() {
               <div className="flex items-center justify-between gap-3 flex-wrap py-3">
                 <div>
                   <strong className="text-sm text-slate-800">{it.job_title}</strong>
-                  <div className="text-xs text-slate-400 mt-0.5">
-                    پیشنهاد #{it.id.toLocaleString("fa-IR")}
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs text-slate-400">
+                      پیشنهاد #{it.id.toLocaleString("fa-IR")}
+                    </span>
+                    <Badge tone={scopeOf(it)[1]}>{scopeOf(it)[0]}</Badge>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -227,6 +275,8 @@ export default function Admin() {
             key={editingRow.id}
             formId={EDIT_FORM_ID}
             initial={editingRow}
+            owners={orgs}
+            allowPublic={isSuper}
             onSubmit={(body) => saveEdit(editingRow.id, body)}
           />
         </Modal>

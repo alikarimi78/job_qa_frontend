@@ -3,9 +3,11 @@ import { Link } from "react-router-dom";
 import Card from "@components/ui/Card";
 import Button from "@components/ui/Button";
 import Badge from "@components/ui/Badge";
+import Select from "@components/ui/Select";
 import { Spinner } from "@components/ui/Loader";
 import JobDetails from "@components/JobDetails";
-import JobForm from "@components/JobForm";
+import JobForm, { PUBLIC_OWNER } from "@components/JobForm";
+import useSuggestionOwners from "@hook/useSuggestionOwners";
 import { useSearchMutation, useSearchReportMutation, useSuggestJobMutation } from "@services/jobsApi";
 import { downloadBlob, safeFileName } from "@utils/download";
 import { errorMessage } from "@utils/errors";
@@ -37,17 +39,46 @@ const MODE_BADGE = {
 // `needs_detail` carries no record either: the question named a field, not a job.
 const NO_REPORT = new Set(["out_of_domain", "about", "needs_detail"]);
 
+// The modes whose record was composed rather than found — typed as a name or asked as a
+// question, it is the same kind of record, and it is shown and offered the same way.
+const COMPOSED = new Set(["job_generated", "job_adapted"]);
+
+// Why a combination came back with no job to offer, keyed on its `draft_reason`.
+const DRAFT_REASONS = {
+  exists: ({ draft_job }) =>
+    `شغلی با عنوان «${draft_job}» که این ترکیب را پوشش می‌دهد در پایگاه داده موجود است؛ برای مشاهده مشخصات آن، همین عنوان را جست‌وجو نمایید.`,
+  not_a_job: () =>
+    "ترکیب این دو حوزه به شغل مشخصی اشاره ندارد، بنابراین شغلی برای پیشنهاد ایجاد نشد.",
+  too_vague: () =>
+    "پرسش شما دو حوزه را نام می‌برد، نه یک شغل مشخص؛ برای ثبت پیشنهاد، عنوان شغل ترکیبی مورد نظر را جست‌وجو نمایید، برای نمونه «مهندس رباتیک جراحی».",
+  unavailable: () => "امکان ایجاد شغل ترکیبی پیشنهادی در حال حاضر فراهم نیست.",
+};
+
+function Notice({ title, children }) {
+  return (
+    <div className="mb-4 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200">
+      <strong className="text-sm text-amber-900">{title}</strong>
+      <p className="text-xs text-amber-800 mt-1 leading-6">{children}</p>
+    </div>
+  );
+}
+
 export default function QuestionSearch() {
   const [question, setQuestion] = useState("");
   const [result, setResult] = useState(null);
   const [asked, setAsked] = useState("");
   const [declined, setDeclined] = useState(false);
   const [filed, setFiled] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [owner, setOwner] = useState(PUBLIC_OWNER);
   const [runId, setRunId] = useState(0);
   const [openNearest, setOpenNearest] = useState(false);
   const [search, { isLoading }] = useSearchMutation();
   const [searchReport, { isLoading: isReporting }] = useSearchReportMutation();
   const [suggestJob, { isLoading: isFiling }] = useSuggestJobMutation();
+  // The owner choice the suggestion page offers, so a job composed here can be filed for the
+  // caller's own organization too; without it this page could only ever file public records.
+  const { owners, allowPublic } = useSuggestionOwners();
 
   async function runSearch(text) {
     const asking = text.trim();
@@ -55,6 +86,8 @@ export default function QuestionSearch() {
     setResult(null);
     setDeclined(false);
     setFiled(false);
+    setEditing(false);
+    setOwner(PUBLIC_OWNER);
     setOpenNearest(false);
     try {
       const data = await search(asking).unwrap();
@@ -93,21 +126,22 @@ export default function QuestionSearch() {
     try {
       await suggestJob(body).unwrap();
       setFiled(true);
+      setEditing(false);
       showMessage.success("پیشنهاد شما ثبت شد و در انتظار بررسی مدیر سامانه است.");
     } catch (err) {
       showMessage.error(errorMessage(err));
     }
   }
 
-  const offered = result?.mode === "job_generated" && result.job_draft;
-  // The engine resolves a question to the job it is about before answering it, so the
-  // record under a `job_adapted` answer describes that job and is *not* in the database —
-  // it was composed from the question and the nearest record. Every other mode's boxes
-  // are the stored record, and the heading names it rather than saying «این شغل» and
-  // leaving the reader to guess which of the two it means.
-  const composed = result?.mode === "job_adapted";
-  // The single nearest stored record, sent whole beside the answer so a click opens it
-  // here rather than starting another search.
+  const mode = result?.mode;
+  const composed = COMPOSED.has(mode);
+  const combination = mode === "interdisciplinary";
+  // The job this search offers for filing, and the boxes that show it: a composed record is
+  // itself the answer's boxes, while a combination composes one beside its two stored records.
+  // Every offer is then shown the same way — boxes, and «پذیرش» / «رد» / «ویرایش» under them.
+  const draft = result?.job_draft ?? null;
+  const draftDetail = composed ? result?.details?.[0] : result?.draft_detail;
+  const offered = Boolean(draft && draftDetail);
   const nearest = result?.nearest ?? null;
   const subject = result?.details?.[0]?.job_title ?? result?.job;
   const detailsTitle =
@@ -118,6 +152,14 @@ export default function QuestionSearch() {
         : subject
           ? `اطلاعات «${subject}»`
           : "اطلاعات این شغل";
+
+  // «پذیرش» files the record exactly as shown. The owner is the one thing a suggestion adds to
+  // it, chosen beside the buttons when there is a choice at all — the rule JobForm follows.
+  function accept() {
+    const body = { ...draft };
+    if (owners.length) body.organization_id = owner === PUBLIC_OWNER ? null : Number(owner);
+    fileSuggestion(body);
+  }
 
   return (
     <>
@@ -155,22 +197,20 @@ export default function QuestionSearch() {
         <Card>
           <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
             <span className="min-w-0">
-              {result.mode === "job_generated" ? (
-                <Badge tone="warning">شغل پیشنهادی؛ ثبت نشده است</Badge>
-              ) : result.mode === "out_of_domain" ? (
+              {mode === "out_of_domain" ? (
                 <Badge tone="danger">خارج از دامنه</Badge>
-              ) : result.mode === "needs_detail" ? (
+              ) : mode === "needs_detail" ? (
                 <Badge tone="warning">نیازمند توضیح دقیق‌تر</Badge>
-              ) : result.mode === "about" ? (
+              ) : mode === "about" ? (
                 <Badge tone="neutral">راهنمای سامانه</Badge>
-              ) : result.mode === "interdisciplinary" ? (
+              ) : combination ? (
                 <Badge tone="accent">{result.jobs?.join(" + ")}</Badge>
               ) : (
-                // The job the question was about — the one the engine resolved it to,
-                // not the question itself and not the nearest record it was ranked
-                // against. A title can be long enough to need two lines.
+                // The job the question was about — the one the engine resolved it to, not the
+                // question itself and not the nearest record it was ranked against. A title can
+                // be long enough to need two lines.
                 result.job && (
-                  <Badge tone={MODE_BADGE[result.mode] ?? "accent"} wrap className="max-w-full">
+                  <Badge tone={MODE_BADGE[mode] ?? "accent"} wrap className="max-w-full">
                     {result.job}
                   </Badge>
                 )
@@ -180,7 +220,7 @@ export default function QuestionSearch() {
               {result.score != null && (
                 <span className="text-xs text-slate-400">تطابق: {result.score.toFixed(2)}</span>
               )}
-              {!NO_REPORT.has(result.mode) && (
+              {!NO_REPORT.has(mode) && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -194,55 +234,107 @@ export default function QuestionSearch() {
           </div>
 
           {composed && (
-            <div className="mb-4 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200">
-              <strong className="text-sm text-amber-900">
-                این شغل در پایگاه داده ثبت نشده است
-              </strong>
-              <p className="text-xs text-amber-800 mt-1 leading-6">
-                مشخصات زیر بر اساس پرسش شما و نزدیک‌ترین رکورد پایگاه داده تدوین شده است و
-                بخشی از پایگاه داده به شمار نمی‌رود.
-              </p>
-            </div>
+            <Notice title="این شغل در پایگاه داده ثبت نشده است">
+              مشخصات زیر بر اساس ورودی شما و نزدیک‌ترین رکورد پایگاه داده تدوین شده است و تا پیش
+              از تایید مدیر سامانه، بخشی از پایگاه داده به شمار نمی‌رود.
+            </Notice>
           )}
 
           <p className="whitespace-pre-wrap text-[15px] leading-9 text-slate-800 m-0">
             {result.answer}
           </p>
 
-          {!offered && <JobDetails details={result.details} title={detailsTitle} />}
+          {!(composed && editing) && <JobDetails details={result.details} title={detailsTitle} />}
 
-          {offered && !declined && !filed && (
+          {combination && (offered || result.draft_reason) && (
             <div className="mt-6 pt-5 border-t border-slate-200">
-              <div className="mb-4 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200">
-                <strong className="text-sm text-amber-900">
-                  این شغل در پایگاه داده موجود نیست
-                </strong>
-                <p className="text-xs text-amber-800 mt-1 leading-6">
-                  مشخصات پیشنهادی زیر را بررسی و در صورت نیاز ویرایش نمایید؛ پس از ثبت، جهت بررسی
-                  و تایید به مدیر سامانه ارسال می‌شود.
-                </p>
-              </div>
+              <Notice
+                title={offered ? "شغل ترکیبی پیشنهادی" : "شغل ترکیبی برای پیشنهاد ایجاد نشد"}
+              >
+                {offered
+                  ? "مشخصات زیر بر اساس پرسش شما و دو رکورد بالا تدوین شده است و تا پیش از تایید مدیر سامانه، بخشی از پایگاه داده به شمار نمی‌رود."
+                  : (DRAFT_REASONS[result.draft_reason] ?? DRAFT_REASONS.unavailable)(result)}
+              </Notice>
+              {offered && !editing && (
+                <JobDetails
+                  details={[draftDetail]}
+                  title={`مشخصات تدوین‌شده «${draftDetail.job_title}»`}
+                />
+              )}
+            </div>
+          )}
 
+          {offered && !filed && !declined && editing && (
+            <div className="mt-6 pt-5 border-t border-slate-200">
               <JobForm
-                key={runId}
-                initial={result.job_draft}
+                key={`${runId}-edit`}
+                initial={draft}
                 onSubmit={fileSuggestion}
                 submitLabel="ثبت پیشنهاد"
                 busy={isFiling}
+                owners={owners}
+                allowPublic={allowPublic}
                 actions={
                   <Button
-                    variant="danger-outline"
+                    variant="outline"
                     size="lg"
                     buttonProps={{
                       type: "button",
-                      onClick: () => setDeclined(true),
+                      onClick: () => setEditing(false),
                       disabled: isFiling,
                     }}
                   >
-                    رد پیشنهاد
+                    انصراف
                   </Button>
                 }
               />
+            </div>
+          )}
+
+          {offered && !filed && !declined && !editing && (
+            <div className="mt-6 pt-5 border-t border-slate-200 flex items-center justify-between gap-3 flex-wrap">
+              <p className="text-sm text-slate-600 leading-7 m-0">
+                آیا این شغل به‌عنوان پیشنهاد ثبت شود؟ ثبت نهایی پس از تایید مدیر سامانه انجام
+                می‌شود.
+              </p>
+              <div className="flex items-center gap-2 flex-wrap">
+                {owners.length > 0 && (
+                  <Select
+                    value={owner}
+                    onChange={(event) => setOwner(event.target.value)}
+                    className="min-w-44"
+                    selectProps={{ "aria-label": "دامنه شغل", disabled: isFiling }}
+                  >
+                    {allowPublic && <option value={PUBLIC_OWNER}>عمومی — همه سازمان‌ها</option>}
+                    {owners.map((organization) => (
+                      <option key={organization.id} value={String(organization.id)}>
+                        اختصاصی — {organization.name}
+                      </option>
+                    ))}
+                  </Select>
+                )}
+                <Button
+                  variant="success"
+                  size="sm"
+                  buttonProps={{ type: "button", onClick: accept, disabled: isFiling }}
+                >
+                  {isFiling ? <Spinner /> : "پذیرش"}
+                </Button>
+                <Button
+                  variant="danger-outline"
+                  size="sm"
+                  buttonProps={{ type: "button", onClick: () => setDeclined(true), disabled: isFiling }}
+                >
+                  رد
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  buttonProps={{ type: "button", onClick: () => setEditing(true), disabled: isFiling }}
+                >
+                  ویرایش
+                </Button>
+              </div>
             </div>
           )}
 
@@ -267,10 +359,7 @@ export default function QuestionSearch() {
 
           {nearest && (
             <div className="mt-6 pt-5 border-t border-slate-200">
-              <p className="text-xs text-slate-500 leading-6 m-0">
-                نزدیک‌ترین شغل موجود در پایگاه داده
-                {offered && "؛ شغل پیشنهادی بالا از آن برداشته نشده است"}
-              </p>
+              <p className="text-xs text-slate-500 leading-6 m-0">نزدیک‌ترین شغل موجود در پایگاه داده</p>
               <div className="flex items-center gap-2 flex-wrap mt-3">
                 <button
                   type="button"

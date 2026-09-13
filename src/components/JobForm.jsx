@@ -1,6 +1,7 @@
 import { FormProvider, useForm } from "react-hook-form";
 import Input from "@components/ui/Input";
 import ItemsInput, { cellFromItems, itemsFromCell } from "@components/ui/ItemsInput";
+import Select from "@components/ui/Select";
 import SubmitBar from "@components/ui/SubmitBar";
 import Textarea from "@components/ui/Textarea";
 
@@ -21,7 +22,15 @@ const LISTS = [
 
 const KEYS = [...PROSE.map(([k]) => k), "description", ...LISTS.map(([k]) => k)];
 
-function toFormValues(initial) {
+const PUBLIC = "";
+// The same "no organization" value, for a caller that files a record without opening the form.
+export const PUBLIC_OWNER = PUBLIC;
+
+// `owners` is the organizations this caller may hand the record to, and `allowPublic`
+// whether the shared corpus is one of the choices. With neither — a user who sits in no
+// organization — the field is not drawn and the body never mentions the owner, which is
+// what leaves an existing record where it already was.
+function toFormValues(initial, owners, allowPublic) {
   const values = { job_title: "", description: "" };
   for (const key of ["job_title", "description"]) {
     values[key] = initial?.[key] ?? "";
@@ -29,16 +38,36 @@ function toFormValues(initial) {
   for (const [key] of LISTS) {
     values[key] = itemsFromCell(initial?.[key] ?? "");
   }
+  values.organization_id =
+    initial?.organization_id != null
+      ? String(initial.organization_id)
+      : allowPublic
+        ? PUBLIC
+        : String(owners[0]?.id ?? PUBLIC);
   return values;
 }
 
-export default function JobForm({ onSubmit, submitLabel, busy, initial, actions, formId }) {
-  const methods = useForm({ defaultValues: toFormValues(initial) });
+export default function JobForm({
+  onSubmit,
+  submitLabel,
+  busy,
+  initial,
+  actions,
+  formId,
+  owners = [],
+  allowPublic = true,
+}) {
+  const methods = useForm({ defaultValues: toFormValues(initial, owners, allowPublic) });
+  const owner = methods.watch("organization_id");
 
   const submit = (values) => {
     const body = { job_title: values.job_title, description: values.description };
     for (const [key] of LISTS) body[key] = cellFromItems(values[key]);
-    onSubmit(body, () => methods.reset(toFormValues(null)));
+    if (owners.length) {
+      body.organization_id =
+        values.organization_id === PUBLIC ? null : Number(values.organization_id);
+    }
+    onSubmit(body, () => methods.reset(toFormValues(null, owners, allowPublic)));
   };
 
   return (
@@ -58,6 +87,30 @@ export default function JobForm({ onSubmit, submitLabel, busy, initial, actions,
               registerProps={{ required: `${label} را وارد نمایید` }}
             />
           ))}
+
+          {owners.length > 0 && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-slate-700">دامنه شغل</label>
+              <Select
+                value={owner}
+                onChange={(event) =>
+                  methods.setValue("organization_id", event.target.value)
+                }
+                className="w-full h-11"
+              >
+                {allowPublic && <option value={PUBLIC}>عمومی — همه سازمان‌ها</option>}
+                {owners.map((organization) => (
+                  <option key={organization.id} value={String(organization.id)}>
+                    اختصاصی — {organization.name}
+                  </option>
+                ))}
+              </Select>
+              <span className="text-xs text-slate-500 leading-6">
+                شغل عمومی در جست‌وجوی تمامی سازمان‌ها دیده می‌شود؛ شغل اختصاصی تنها برای
+                کاربران همان سازمان.
+              </span>
+            </div>
+          )}
         </div>
 
         <Textarea

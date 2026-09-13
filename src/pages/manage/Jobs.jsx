@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useOutletContext } from "react-router-dom";
 import Card from "@components/ui/Card";
 import Badge from "@components/ui/Badge";
 import Loader, { Spinner } from "@components/ui/Loader";
@@ -6,11 +7,14 @@ import DataTable, { RowActions } from "@components/ui/DataTable";
 import PageToolbar from "@components/ui/PageToolbar";
 import Pager from "@components/ui/Pager";
 import Modal from "@components/ui/Modal";
-import IconButton, { PencilGlyph } from "@components/ui/IconButton";
-import { CloseButton, DialogFooter } from "@components/manage/Forms";
+import Select from "@components/ui/Select";
+import IconButton, { PencilGlyph, TrashGlyph } from "@components/ui/IconButton";
+import { CloseButton, ConfirmDialog, DialogFooter } from "@components/manage/Forms";
 import { splitItems } from "@components/ui/ItemsInput";
 import JobForm from "@components/JobForm";
+import { useOrganizationsQuery } from "@services/accountsApi";
 import {
+  useDeleteJobMutation,
   useJobsQuery,
   useRebuildStatusQuery,
   useUpdateJobMutation,
@@ -25,6 +29,9 @@ const EDIT_FORM_ID = "corpus-edit-form";
 const EMPTY_PAGE = { items: [], total: 0, page: 1, page_size: PAGE_SIZE };
 
 const ALIAS_CHIPS = 2;
+
+// The records that belong to no organization — the corpus every organization searches.
+const PUBLIC = "public";
 
 function AliasCell({ value }) {
   const items = splitItems(value);
@@ -51,10 +58,18 @@ function AliasCell({ value }) {
 }
 
 export default function Jobs() {
+  const me = useOutletContext();
+  const isSuper = me.role === "super_admin";
+
   const [term, setTerm] = useState("");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [editing, setEditing] = useState(null);
+  const [deleting, setDeleting] = useState(null);
+  const [scope, setScope] = useState("");
+
+  const { data: orgs = [] } = useOrganizationsQuery();
+  const orgsById = Object.fromEntries(orgs.map((org) => [org.id, org]));
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -64,13 +79,20 @@ export default function Jobs() {
     return () => clearTimeout(timer);
   }, [term]);
 
-  const { data, isFetching, isLoading } = useJobsQuery({ q: query, page, pageSize: PAGE_SIZE });
+  const { data, isFetching, isLoading } = useJobsQuery({
+    q: query,
+    page,
+    pageSize: PAGE_SIZE,
+    organizationId: scope && scope !== PUBLIC ? Number(scope) : undefined,
+    publicOnly: scope === PUBLIC,
+  });
 
   const previous = useRef(EMPTY_PAGE);
   if (data) previous.current = data;
   const shown = data ?? previous.current;
 
   const [updateJob, { isLoading: saving }] = useUpdateJobMutation();
+  const [deleteJob, { isLoading: removing }] = useDeleteJobMutation();
 
   const { data: rebuild } = useRebuildStatusQuery(undefined, {
     pollingInterval: 3000,
@@ -88,6 +110,18 @@ export default function Jobs() {
     if (done) setEditing(null);
   }
 
+  async function remove() {
+    const job = deleting;
+    const done = await runAction(
+      () => deleteJob(job.id),
+      `«${job.job_title}» حذف شد؛ بازسازی امبدینگ‌ها آغاز شد.`
+    );
+    if (!done) return;
+    setDeleting(null);
+    // The last row of a page past the first leaves that page empty, so step back a page.
+    if (shown.items.length === 1 && page > 1) setPage(page - 1);
+  }
+
   const columns = [
     {
       key: "job_title",
@@ -98,6 +132,18 @@ export default function Jobs() {
       key: "aliases",
       header: "نام‌های دیگر",
       cell: (job) => <AliasCell value={job.aliases} />,
+    },
+    {
+      key: "organization",
+      header: "دامنه",
+      cell: (job) =>
+        job.organization_id == null ? (
+          <Badge tone="neutral">عمومی</Badge>
+        ) : (
+          <Badge tone="accent">
+            {orgsById[job.organization_id]?.name ?? `سازمان ${job.organization_id}`}
+          </Badge>
+        ),
     },
     {
       key: "updated_at",
@@ -119,6 +165,13 @@ export default function Jobs() {
           >
             {PencilGlyph}
           </IconButton>
+          <IconButton
+            tone="danger"
+            title={`حذف «${job.job_title}»`}
+            onClick={() => setDeleting(job)}
+          >
+            {TrashGlyph}
+          </IconButton>
         </RowActions>
       ),
     },
@@ -128,8 +181,30 @@ export default function Jobs() {
     <>
       <PageToolbar
         title="مدیریت مشاغل"
-        hint="مشاغل ثبت‌شده در پایگاه داده. با ذخیره هر ویرایش، بازسازی امبدینگ‌ها بی‌درنگ آغاز می‌شود و جستجو در این مدت با نسخه پیشین پاسخ می‌دهد."
+        hint={
+          isSuper
+            ? "مشاغل ثبت‌شده در پایگاه داده. با ذخیره هر ویرایش یا حذف هر شغل، بازسازی امبدینگ‌ها بی‌درنگ آغاز می‌شود و جستجو در این مدت با نسخه پیشین پاسخ می‌دهد."
+            : "مشاغل اختصاصی سازمان شما. با ذخیره هر ویرایش یا حذف هر شغل، بازسازی امبدینگ‌ها بی‌درنگ آغاز می‌شود و جستجو در این مدت با نسخه پیشین پاسخ می‌دهد."
+        }
       >
+        {isSuper && (
+          <Select
+            value={scope}
+            onChange={(event) => {
+              setScope(event.target.value);
+              setPage(1);
+            }}
+            className="h-11 min-w-44"
+          >
+            <option value="">همه دامنه‌ها</option>
+            <option value={PUBLIC}>عمومی</option>
+            {orgs.map((org) => (
+              <option key={org.id} value={org.id}>
+                {org.name}
+              </option>
+            ))}
+          </Select>
+        )}
         <input
           value={term}
           onChange={(event) => setTerm(event.target.value)}
@@ -160,8 +235,8 @@ export default function Jobs() {
               rows={shown.items}
               empty={
                 query
-                  ? `شغلی با عنوان «${query}» در پایگاه داده یافت نشد.`
-                  : "هنوز شغلی در پایگاه داده ثبت نشده است."
+                  ? `شغلی با عنوان «${query}» در این دامنه یافت نشد.`
+                  : "هنوز شغلی در این دامنه ثبت نشده است."
               }
             />
             <Pager
@@ -179,7 +254,11 @@ export default function Jobs() {
         <Modal
           open
           title={`ویرایش «${row.job_title}»`}
-          hint="این رکورد هم‌اکنون در پایگاه دادهٔ مشترک تمامی سازمان‌ها موجود است. با ذخیره، تغییرات بلافاصله اعمال و بازسازی امبدینگ‌ها آغاز می‌شود."
+          hint={
+            row.organization_id == null
+              ? "این رکورد هم‌اکنون در پایگاه دادهٔ مشترک تمامی سازمان‌ها موجود است. با ذخیره، تغییرات بلافاصله اعمال و بازسازی امبدینگ‌ها آغاز می‌شود."
+              : `این رکورد تنها در جست‌وجوی سازمان «${orgsById[row.organization_id]?.name ?? row.organization_id}» دیده می‌شود. با ذخیره، تغییرات بلافاصله اعمال و بازسازی امبدینگ‌ها آغاز می‌شود.`
+          }
           size="lg"
           onClose={saving ? undefined : () => setEditing(null)}
           footer={
@@ -189,9 +268,25 @@ export default function Jobs() {
             </>
           }
         >
-          <JobForm key={row.id} formId={EDIT_FORM_ID} initial={row} onSubmit={save} />
+          <JobForm
+            key={row.id}
+            formId={EDIT_FORM_ID}
+            initial={row}
+            owners={orgs}
+            allowPublic={isSuper}
+            onSubmit={save}
+          />
         </Modal>
       )}
+
+      <ConfirmDialog
+        open={deleting !== null}
+        title="حذف شغل"
+        message={`آیا از حذف «${deleting?.job_title ?? ""}» اطمینان دارید؟ این عملیات قابل بازگشت نیست. شغل از پایگاه داده حذف و بازسازی امبدینگ‌ها بی‌درنگ آغاز می‌شود؛ تا پایان بازسازی، جست‌وجو با نسخه پیشین پاسخ می‌دهد.`}
+        busy={removing}
+        onClose={() => setDeleting(null)}
+        onConfirm={remove}
+      />
     </>
   );
 }

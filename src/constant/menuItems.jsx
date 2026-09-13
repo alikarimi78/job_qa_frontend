@@ -99,13 +99,13 @@ export const menuItems = [
     href: "/manage/jobs",
     label: "مدیریت مشاغل",
     icon: BriefcaseIcon,
-    roles: ["super_admin"],
+    roles: ADMIN_ROLES,
   },
   {
     href: "/admin",
     label: "بررسی پیشنهادها",
     icon: ShieldIcon,
-    roles: ["super_admin"],
+    roles: ADMIN_ROLES,
   },
 ];
 

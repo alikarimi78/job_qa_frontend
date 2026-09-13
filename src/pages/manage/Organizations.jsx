@@ -223,6 +223,10 @@ export default function Organizations() {
                   ),
                 },
                 { label: "تعداد کاربر", value: faNumber(accountCountOf(target.id)) },
+                {
+                  label: "شغل اختصاصی",
+                  value: faNumber(target.job_count ?? 0),
+                },
               ]
             : []
         }
@@ -231,7 +235,14 @@ export default function Organizations() {
       <ConfirmDialog
         open={is("delete")}
         title="حذف سازمان"
-        message={`آیا از حذف سازمان «${target?.name ?? ""}» اطمینان دارید؟ این عملیات قابل بازگشت نیست. حذف تنها وقتی ممکن است که هیچ کاربری — ادمین آن هم — در سازمان نمانده باشد.`}
+        message={
+          `آیا از حذف سازمان «${target?.name ?? ""}» اطمینان دارید؟ این عملیات قابل بازگشت نیست. ` +
+          `حذف تنها وقتی ممکن است که هیچ کاربری — ادمین آن هم — در سازمان نمانده باشد.` +
+          (target?.job_count
+            ? ` همچنین ${faNumber(target.job_count)} شغل اختصاصی این سازمان به همراه آن حذف می‌شود؛` +
+              ` شغلی که باید بماند را پیش از حذف، در «مدیریت مشاغل» عمومی نمایید.`
+            : "")
+        }
         busy={deleting}
         onClose={close}
         onConfirm={() =>

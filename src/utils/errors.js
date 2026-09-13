@@ -28,6 +28,8 @@ const EXACT = {
   "Account is blocked": "حساب کاربری شما مسدود شده است؛ برای پیگیری با مدیر سامانه تماس بگیرید.",
   "Insufficient role": "سطح دسترسی شما برای انجام این عملیات کافی نیست.",
   "Outside your organization": "این حساب خارج از سازمان شماست.",
+  "Public records are admitted by the system administrator":
+    "مشاغل عمومی تنها توسط مدیر سامانه تایید، ویرایش یا حذف می‌شوند.",
   "You cannot act on your own account": "انجام این عملیات روی حساب کاربری خودتان ممکن نیست.",
 
   "Account not found": "حساب کاربری موردنظر یافت نشد.",

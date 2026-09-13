@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Card from "@components/ui/Card";
 import JobForm from "@components/JobForm";
+import useSuggestionOwners from "@hook/useSuggestionOwners";
 import { useSuggestJobMutation } from "@services/jobsApi";
 import { errorMessage } from "@utils/errors";
 import { showMessage } from "@utils/toast";
@@ -8,6 +9,9 @@ import { showMessage } from "@utils/toast";
 export default function NewSuggestion() {
   const [done, setDone] = useState(false);
   const [suggestJob, { isLoading }] = useSuggestJobMutation();
+  // A super_admin may name any organization, everyone else only their own, and an account
+  // in none is shown no choice — the super_admin, who sits in none, used to get none either.
+  const { owners, allowPublic } = useSuggestionOwners();
 
   async function submit(form, reset) {
     setDone(false);
@@ -32,7 +36,13 @@ export default function NewSuggestion() {
         </div>
       )}
 
-      <JobForm onSubmit={submit} submitLabel="ثبت پیشنهاد" busy={isLoading} />
+      <JobForm
+        onSubmit={submit}
+        submitLabel="ثبت پیشنهاد"
+        busy={isLoading}
+        owners={owners}
+        allowPublic={allowPublic}
+      />
     </Card>
   );
 }

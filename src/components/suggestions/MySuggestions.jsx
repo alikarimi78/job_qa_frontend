@@ -1,6 +1,7 @@
 import Card from "@components/ui/Card";
 import Badge from "@components/ui/Badge";
 import Loader from "@components/ui/Loader";
+import { useCurrentUserQuery } from "@services/authApi";
 import { useMySuggestionsQuery } from "@services/jobsApi";
 import { errorMessage } from "@utils/errors";
 
@@ -12,6 +13,15 @@ const STATUS = {
 
 export default function MySuggestions() {
   const { data: items = [], isLoading, error } = useMySuggestionsQuery();
+  const { data: me } = useCurrentUserQuery();
+
+  // The organization is named only when it is the suggester's own, which is the only
+  // one they could have chosen.
+  const scopeOf = (item) => {
+    if (item.organization_id == null) return ["عمومی", "neutral"];
+    const mine = me?.organization?.id === item.organization_id;
+    return [mine ? `اختصاصی — ${me.organization.name}` : "اختصاصی", "accent"];
+  };
 
   return (
     <Card title="پیشنهادهای من" hint="وضعیت مشاغلی که پیشنهاد داده‌اید">
@@ -30,6 +40,7 @@ export default function MySuggestions() {
       <div className="flex flex-col">
         {items.map((it) => {
           const [label, tone] = STATUS[it.status] ?? [it.status, "neutral"];
+          const [scopeLabel, scopeTone] = scopeOf(it);
           return (
             <div
               key={it.id}
@@ -41,7 +52,10 @@ export default function MySuggestions() {
                   {it.description}
                 </p>
               </div>
-              <Badge tone={tone}>{label}</Badge>
+              <div className="flex items-center gap-2 flex-wrap justify-end">
+                <Badge tone={scopeTone}>{scopeLabel}</Badge>
+                <Badge tone={tone}>{label}</Badge>
+              </div>
             </div>
           );
         })}
