@@ -1,9 +1,10 @@
 export const PAGE_TITLES = {
-  "/search": "جستجوی شغل",
-  "/suggestions": "پیشنهادها",
-  "/manage/dashboard": "داشبورد مدیریت",
-  "/manage/organizations": "مدیریت سازمان‌ها",
-  "/manage/accounts": "مدیریت کاربران",
-  "/admin": "بررسی پیشنهادها",
+  "/search": "تحلیل هوشمند",
+  "/suggestions": "تحلیل شخصی",
+  "/manage/dashboard": "پیشخوان",
+  "/manage/jobs": "مدیریت مشاغل",
+  "/settings/organizations": "مدیریت سازمان‌ها",
+  "/settings/accounts": "مدیریت کاربران",
+  "/settings/reviews": "بررسی پیشنهادها",
   "/login": "ورود",
 };

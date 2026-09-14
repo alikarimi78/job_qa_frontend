@@ -2,7 +2,7 @@ import { ROLE_LABELS } from "@routes/roles";
 
 const GENERIC = "خطایی رخ داده است؛ لطفاً مجدداً تلاش نمایید.";
 const SESSION_ENDED = "اعتبار ورود شما به پایان رسیده است؛ لطفاً مجدداً وارد شوید.";
-const ENGINE_COLD = "سرویس جستجو هنوز آماده نیست؛ لطفاً دقایقی بعد مجدداً تلاش نمایید.";
+const ENGINE_COLD = "سرویس تحلیل هنوز آماده نیست؛ لطفاً دقایقی بعد مجدداً تلاش نمایید.";
 
 const fa = (value) => Number(value).toLocaleString("fa-IR");
 
@@ -81,7 +81,7 @@ const PATTERNS = [
   [/^\w+: at most (\d+) items$/,
     ([, limit]) => `برای هر فیلد حداکثر ${fa(limit)} مورد می‌توانید وارد نمایید.`],
   [/^skills: at least (\d+) items are required$/,
-    ([, min]) => `برای جست‌وجوی پیشرفته باید دست‌کم ${fa(min)} مهارت وارد نمایید.`],
+    ([, min]) => `برای تحلیل پیشرفته باید دست‌کم ${fa(min)} مهارت وارد نمایید.`],
   [/^At least (\d+) fields must be filled in$/,
     ([, min]) => `دست‌کم ${fa(min)} فیلد باید تکمیل شود.`],
 

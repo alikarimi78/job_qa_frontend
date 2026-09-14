@@ -34,12 +34,12 @@ const Sliders = (
 );
 
 const MODES = [
-  ["simple", "جستجوی معمولی", Magnifier],
-  ["advanced", "جستجوی پیشرفته", Sliders],
+  ["simple", "تحلیل معمولی", Magnifier],
+  ["advanced", "تحلیل پیشرفته", Sliders],
 ];
 
 export default function ModeSwitch({ value, onChange }) {
   return (
-    <SegmentedSwitch options={MODES} value={value} onChange={onChange} label="نوع جستجو" />
+    <SegmentedSwitch options={MODES} value={value} onChange={onChange} label="نوع تحلیل" />
   );
 }

@@ -60,7 +60,7 @@ export default function SideBar({ isOpen, setIsOpen }) {
           </div>
 
           <nav className="flex-1 min-h-0 overflow-y-auto">
-            <ul className="flex flex-col gap-2">
+            <ul className="flex flex-col gap-3">
               {visibleMenuItems.map((item, index) => (
                 <MenuItem key={index} {...item} sidebarOpen={isOpen} />
               ))}

@@ -85,7 +85,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <PageToolbar title="داشبورد مدیریت" hint={scopeNote}>
+      <PageToolbar title="پیشخوان مدیریت" hint={scopeNote}>
         {isSuper && (
           <Select
             value={orgFilter}
@@ -119,7 +119,7 @@ export default function Dashboard() {
           <StatTile
             label="مشاغل پایگاه داده"
             value={stats.jobs.corpus_records}
-            hint="رکوردهای تاییدشده‌ای که جستجو بر روی آن‌ها انجام می‌شود"
+            hint="رکوردهای تاییدشده‌ای که تحلیل بر اساس آن‌ها انجام می‌شود"
           />
           <StatTile
             label="در انتظار بررسی"
@@ -169,7 +169,7 @@ export default function Dashboard() {
 
       <Card
         title="پایگاه داده مشاغل"
-        hint="پیشنهادهای زیر متعلق به دامنه شماست؛ مشاغل عمومی میان تمامی سازمان‌ها مشترک است و مشاغل اختصاصی تنها در جست‌وجوی سازمان خودشان دیده می‌شود"
+        hint="پیشنهادهای زیر متعلق به دامنه شماست؛ مشاغل عمومی میان تمامی سازمان‌ها مشترک است و مشاغل اختصاصی تنها در نتایج تحلیل سازمان خودشان دیده می‌شود"
       >
         <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3 mb-6">
           <StatTile label="تایید شده" value={stats.jobs.approved} />
@@ -189,14 +189,14 @@ export default function Dashboard() {
 
         {stats.jobs.engine_records == null ? (
           <p className="text-sm text-slate-500 leading-7">
-            موتور جستجو هنوز بارگذاری نشده است، بنابراین تعداد رکوردهای آموزش‌دیده در دسترس نیست.
+            موتور تحلیل هنوز بارگذاری نشده است، بنابراین تعداد رکوردهای آموزش‌دیده در دسترس نیست.
           </p>
         ) : (
           <Meter
-            label="رکوردهای واردشده در موتور جستجو"
+            label="رکوردهای واردشده در موتور تحلیل"
             value={stats.jobs.engine_records}
             total={stats.jobs.corpus_records}
-            note="موتور جستجو با تمامی رکوردهای تاییدشده ساخته شده است."
+            note="موتور تحلیل با تمامی رکوردهای تاییدشده ساخته شده است."
           />
         )}
       </Card>
@@ -204,7 +204,7 @@ export default function Dashboard() {
       {orgRows.length > 0 && (
         <Card
           title="مشاغل اختصاصی به تفکیک سازمان"
-          hint="رکوردهای تاییدشده‌ای که تنها در جست‌وجوی همان سازمان دیده می‌شوند"
+          hint="رکوردهای تاییدشده‌ای که تنها در نتایج تحلیل همان سازمان دیده می‌شوند"
         >
           <CategoryBars rows={orgRows} valueLabel="شغل" />
         </Card>

@@ -26,7 +26,9 @@ export default function MenuItem({ href, icon, label, submenuItems }) {
     if (location.pathname) setIsReady(true);
   }, [location.pathname]);
 
-  const isActive = isReady && href && location.pathname === href;
+  // A section's own sub-pages keep it lit — «تنظیمات» is one item over three tabs.
+  const isActive =
+    isReady && href && (location.pathname === href || location.pathname.startsWith(`${href}/`));
   const isSubmenuActive =
     isReady &&
     submenuItems?.some(
@@ -47,7 +49,7 @@ export default function MenuItem({ href, icon, label, submenuItems }) {
         <Link
           to={href}
           className={`
-            group relative flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium
+            group relative flex items-center gap-4 px-5 py-4 rounded-2xl text-base font-medium
             transition-all duration-300 ease-out overflow-hidden
             ${
               isActive
@@ -62,7 +64,7 @@ export default function MenuItem({ href, icon, label, submenuItems }) {
 
           <div
             className={`
-              relative p-1.5 rounded-lg transition-all duration-300
+              relative p-2 rounded-xl transition-all duration-300
               ${isActive ? "bg-white/20 text-white" : "bg-slate-200/80 text-slate-600 group-hover:bg-slate-600/50 group-hover:text-white"}
             `}
           >
@@ -72,7 +74,7 @@ export default function MenuItem({ href, icon, label, submenuItems }) {
           <span className="relative">{label}</span>
 
           {isActive && (
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full" />
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-10 bg-white rounded-r-full" />
           )}
         </Link>
       )}
@@ -83,8 +85,8 @@ export default function MenuItem({ href, icon, label, submenuItems }) {
             type="button"
             onClick={() => setSubmenuOpen(!submenuOpen)}
             className={`
-              w-full group relative flex items-center justify-between gap-3 px-4 py-3 rounded-xl
-              text-sm font-medium cursor-pointer
+              w-full group relative flex items-center justify-between gap-4 px-5 py-4 rounded-2xl
+              text-base font-medium cursor-pointer
               transition-all duration-300 ease-out overflow-hidden
               ${
                 submenuOpen || isSubmenuActive
@@ -93,10 +95,10 @@ export default function MenuItem({ href, icon, label, submenuItems }) {
               }
             `}
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <div
                 className={`
-                  relative p-1.5 rounded-lg transition-all duration-300
+                  relative p-2 rounded-xl transition-all duration-300
                   ${
                     submenuOpen || isSubmenuActive
                       ? "bg-slate-700/60 text-white"

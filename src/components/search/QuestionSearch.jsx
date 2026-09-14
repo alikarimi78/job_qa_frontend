@@ -46,12 +46,19 @@ const COMPOSED = new Set(["job_generated", "job_adapted"]);
 // Why a combination came back with no job to offer, keyed on its `draft_reason`.
 const DRAFT_REASONS = {
   exists: ({ draft_job }) =>
-    `شغلی با عنوان «${draft_job}» که این ترکیب را پوشش می‌دهد در پایگاه داده موجود است؛ برای مشاهده مشخصات آن، همین عنوان را جست‌وجو نمایید.`,
+    `شغلی با عنوان «${draft_job}» که این ترکیب را پوشش می‌دهد در پایگاه داده موجود است؛ برای مشاهده مشخصات آن، همین عنوان را تحلیل نمایید.`,
   not_a_job: () =>
     "ترکیب این دو حوزه به شغل مشخصی اشاره ندارد، بنابراین شغلی برای پیشنهاد ایجاد نشد.",
   too_vague: () =>
-    "پرسش شما دو حوزه را نام می‌برد، نه یک شغل مشخص؛ برای ثبت پیشنهاد، عنوان شغل ترکیبی مورد نظر را جست‌وجو نمایید، برای نمونه «مهندس رباتیک جراحی».",
+    "پرسش شما دو حوزه را نام می‌برد، نه یک شغل مشخص؛ برای ثبت پیشنهاد، عنوان شغل ترکیبی مورد نظر را برای تحلیل وارد نمایید، برای نمونه «مهندس رباتیک جراحی».",
   unavailable: () => "امکان ایجاد شغل ترکیبی پیشنهادی در حال حاضر فراهم نیست.",
+};
+
+// One notice for every job composed rather than found — a name or question the corpus lacks, or a
+// combination of two fields — so the two flows say the same thing in the same words.
+const COMPOSED_NOTICE = {
+  title: "این شغل در پایگاه داده موجود نیست",
+  body: "مشخصات زیر بر اساس ورودی شما و نزدیک‌ترین رکورد موجود در پایگاه داده تدوین شده است.",
 };
 
 function Notice({ title, children }) {
@@ -164,13 +171,13 @@ export default function QuestionSearch() {
       ? [{
           value: PUBLIC_OWNER,
           title: "عمومی — همه سازمان‌ها",
-          hint: "این شغل در جست‌وجوی کاربران تمامی سازمان‌ها دیده می‌شود.",
+          hint: "این شغل در نتایج تحلیل کاربران تمامی سازمان‌ها دیده می‌شود.",
         }]
       : []),
     ...owners.map((organization) => ({
       value: String(organization.id),
       title: `اختصاصی — ${organization.name}`,
-      hint: "این شغل تنها در جست‌وجوی کاربران همین سازمان دیده می‌شود.",
+      hint: "این شغل تنها در نتایج تحلیل کاربران همین سازمان دیده می‌شود.",
     })),
   ];
   const ownerBody = owner === PUBLIC_OWNER ? null : Number(owner);
@@ -201,11 +208,11 @@ export default function QuestionSearch() {
           وظایف، مهارت‌ها، ابزارها، محیط کاری و مسیر ارتقای بیش از ۱۰۰۰ شغل
         </p>
 
-        <form onSubmit={submit} className="flex gap-2 max-w-xl mx-auto mt-5">
+        <form onSubmit={submit} className="flex gap-2 max-w-2xl mx-auto mt-5">
           <input
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder="مثلاً: وظایف افسر توپخانه چیست؟"
+            placeholder="مثلاً: یک حسابدار برای ورود به حوزه تحلیل داده به چه مهارت‌هایی نیاز دارد؟"
             maxLength={500}
             className="flex-1 h-11 px-4 rounded-xl bg-white text-sm text-slate-800
                        border border-slate-200 outline-none transition-all duration-200
@@ -213,7 +220,7 @@ export default function QuestionSearch() {
                        hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
           />
           <Button variant="primary" size="lg" buttonProps={{ type: "submit", disabled: isLoading }}>
-            {isLoading ? <Spinner /> : "جستجو"}
+            {isLoading ? <Spinner /> : "تحلیل مبتنی بر AI"}
           </Button>
         </form>
 
@@ -274,17 +281,14 @@ export default function QuestionSearch() {
               )}
               <span className="text-xs text-slate-500 leading-6">
                 {ownerId == null
-                  ? "این شغل در جست‌وجوی تمامی سازمان‌ها دیده می‌شود."
-                  : "این شغل تنها در جست‌وجوی کاربران همین سازمان دیده می‌شود."}
+                  ? "این شغل در نتایج تحلیل تمامی سازمان‌ها دیده می‌شود."
+                  : "این شغل تنها در نتایج تحلیل کاربران همین سازمان دیده می‌شود."}
               </span>
             </div>
           )}
 
           {composed && (
-            <Notice title="این شغل در پایگاه داده ثبت نشده است">
-              مشخصات زیر بر اساس ورودی شما و نزدیک‌ترین رکورد پایگاه داده تدوین شده است و تا پیش
-              از تایید مدیر سامانه، بخشی از پایگاه داده به شمار نمی‌رود.
-            </Notice>
+            <Notice title={COMPOSED_NOTICE.title}>{COMPOSED_NOTICE.body}</Notice>
           )}
 
           <p className="whitespace-pre-wrap text-[15px] leading-9 text-slate-800 m-0">
@@ -296,10 +300,10 @@ export default function QuestionSearch() {
           {combination && (offered || result.draft_reason) && (
             <div className="mt-6 pt-5 border-t border-slate-200">
               <Notice
-                title={offered ? "شغل ترکیبی پیشنهادی" : "شغل ترکیبی برای پیشنهاد ایجاد نشد"}
+                title={offered ? COMPOSED_NOTICE.title : "شغل ترکیبی برای پیشنهاد ایجاد نشد"}
               >
                 {offered
-                  ? "مشخصات زیر بر اساس پرسش شما و دو رکورد بالا تدوین شده است و تا پیش از تایید مدیر سامانه، بخشی از پایگاه داده به شمار نمی‌رود."
+                  ? COMPOSED_NOTICE.body
                   : (DRAFT_REASONS[result.draft_reason] ?? DRAFT_REASONS.unavailable)(result)}
               </Notice>
               {offered && !editing && (

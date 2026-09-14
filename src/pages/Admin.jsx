@@ -130,7 +130,7 @@ export default function Admin() {
   async function rebuildNow() {
     try {
       await startRebuild().unwrap();
-      showMessage.info("بازسازی آغاز شد؛ جستجو در این مدت با نسخه پیشین پاسخ می‌دهد.");
+      showMessage.info("بازسازی آغاز شد؛ تحلیل در این مدت با نسخه پیشین پاسخ می‌دهد.");
     } catch (err) {
       showMessage.error(errorMessage(err));
     }
@@ -140,7 +140,7 @@ export default function Admin() {
     <>
       <Card
         title="بررسی پیشنهادها"
-        hint="پیشنهاد عمومی تاییدشده به پایگاه داده مشترک تمامی سازمان‌ها افزوده می‌شود و پیشنهاد اختصاصی تنها در جست‌وجوی همان سازمان دیده می‌شود"
+        hint="پیشنهاد عمومی تاییدشده به پایگاه داده مشترک تمامی سازمان‌ها افزوده می‌شود و پیشنهاد اختصاصی تنها در نتایج تحلیل همان سازمان دیده می‌شود"
         actions={
           <Badge tone={pending.length ? "warning" : "neutral"}>
             {pending.length.toLocaleString("fa-IR")} پیشنهاد در انتظار
@@ -152,10 +152,10 @@ export default function Admin() {
             <strong className="text-sm text-slate-800">بازسازی امبدینگ‌ها</strong>
             <p className="text-xs text-slate-500 mt-0.5 leading-6">
               {running
-                ? "در حال اجرا؛ جستجو همچنان با نسخه پیشین پاسخ می‌دهد."
+                ? "در حال اجرا؛ تحلیل همچنان با نسخه پیشین پاسخ می‌دهد."
                 : rebuild?.last_result
                   ? `آخرین اجرا: ${rebuild.last_result}`
-                  : "تا زمانی که بازسازی انجام نشود، رکورد جدید در جستجو نمایش داده نمی‌شود."}
+                  : "تا زمانی که بازسازی انجام نشود، رکورد جدید در نتایج تحلیل نمایش داده نمی‌شود."}
             </p>
           </div>
           {isSuper && (

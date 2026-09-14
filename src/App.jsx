@@ -13,6 +13,7 @@ import Dashboard from "@pages/manage/Dashboard";
 import Organizations from "@pages/manage/Organizations";
 import Accounts from "@pages/manage/Accounts";
 import Jobs from "@pages/manage/Jobs";
+import Settings, { SettingsIndex } from "@pages/Settings";
 
 function Protected({ children, roles }) {
   const token = useAppSelector((state) => state.auth.token);
@@ -63,24 +64,35 @@ export default function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route
               path="organizations"
-              element={
-                <Protected roles={["super_admin"]}>
-                  <Organizations />
-                </Protected>
-              }
+              element={<Navigate to="/settings/organizations" replace />}
             />
-            <Route path="users" element={<Navigate to="/manage/accounts" replace />} />
-            <Route path="accounts" element={<Accounts />} />
+            <Route path="users" element={<Navigate to="/settings/accounts" replace />} />
+            <Route path="accounts" element={<Navigate to="/settings/accounts" replace />} />
             <Route path="jobs" element={<Jobs />} />
           </Route>
           <Route
-            path="/admin"
+            path="/settings"
             element={
               <Protected roles={ADMIN_ROLES}>
-                <Admin />
+                <ManageLayout />
               </Protected>
             }
-          />
+          >
+            <Route element={<Settings />}>
+              <Route index element={<SettingsIndex />} />
+              <Route
+                path="organizations"
+                element={
+                  <Protected roles={["super_admin"]}>
+                    <Organizations />
+                  </Protected>
+                }
+              />
+              <Route path="accounts" element={<Accounts />} />
+              <Route path="reviews" element={<Admin />} />
+            </Route>
+          </Route>
+          <Route path="/admin" element={<Navigate to="/settings/reviews" replace />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
