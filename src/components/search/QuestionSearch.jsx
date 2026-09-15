@@ -7,6 +7,8 @@ import Modal from "@components/ui/Modal";
 import { Spinner } from "@components/ui/Loader";
 import JobDetails from "@components/JobDetails";
 import JobForm, { PUBLIC_OWNER } from "@components/JobForm";
+import { cellFromItems, itemsFromCell } from "@components/ui/ItemsInput";
+import { relabelDetail } from "@constant/fieldLabels";
 import useSuggestionOwners from "@hook/useSuggestionOwners";
 import { useSearchMutation, useSearchReportMutation, useSuggestJobMutation } from "@services/jobsApi";
 import { downloadBlob, safeFileName } from "@utils/download";
@@ -79,6 +81,7 @@ export default function QuestionSearch() {
   const [editing, setEditing] = useState(false);
   const [owner, setOwner] = useState(PUBLIC_OWNER);
   const [choosing, setChoosing] = useState(false);
+  const [seed, setSeed] = useState(null);
   const [runId, setRunId] = useState(0);
   const [openNearest, setOpenNearest] = useState(false);
   const [search, { isLoading }] = useSearchMutation();
@@ -97,6 +100,7 @@ export default function QuestionSearch() {
     setEditing(false);
     setOwner(PUBLIC_OWNER);
     setChoosing(false);
+    setSeed(null);
     setOpenNearest(false);
     try {
       const data = await search(asking).unwrap();
@@ -121,7 +125,7 @@ export default function QuestionSearch() {
         answer: result.answer,
         job: result.job ?? null,
         jobs: result.jobs ?? null,
-        details: result.details ?? [],
+        details: (result.details ?? []).map(relabelDetail),
         related_jobs: result.related_jobs ?? null,
       }).unwrap();
       const subject = result.job ?? result.jobs?.join(" و ") ?? result.details?.[0]?.job_title;
@@ -152,6 +156,17 @@ export default function QuestionSearch() {
   const draft = result?.job_draft ?? null;
   const draftDetail = composed ? result?.details?.[0] : result?.draft_detail;
   const offered = Boolean(draft && draftDetail);
+  const pickable = offered && !filed && !declined;
+
+  // Choosing one of the composed job's other names opens «ویرایش» on the draft with that name as
+  // the title, the old title taking its place among the other names.
+  function pickAlias(alias) {
+    const aliases = itemsFromCell(draft.aliases ?? "").map((name) =>
+      name === alias ? draft.job_title : name,
+    );
+    setSeed({ ...draft, job_title: alias, aliases: cellFromItems(aliases) });
+    setEditing(true);
+  }
   const nearest = result?.nearest ?? null;
   const subject = result?.details?.[0]?.job_title ?? result?.job;
   const detailsTitle =
@@ -295,7 +310,13 @@ export default function QuestionSearch() {
             {result.answer}
           </p>
 
-          {!(composed && editing) && <JobDetails details={result.details} title={detailsTitle} />}
+          {!(composed && editing) && (
+            <JobDetails
+              details={result.details}
+              title={detailsTitle}
+              onPickAlias={composed && pickable ? pickAlias : undefined}
+            />
+          )}
 
           {combination && (offered || result.draft_reason) && (
             <div className="mt-6 pt-5 border-t border-slate-200">
@@ -310,6 +331,7 @@ export default function QuestionSearch() {
                 <JobDetails
                   details={[draftDetail]}
                   title={`مشخصات تدوین‌شده «${draftDetail.job_title}»`}
+                  onPickAlias={pickable ? pickAlias : undefined}
                 />
               )}
             </div>
@@ -319,7 +341,7 @@ export default function QuestionSearch() {
             <div className="mt-6 pt-5 border-t border-slate-200">
               <JobForm
                 key={`${runId}-edit`}
-                initial={{ ...draft, organization_id: ownerBody }}
+                initial={{ ...(seed ?? draft), organization_id: ownerBody }}
                 onSubmit={fileSuggestion}
                 submitLabel="ثبت پیشنهاد"
                 busy={isFiling}
@@ -331,7 +353,7 @@ export default function QuestionSearch() {
                     size="lg"
                     buttonProps={{
                       type: "button",
-                      onClick: () => setEditing(false),
+                      onClick: () => { setEditing(false); setSeed(null); },
                       disabled: isFiling,
                     }}
                   >
@@ -370,7 +392,7 @@ export default function QuestionSearch() {
                 <Button
                   variant="outline"
                   size="sm"
-                  buttonProps={{ type: "button", onClick: () => setEditing(true), disabled: isFiling }}
+                  buttonProps={{ type: "button", onClick: () => { setSeed(null); setEditing(true); }, disabled: isFiling }}
                 >
                   ویرایش
                 </Button>

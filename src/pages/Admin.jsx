@@ -1,3 +1,4 @@
+import { FIELD_LABELS } from "@constant/fieldLabels";
 import { useState } from "react";
 import Card from "@components/ui/Card";
 import Button from "@components/ui/Button";
@@ -24,14 +25,14 @@ import { showMessage } from "@utils/toast";
 
 const DETAIL_ROWS = [
   ["aliases", "نام‌های دیگر", true],
-  ["tools", "ابزارها", true],
+  ["tools", FIELD_LABELS.tools, true],
   ["skills", "مهارت‌ها", true],
   ["knowledge", "دانش تخصصی", true],
   ["abilities", "توانایی‌ها", true],
   ["description", "شرح شغل", false],
   ["responsibilities", "وظایف و مسئولیت‌ها", true],
-  ["work_context", "محیط کاری", false],
-  ["career_path_next", "مسیر شغلی بعدی", true],
+  ["work_context", FIELD_LABELS.work_context, false],
+  ["career_path_next", FIELD_LABELS.career_path_next, true],
 ];
 
 function FieldRow({ label, value, list }) {

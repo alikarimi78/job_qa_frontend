@@ -31,6 +31,20 @@ const PencilGlyph = (
   </svg>
 );
 
+const SwapGlyph = (
+  <svg
+    className="w-3 h-3 shrink-0"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2.5}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    viewBox="0 0 24 24"
+  >
+    <path d="M7 7h13l-3-3M17 17H4l3 3" />
+  </svg>
+);
+
 export function splitItems(text) {
   return String(text ?? "")
     .split(SEPARATORS)
@@ -55,6 +69,8 @@ export default function ItemsInput({
   min = 1,
   max = 20,
   className = "",
+  onPick,
+  pickLabel = (item) => item,
 }) {
   const { control } = useFormContext();
   const {
@@ -241,6 +257,19 @@ export default function ItemsInput({
                   <span className="truncate">{item}</span>
                   <span className="text-blue-400">{PencilGlyph}</span>
                 </button>
+                {onPick && (
+                  <button
+                    type="button"
+                    onClick={() => onPick(item)}
+                    title={pickLabel(item)}
+                    aria-label={pickLabel(item)}
+                    className="shrink-0 w-5 h-5 rounded-full inline-flex items-center justify-center
+                               text-blue-400 hover:text-white hover:bg-blue-600 cursor-pointer
+                               transition-colors duration-200"
+                  >
+                    {SwapGlyph}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => remove(index)}

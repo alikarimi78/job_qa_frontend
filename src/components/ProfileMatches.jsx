@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Badge from "@components/ui/Badge";
 import JobDetails from "@components/JobDetails";
+import { fieldLabel } from "@constant/fieldLabels";
 
 
 function faPercent(ratio) {
@@ -23,7 +24,7 @@ function FieldRow({ field }) {
 
   return (
     <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1.5 py-2 border-t border-slate-100 first:border-t-0">
-      <span className="text-xs text-slate-500 min-w-32">{field.label}</span>
+      <span className="text-xs text-slate-500 min-w-32">{fieldLabel(field.key, field.label)}</span>
       {field.matched.map((item, i) => (
         <span
           key={`m${i}`}

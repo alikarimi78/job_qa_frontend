@@ -1,3 +1,4 @@
+import { FIELD_LABELS } from "@constant/fieldLabels";
 import { useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import Card from "@components/ui/Card";
@@ -14,8 +15,8 @@ const FIELDS = [
   ["knowledge", "دانش تخصصی", "مکانیک خودرو", false],
   ["abilities", "توانایی‌ها", "تفکر تحلیلی", false],
   ["responsibilities", "وظایف و مسئولیت‌ها", "هدایت خودرو زرهی", false],
-  ["work_context", "محیط کاری", "فضای باز", false],
-  ["career_path_next", "مسیر شغلی بعدی", "سرپرست فنی", false],
+  ["work_context", FIELD_LABELS.work_context, "فضای باز", false],
+  ["career_path_next", FIELD_LABELS.career_path_next, "سرپرست فنی", false],
 ];
 
 const BLANK = Object.fromEntries(FIELDS.map(([key]) => [key, []]));

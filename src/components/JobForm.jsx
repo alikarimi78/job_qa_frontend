@@ -4,6 +4,7 @@ import ItemsInput, { cellFromItems, itemsFromCell } from "@components/ui/ItemsIn
 import Select from "@components/ui/Select";
 import SubmitBar from "@components/ui/SubmitBar";
 import Textarea from "@components/ui/Textarea";
+import { FIELD_LABELS } from "@constant/fieldLabels";
 
 const PROSE = [
   ["job_title", "عنوان شغل", "توسعه‌دهنده بک‌اند"],
@@ -11,12 +12,12 @@ const PROSE = [
 
 const LISTS = [
   ["aliases", "نام‌های دیگر", "برنامه‌نویس سرور"],
-  ["work_context", "محیط کاری", "کار گروهی"],
-  ["tools", "ابزارها", "پایتون"],
+  ["work_context", FIELD_LABELS.work_context, "کار گروهی"],
+  ["tools", FIELD_LABELS.tools, "پایتون"],
   ["skills", "مهارت‌ها", "حل مسئله"],
   ["knowledge", "دانش تخصصی", "ساختمان داده"],
   ["abilities", "توانایی‌ها", "تفکر تحلیلی"],
-  ["career_path_next", "مسیر شغلی بعدی", "مهندس ارشد"],
+  ["career_path_next", FIELD_LABELS.career_path_next, "مهندس ارشد"],
   ["responsibilities", "وظایف و مسئولیت‌ها", "طراحی و پیاده‌سازی API"],
 ];
 
@@ -59,6 +60,18 @@ export default function JobForm({
 }) {
   const methods = useForm({ defaultValues: toFormValues(initial, owners, allowPublic) });
   const owner = methods.watch("organization_id");
+
+  // An other name becomes the title and the title takes its place among the other names, so the
+  // swap loses neither.
+  const promoteAlias = (alias) => {
+    const title = methods.getValues("job_title").trim();
+    const aliases = methods.getValues("aliases") ?? [];
+    const next = title
+      ? aliases.map((name) => (name === alias ? title : name))
+      : aliases.filter((name) => name !== alias);
+    methods.setValue("job_title", alias, { shouldDirty: true, shouldValidate: true });
+    methods.setValue("aliases", next, { shouldDirty: true, shouldValidate: true });
+  };
 
   const submit = (values) => {
     const body = { job_title: values.job_title, description: values.description };
@@ -129,7 +142,13 @@ export default function JobForm({
               label={label}
               placeholder={placeholder}
               required
-              hint="هر مورد را جداگانه وارد و با + اضافه نمایید"
+              hint={
+                key === "aliases"
+                  ? "هر مورد را جداگانه وارد و با + اضافه نمایید؛ با دکمه جابه‌جایی کنار هر نام، آن نام جایگزین عنوان شغل می‌شود"
+                  : "هر مورد را جداگانه وارد و با + اضافه نمایید"
+              }
+              onPick={key === "aliases" ? promoteAlias : undefined}
+              pickLabel={(item) => `جایگزینی عنوان شغل با «${item}»`}
             />
           ))}
         </div>
