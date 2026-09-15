@@ -26,9 +26,9 @@ import { showMessage } from "@utils/toast";
 const DETAIL_ROWS = [
   ["aliases", "نام‌های دیگر", true],
   ["tools", FIELD_LABELS.tools, true],
-  ["skills", "مهارت‌ها", true],
-  ["knowledge", "دانش تخصصی", true],
-  ["abilities", "توانایی‌ها", true],
+  ["skills", FIELD_LABELS.skills, true],
+  ["knowledge", FIELD_LABELS.knowledge, true],
+  ["abilities", FIELD_LABELS.abilities, true],
   ["description", "شرح شغل", false],
   ["responsibilities", "وظایف و مسئولیت‌ها", true],
   ["work_context", FIELD_LABELS.work_context, false],

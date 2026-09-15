@@ -14,9 +14,9 @@ const LISTS = [
   ["aliases", "نام‌های دیگر", "برنامه‌نویس سرور"],
   ["work_context", FIELD_LABELS.work_context, "کار گروهی"],
   ["tools", FIELD_LABELS.tools, "پایتون"],
-  ["skills", "مهارت‌ها", "حل مسئله"],
-  ["knowledge", "دانش تخصصی", "ساختمان داده"],
-  ["abilities", "توانایی‌ها", "تفکر تحلیلی"],
+  ["skills", FIELD_LABELS.skills, "حل مسئله"],
+  ["knowledge", FIELD_LABELS.knowledge, "ساختمان داده"],
+  ["abilities", FIELD_LABELS.abilities, "تفکر تحلیلی"],
   ["career_path_next", FIELD_LABELS.career_path_next, "مهندس ارشد"],
   ["responsibilities", "وظایف و مسئولیت‌ها", "طراحی و پیاده‌سازی API"],
 ];

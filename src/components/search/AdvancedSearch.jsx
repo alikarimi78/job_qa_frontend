@@ -11,9 +11,9 @@ import { errorMessage } from "@utils/errors";
 import { showMessage } from "@utils/toast";
 
 const FIELDS = [
-  ["skills", "مهارت‌ها و شایستگی‌ها", "حل مسئله", true],
-  ["knowledge", "دانش تخصصی", "مکانیک خودرو", false],
-  ["abilities", "توانایی‌ها", "تفکر تحلیلی", false],
+  ["skills", FIELD_LABELS.skills, "حل مسئله", true],
+  ["knowledge", FIELD_LABELS.knowledge, "مکانیک خودرو", false],
+  ["abilities", FIELD_LABELS.abilities, "تفکر تحلیلی", false],
   ["responsibilities", "وظایف و مسئولیت‌ها", "هدایت خودرو زرهی", false],
   ["work_context", FIELD_LABELS.work_context, "فضای باز", false],
   ["career_path_next", FIELD_LABELS.career_path_next, "سرپرست فنی", false],
