@@ -30,7 +30,46 @@ const AwardGlyph = icon(
   </>
 );
 
-const COMPETENCY_ICONS = {
+// One icon per column, drawn in the same rounded badge on every field and competency card; a column
+// the client does not know yet gets the generic list icon rather than none.
+const FIELD_ICONS = {
+  responsibilities: icon(
+    <>
+      <rect x="8" y="2" width="8" height="4" rx="1" />
+      <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" />
+      <path d="M9 14l2 2 4-4" />
+    </>
+  ),
+  description: icon(
+    <>
+      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+      <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+    </>
+  ),
+  tools: icon(
+    <>
+      <rect x="2" y="7" width="20" height="14" rx="2" />
+      <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2M2 13h20M10 13v2h4v-2" />
+    </>
+  ),
+  work_context: icon(
+    <>
+      <path d="M3 21h18M5 21V7l7-4 7 4v14" />
+      <path d="M9 21v-6h6v6M9 10h.01M15 10h.01" />
+    </>
+  ),
+  career_path_next: icon(
+    <>
+      <path d="M23 6l-9.5 9.5-5-5L1 18" />
+      <path d="M17 6h6v6" />
+    </>
+  ),
+  aliases: icon(
+    <>
+      <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" />
+      <path d="M7 7h.01" />
+    </>
+  ),
   skills: icon(
     <path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.5 2.5-2.4-.6-.6-2.4 2.5-2.5z" />
   ),
@@ -42,6 +81,20 @@ const COMPETENCY_ICONS = {
   ),
   abilities: icon(<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />),
 };
+
+const FALLBACK_ICON = icon(<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />);
+
+function FieldIcon({ field, className = "w-7 h-7" }) {
+  return (
+    <span
+      className={`${className} rounded-lg flex items-center justify-center shrink-0 ${
+        field.primary ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-500"
+      }`}
+    >
+      {FIELD_ICONS[field.key] ?? FALLBACK_ICON}
+    </span>
+  );
+}
 
 const SwapGlyph = (
   <svg
@@ -260,12 +313,8 @@ function FieldSection({ field, jobTitle, onPickAlias }) {
 
   return (
     <section className="py-4 first:pt-0 last:pb-0">
-      <header className="flex items-center gap-2 mb-3">
-        <span
-          className={`w-1 h-4 rounded-full shrink-0 ${
-            field.primary ? "bg-blue-500" : "bg-slate-300"
-          }`}
-        />
+      <header className="flex items-center gap-2.5 mb-3">
+        <FieldIcon field={field} />
         <h4
           className={`text-sm font-bold m-0 ${
             field.primary ? "text-blue-800" : "text-slate-700"
@@ -318,13 +367,7 @@ function CompetencyCard({ field }) {
       }`}
     >
       <div className="flex items-center gap-2.5">
-        <span
-          className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-            field.primary ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-500"
-          }`}
-        >
-          {COMPETENCY_ICONS[field.key]}
-        </span>
+        <FieldIcon field={field} className="w-8 h-8" />
         <div className="min-w-0 flex-1">
           <h5
             className={`text-[13px] font-bold leading-5 m-0 ${
