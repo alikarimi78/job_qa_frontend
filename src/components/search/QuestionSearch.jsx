@@ -367,8 +367,8 @@ export default function QuestionSearch() {
           {offered && !filed && !declined && !editing && (
             <div className="mt-6 pt-5 border-t border-slate-200 flex items-center justify-between gap-3 flex-wrap">
               <p className="text-sm text-slate-600 leading-7 m-0">
-                آیا این شغل به‌عنوان پیشنهاد ثبت شود؟ ثبت نهایی پس از تایید مدیر سامانه انجام
-                می‌شود.
+                با توجه به اینکه شغل تحلیل‌شده در پایگاه داده سامانه نیست، آیا تمایل به اضافه کردن آن به
+                پایگاه داده را دارید؟
               </p>
               <div className="flex items-center gap-2 flex-wrap">
                 <Button
