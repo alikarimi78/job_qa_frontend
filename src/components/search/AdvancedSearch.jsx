@@ -5,18 +5,18 @@ import Card from "@components/ui/Card";
 import ItemsInput from "@components/ui/ItemsInput";
 import SubmitBar from "@components/ui/SubmitBar";
 import ProfileMatches from "@components/ProfileMatches";
-import { useAdvancedSearchMutation } from "@services/jobsApi";
+import { useAdvancedSearchMutation, useProfileVocabularyQuery } from "@services/jobsApi";
 import { faNumber } from "@utils/jalali";
 import { errorMessage } from "@utils/errors";
 import { showMessage } from "@utils/toast";
 
 const FIELDS = [
-  ["skills", FIELD_LABELS.skills, "حل مسئله", true],
-  ["knowledge", FIELD_LABELS.knowledge, "مکانیک خودرو", false],
-  ["abilities", FIELD_LABELS.abilities, "تفکر تحلیلی", false],
+  ["skills", FIELD_LABELS.skills, "تفکر انتقادی", true],
+  ["knowledge", FIELD_LABELS.knowledge, "روان‌شناسی", false],
+  ["abilities", FIELD_LABELS.abilities, "استدلال قیاسی", false],
   ["responsibilities", "وظایف و مسئولیت‌ها", "هدایت خودرو زرهی", false],
-  ["work_context", FIELD_LABELS.work_context, "فضای باز", false],
-  ["career_path_next", FIELD_LABELS.career_path_next, "سرپرست فنی", false],
+  ["work_context", FIELD_LABELS.work_context, "کار گروهی و تیمی", false],
+  ["career_path_next", FIELD_LABELS.career_path_next, "کارگران ساختمانی", false],
 ];
 
 const BLANK = Object.fromEntries(FIELDS.map(([key]) => [key, []]));
@@ -28,6 +28,9 @@ export default function AdvancedSearch() {
   const methods = useForm({ defaultValues: BLANK });
   const [result, setResult] = useState(null);
   const [advancedSearch, { isLoading }] = useAdvancedSearchMutation();
+  // The phrases the records themselves use, per field. An item picked from them is one coverage can
+  // find, where the same skill in other words («ارتباط مؤثر» for «سخن گفتن») often matches nothing.
+  const { data: vocabulary } = useProfileVocabularyQuery();
 
   const values = methods.watch();
   const filled = FIELDS.filter(([key]) => (values[key]?.length ?? 0) > 0).length;
@@ -50,7 +53,7 @@ export default function AdvancedSearch() {
   return (
     <Card
       title="تحلیل پیشرفته"
-      hint="به‌جای طرح پرسش، مهارت‌ها و ویژگی‌های خود را وارد نمایید تا نزدیک‌ترین مشاغل پایگاه داده رتبه‌بندی شوند و میزان پوشش هر شغل نسبت به موارد واردشده مشخص گردد. هر مورد را جداگانه وارد و با + اضافه نمایید."
+      hint="به‌جای طرح پرسش، مهارت‌ها و ویژگی‌های خود را وارد نمایید تا نزدیک‌ترین مشاغل پایگاه داده رتبه‌بندی شوند و میزان پوشش هر شغل نسبت به موارد واردشده مشخص گردد. هر مورد را جداگانه وارد و با + اضافه نمایید؛ برای محاسبه دقیق پوشش، موارد را از فهرست پیشنهادی که هنگام تایپ نمایش داده می‌شود انتخاب نمایید."
     >
       <FormProvider {...methods}>
         <form onSubmit={methods.handleSubmit(submit)} className="flex flex-col gap-4">
@@ -63,7 +66,13 @@ export default function AdvancedSearch() {
                 placeholder={placeholder}
                 required={required}
                 min={required ? MIN_SKILLS : 1}
-                hint={required ? `دست‌کم ${faNumber(MIN_SKILLS)} مورد` : "اختیاری"}
+                hint={[
+                  required ? `دست‌کم ${faNumber(MIN_SKILLS)} مورد` : "اختیاری",
+                  vocabulary?.fields?.[key] ? "از فهرست پیشنهادی انتخاب نمایید" : null,
+                ]
+                  .filter(Boolean)
+                  .join("؛ ")}
+                suggestions={vocabulary?.fields?.[key]}
               />
             ))}
           </div>

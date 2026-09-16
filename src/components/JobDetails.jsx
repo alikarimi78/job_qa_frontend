@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { IconBadge, icon, themeOf } from "@components/fieldVisuals";
+import SectionHeading from "@components/ui/SectionHeading";
 import { fieldLabel } from "@constant/fieldLabels";
 
 const LIST_AS_LINES = new Set(["responsibilities"]);
@@ -7,22 +9,11 @@ const LIST_AS_LINES = new Set(["responsibilities"]);
 // in the backend's order. The backend still sends three fields; each keeps its own box and toggle.
 const COMPETENCIES = ["skills", "knowledge", "abilities"];
 const COMPETENCY_TITLE = "شایستگی‌های شغلی";
+const COMPETENCY_HINT = "مهارت‌ها، دانش و توانایی‌های لازم برای این شغل";
 const COMPETENCY_COLUMNS = { 1: "", 2: "@2xl:grid-cols-2", 3: "@2xl:grid-cols-3" };
 
-const icon = (path) => (
-  <svg
-    className="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    viewBox="0 0 24 24"
-  >
-    {path}
-  </svg>
-);
-
+// Each field's colour and icon come from `fieldVisuals`. The field an answer used is not told apart
+// by colour but by a ring in its own colour and a «مرتبط با پرسش شما» label.
 const AwardGlyph = icon(
   <>
     <circle cx="12" cy="8" r="6" />
@@ -30,113 +21,22 @@ const AwardGlyph = icon(
   </>
 );
 
-// One icon per column, drawn in the same rounded badge on every field and competency card; a column
-// the client does not know yet gets the generic list icon rather than none.
-const FIELD_ICONS = {
-  responsibilities: icon(
-    <>
-      <rect x="8" y="2" width="8" height="4" rx="1" />
-      <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" />
-      <path d="M9 14l2 2 4-4" />
-    </>
-  ),
-  description: icon(
-    <>
-      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-      <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
-    </>
-  ),
-  tools: icon(
-    <>
-      <rect x="2" y="7" width="20" height="14" rx="2" />
-      <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2M2 13h20M10 13v2h4v-2" />
-    </>
-  ),
-  work_context: icon(
-    <>
-      <path d="M3 21h18M5 21V7l7-4 7 4v14" />
-      <path d="M9 21v-6h6v6M9 10h.01M15 10h.01" />
-    </>
-  ),
-  career_path_next: icon(
-    <>
-      <path d="M23 6l-9.5 9.5-5-5L1 18" />
-      <path d="M17 6h6v6" />
-    </>
-  ),
-  aliases: icon(
-    <>
-      <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" />
-      <path d="M7 7h.01" />
-    </>
-  ),
-  skills: icon(
-    <path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.5 2.5-2.4-.6-.6-2.4 2.5-2.5z" />
-  ),
-  knowledge: icon(
-    <>
-      <path d="M4 19.5A2.5 2.5 0 016.5 17H20V3H6.5A2.5 2.5 0 004 5.5v14z" />
-      <path d="M4 19.5A2.5 2.5 0 006.5 22H20v-5" />
-    </>
-  ),
-  abilities: icon(<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />),
-};
+const SparkleGlyph = icon(
+  <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z" />,
+  "w-3 h-3 shrink-0",
+);
 
-const FALLBACK_ICON = icon(<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />);
+const CheckGlyph = icon(<path d="M5 12.5l4.5 4.5L19 7.5" />, "w-3 h-3");
 
-function FieldIcon({ field, className = "w-7 h-7" }) {
-  return (
-    <span
-      className={`${className} rounded-lg flex items-center justify-center shrink-0 ${
-        field.primary ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-500"
-      }`}
-    >
-      {FIELD_ICONS[field.key] ?? FALLBACK_ICON}
-    </span>
+const SwapGlyph = icon(<path d="M7 7h13l-3-3M17 17H4l3 3" />, "w-3 h-3 shrink-0");
+
+const PathChevron = ({ className }) => icon(<path d="M15 18l-6-6 6-6" />, `w-3 h-3 shrink-0 ${className}`);
+
+const ToggleChevron = ({ open }) =>
+  icon(
+    <path d="M6 9l6 6 6-6" />,
+    `w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`,
   );
-}
-
-const SwapGlyph = (
-  <svg
-    className="w-3 h-3 shrink-0"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2.5}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    viewBox="0 0 24 24"
-  >
-    <path d="M7 7h13l-3-3M17 17H4l3 3" />
-  </svg>
-);
-
-const PathChevron = ({ className }) => (
-  <svg
-    className={`w-3 h-3 shrink-0 ${className}`}
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2.5}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    viewBox="0 0 24 24"
-  >
-    <path d="M15 18l-6-6 6-6" />
-  </svg>
-);
-
-const ToggleChevron = ({ open }) => (
-  <svg
-    className={`w-3 h-3 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2.5}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    viewBox="0 0 24 24"
-  >
-    <path d="M6 9l6 6 6-6" />
-  </svg>
-);
 
 function faCount(n) {
   return n.toLocaleString("fa-IR");
@@ -163,21 +63,39 @@ function countText(field, shown) {
     : `${faCount(field.items.length)} مورد`;
 }
 
-function ExpandButton({ expanded, total, primary, onToggle }) {
+function RelevantPill({ theme }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium leading-5 ${theme.pill}`}
+    >
+      {SparkleGlyph}
+      مرتبط با پرسش شما
+    </span>
+  );
+}
+
+// A competency card can be narrower than the full label beside its title, so there the label shortens
+// once the card itself (not the viewport) is under 20rem; the full wording stays in `title`.
+function ExpandButton({ expanded, total, theme, onToggle, compact = false }) {
+  const full = expanded ? "نمایش خلاصه" : `مشاهده کامل (${faCount(total)})`;
   return (
     <button
       type="button"
       onClick={onToggle}
       aria-expanded={expanded}
-      className={`inline-flex items-center gap-1 shrink-0 rounded-full border px-2.5 py-1
-                  text-[11px] font-medium cursor-pointer transition-colors duration-200
-                  focus:outline-none focus:ring-2 focus:ring-blue-500/30 ${
-                    primary
-                      ? "bg-white border-blue-200 text-blue-700 hover:bg-blue-600 hover:border-blue-600 hover:text-white"
-                      : "bg-white border-slate-200 text-slate-600 hover:bg-slate-700 hover:border-slate-700 hover:text-white"
-                  }`}
+      title={full}
+      className={`inline-flex items-center gap-1 shrink-0 h-8 rounded-full border bg-white px-3
+                  text-xs font-medium cursor-pointer transition-colors duration-200
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${theme.toggle}`}
     >
-      {expanded ? "نمایش خلاصه" : `مشاهده کامل (${faCount(total)})`}
+      {compact ? (
+        <>
+          <span className="@xs:hidden">{expanded ? "خلاصه" : `همه (${faCount(total)})`}</span>
+          <span className="hidden @xs:inline">{full}</span>
+        </>
+      ) : (
+        full
+      )}
       <ToggleChevron open={expanded} />
     </button>
   );
@@ -185,41 +103,32 @@ function ExpandButton({ expanded, total, primary, onToggle }) {
 
 // `career_path_next` is a set of jobs this one can lead to, not a sequence — «پرستاران» lists
 // «بهیاران» beside «پرستاران بیهوشی» — so it is drawn as branches from the job, not as a staircase.
-function CareerPath({ root, steps, primary }) {
-  const line = primary ? "bg-blue-200" : "bg-slate-300";
-  const arrow = primary ? "text-blue-300" : "text-slate-400";
+function CareerPath({ root, steps, theme }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-0">
       <div className="flex items-center shrink-0">
         <span
-          className={`max-w-56 rounded-xl px-3 py-2 text-[13px] font-bold leading-6 text-white ${
-            primary ? "bg-blue-600" : "bg-slate-600"
-          }`}
+          className={`max-w-56 rounded-xl px-3.5 py-2 text-[13px] font-bold leading-6 text-white
+                      bg-gradient-to-br shadow-md ${theme.badge}`}
         >
           {root}
         </span>
-        <span className={`hidden sm:block w-6 h-0.5 ${line}`} />
+        <span className={`hidden sm:block w-6 h-0.5 ${theme.line}`} />
       </div>
       <ol className="list-none m-0 p-0 flex flex-col flex-1 min-w-0">
         {steps.map((step, i) => (
           <li key={i} className="relative flex items-center gap-1 ps-5 py-1">
             <span
-              className={`absolute start-0 top-0 w-0.5 h-1/2 ${line} ${i === 0 ? "invisible" : ""}`}
+              className={`absolute start-0 top-0 w-0.5 h-1/2 ${theme.line} ${i === 0 ? "invisible" : ""}`}
             />
             <span
-              className={`absolute start-0 bottom-0 w-0.5 h-1/2 ${line} ${
+              className={`absolute start-0 bottom-0 w-0.5 h-1/2 ${theme.line} ${
                 i === steps.length - 1 ? "invisible" : ""
               }`}
             />
-            <span className={`absolute start-0 top-1/2 -translate-y-1/2 w-4 h-0.5 ${line}`} />
-            <PathChevron className={`-ms-1.5 ${arrow}`} />
-            <span
-              className={`rounded-full px-3 py-1 text-[13px] border ${
-                primary
-                  ? "bg-white border-blue-200 text-blue-900"
-                  : "bg-slate-50 border-slate-200 text-slate-700"
-              }`}
-            >
+            <span className={`absolute start-0 top-1/2 -translate-y-1/2 w-4 h-0.5 ${theme.line}`} />
+            <PathChevron className={`-ms-1.5 ${theme.arrow}`} />
+            <span className={`rounded-full px-3 py-1 text-[13px] leading-6 border ${theme.chip}`}>
               {step}
             </span>
           </li>
@@ -229,25 +138,19 @@ function CareerPath({ root, steps, primary }) {
   );
 }
 
-function FieldItems({ field, shown, hidden, onExpand, jobTitle, onPickAlias }) {
+function FieldItems({ field, theme, shown, hidden, onExpand, jobTitle, onPickAlias }) {
   const asPath = shown.length > 0 && field.key === "career_path_next";
   const asChips = shown.length > 0 && !LIST_AS_LINES.has(field.key) && !asPath;
   // A composed job's other names are offered as its title: a click opens the edit form with that
   // name as the title and the old title kept among the other names.
   const pickable = asChips && field.key === "aliases" && Boolean(onPickAlias);
-  const chipTone = field.primary
-    ? "bg-white border-blue-200 text-blue-900"
-    : "bg-slate-50 border-slate-200 text-slate-700";
   const more = hidden > 0 && (
     <button
       type="button"
       onClick={onExpand}
-      className={`rounded-full px-3 py-1 text-[12px] border border-dashed cursor-pointer
-                  transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 ${
-                    field.primary
-                      ? "border-blue-300 text-blue-700 hover:bg-blue-100/70"
-                      : "border-slate-300 text-slate-500 hover:bg-slate-100"
-                  }`}
+      className={`rounded-full px-3 py-1 text-[12px] leading-6 border border-dashed bg-white/70 cursor-pointer
+                  transition-colors duration-200 focus:outline-none focus-visible:ring-2
+                  focus-visible:ring-blue-500/40 ${theme.more}`}
     >
       نمایش {faCount(hidden)} مورد دیگر
     </button>
@@ -255,7 +158,7 @@ function FieldItems({ field, shown, hidden, onExpand, jobTitle, onPickAlias }) {
 
   return (
     <>
-      {asPath && <CareerPath root={jobTitle} steps={shown} primary={field.primary} />}
+      {asPath && <CareerPath root={jobTitle} steps={shown} theme={theme} />}
       {asChips && (
         <div className="flex flex-wrap gap-2">
           {shown.map((item, i) =>
@@ -265,16 +168,15 @@ function FieldItems({ field, shown, hidden, onExpand, jobTitle, onPickAlias }) {
                 type="button"
                 onClick={() => onPickAlias(item)}
                 title={`جایگزینی عنوان شغل با «${item}»`}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] border
-                            cursor-pointer transition-colors duration-200 ${chipTone}
-                            hover:bg-blue-600 hover:text-white hover:border-blue-600
-                            focus:outline-none focus:ring-2 focus:ring-blue-500/30`}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] leading-6 border
+                            cursor-pointer transition-colors duration-200 ${theme.chip} ${theme.pick}
+                            focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40`}
               >
                 {SwapGlyph}
                 {item}
               </button>
             ) : (
-              <span key={i} className={`rounded-full px-3 py-1 text-[13px] border ${chipTone}`}>
+              <span key={i} className={`rounded-full px-3 py-1 text-[13px] leading-6 border ${theme.chip}`}>
                 {item}
               </span>
             ),
@@ -288,63 +190,57 @@ function FieldItems({ field, shown, hidden, onExpand, jobTitle, onPickAlias }) {
         </p>
       )}
       {!asChips && !asPath && shown.length > 0 && (
-        <ul className="list-none p-0 m-0 grid grid-cols-[repeat(auto-fit,minmax(340px,1fr))] gap-x-8 gap-y-1.5">
+        <ul className="list-none p-0 m-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] gap-x-8 gap-y-2">
           {shown.map((item, i) => (
-            <li key={i} className="flex items-start gap-2 leading-7">
+            <li key={i} className="flex items-start gap-2.5 leading-7">
               <span
-                className={`mt-2.5 w-1.5 h-1.5 rounded-full shrink-0 ${
-                  field.primary ? "bg-blue-400" : "bg-slate-300"
-                }`}
-              />
+                aria-hidden="true"
+                className={`mt-1 w-5 h-5 rounded-full ${theme.soft} flex items-center justify-center shrink-0`}
+              >
+                {CheckGlyph}
+              </span>
               <span>{item}</span>
             </li>
           ))}
         </ul>
       )}
-      {!asChips && more && <div className="mt-2">{more}</div>}
-      {field.items.length === 0 && <p className="leading-8 m-0">{field.value}</p>}
+      {!asChips && more && <div className="mt-3">{more}</div>}
+      {field.items.length === 0 && <p className="leading-8 m-0 text-slate-700">{field.value}</p>}
     </>
   );
 }
 
-function FieldSection({ field, jobTitle, onPickAlias }) {
+function FieldCard({ field, jobTitle, onPickAlias }) {
+  const theme = themeOf(field.key);
   const { expanded, toggle, shown, hidden, foldable } = useExpandable(field);
   const count = countText(field, shown);
 
   return (
-    <section className="py-4 first:pt-0 last:pb-0">
-      <header className="flex items-center gap-2.5 mb-3">
-        <FieldIcon field={field} />
-        <h4
-          className={`text-sm font-bold m-0 ${
-            field.primary ? "text-blue-800" : "text-slate-700"
-          }`}
-        >
-          {fieldLabel(field.key, field.label)}
-        </h4>
-        {count && <span className="text-[11px] text-slate-400 shrink-0">({count})</span>}
-        <span
-          className={`flex-1 h-px ${field.primary ? "bg-blue-100" : "bg-slate-100"}`}
-        />
+    <section
+      className={`rounded-2xl border bg-white shadow-sm shadow-slate-900/5 overflow-hidden ${
+        field.primary ? `ring-2 ${theme.ring} border-transparent` : "border-slate-200/80"
+      }`}
+    >
+      <header className={`flex items-center gap-3 px-4 py-3 bg-gradient-to-l ${theme.header} to-white`}>
+        <IconBadge theme={theme} fieldKey={field.key} />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-x-2 gap-y-1 flex-wrap">
+            <h4 className="text-[15px] font-bold text-slate-800 m-0 leading-7">
+              {fieldLabel(field.key, field.label)}
+            </h4>
+            {field.primary && <RelevantPill theme={theme} />}
+          </div>
+          {count && <p className="text-xs text-slate-500 m-0 leading-5">{count}</p>}
+        </div>
         {foldable && (
-          <ExpandButton
-            expanded={expanded}
-            total={field.items.length}
-            primary={field.primary}
-            onToggle={toggle}
-          />
+          <ExpandButton expanded={expanded} total={field.items.length} theme={theme} onToggle={toggle} />
         )}
       </header>
 
-      <div
-        className={`text-sm text-slate-700 rounded-xl px-4 py-3 border ${
-          field.primary
-            ? "bg-blue-50/70 border-blue-100"
-            : "bg-white/70 border-slate-100"
-        }`}
-      >
+      <div className="px-4 pt-2 pb-4 text-sm text-slate-700">
         <FieldItems
           field={field}
+          theme={theme}
           shown={shown}
           hidden={hidden}
           onExpand={toggle}
@@ -356,78 +252,63 @@ function FieldSection({ field, jobTitle, onPickAlias }) {
   );
 }
 
-function CompetencyCard({ field }) {
+function CompetencyCard({ field, theme }) {
   const { expanded, toggle, shown, hidden, foldable } = useExpandable(field);
   const count = countText(field, shown);
 
   return (
     <div
-      className={`flex flex-col gap-3 min-w-0 rounded-xl border bg-white p-3.5 shadow-sm shadow-slate-900/5 ${
-        field.primary ? "border-blue-200 ring-1 ring-blue-100" : "border-slate-200/80"
+      className={`@container flex flex-col gap-3 min-w-0 rounded-xl border bg-white p-3.5 shadow-sm shadow-slate-900/5 ${
+        field.primary ? `ring-2 ${theme.ring} border-transparent` : "border-slate-200/70"
       }`}
     >
-      <div className="flex items-center gap-2.5">
-        <FieldIcon field={field} className="w-8 h-8" />
+      <div className="flex items-start gap-2.5">
+        <IconBadge theme={theme} fieldKey={field.key} size="md" />
         <div className="min-w-0 flex-1">
-          <h5
-            className={`text-[13px] font-bold leading-5 m-0 ${
-              field.primary ? "text-blue-800" : "text-slate-700"
-            }`}
-          >
+          <h5 className="text-[13px] font-bold text-slate-800 m-0 leading-6">
             {fieldLabel(field.key, field.label)}
           </h5>
-          {count && <p className="text-[11px] text-slate-400 leading-5 m-0">{count}</p>}
+          {count && <p className="text-[11px] text-slate-500 m-0 leading-5">{count}</p>}
         </div>
         {foldable && (
           <ExpandButton
             expanded={expanded}
             total={field.items.length}
-            primary={field.primary}
+            theme={theme}
             onToggle={toggle}
+            compact
           />
         )}
       </div>
+      {field.primary && (
+        <div>
+          <RelevantPill theme={theme} />
+        </div>
+      )}
       <div className="text-sm text-slate-700">
-        <FieldItems field={field} shown={shown} hidden={hidden} onExpand={toggle} />
+        <FieldItems field={field} theme={theme} shown={shown} hidden={hidden} onExpand={toggle} />
       </div>
     </div>
   );
 }
 
 function CompetencyGroup({ fields }) {
-  const primary = fields.some((field) => field.primary);
+  const theme = themeOf(COMPETENCIES[0]);
 
   return (
-    <section className="py-4 first:pt-0 last:pb-0">
-      <header className="flex items-center gap-2.5 mb-3">
-        <span
-          className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-white shadow-md ${
-            primary
-              ? "bg-gradient-to-br from-blue-500 to-indigo-600 shadow-blue-600/25"
-              : "bg-gradient-to-br from-slate-500 to-slate-700 shadow-slate-600/20"
-          }`}
-        >
-          {AwardGlyph}
-        </span>
-        <h4 className={`text-sm font-bold m-0 ${primary ? "text-blue-800" : "text-slate-700"}`}>
-          {COMPETENCY_TITLE}
-        </h4>
-        <span className="text-[11px] text-slate-400 shrink-0">
-          ({faCount(fields.length)} بخش)
-        </span>
-        <span className={`flex-1 h-px ${primary ? "bg-blue-100" : "bg-slate-100"}`} />
+    <section className="rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-900/5 overflow-hidden">
+      <header className={`flex items-center gap-3 px-4 py-3 bg-gradient-to-l ${theme.header} to-white`}>
+        <IconBadge theme={theme} glyph={AwardGlyph} />
+        <div className="min-w-0 flex-1">
+          <h4 className="text-[15px] font-bold text-slate-800 m-0 leading-7">{COMPETENCY_TITLE}</h4>
+          <p className="text-xs text-slate-500 m-0 leading-5">{COMPETENCY_HINT}</p>
+        </div>
       </header>
 
-      <div
-        className={`@container rounded-2xl border p-2.5 sm:p-3 ${
-          primary
-            ? "bg-gradient-to-bl from-blue-50 via-indigo-50/50 to-white border-blue-100"
-            : "bg-gradient-to-bl from-slate-50 via-slate-50/60 to-white border-slate-100"
-        }`}
-      >
+      <div className={`@container ${theme.body} p-3 sm:p-4`}>
         <div className={`grid grid-cols-1 gap-3 ${COMPETENCY_COLUMNS[fields.length]}`}>
           {fields.map((field) => (
-            <CompetencyCard key={field.key} field={field} />
+            <CompetencyCard key={field.key} field={field} theme={theme} />
           ))}
         </div>
       </div>
@@ -454,31 +335,29 @@ function arrange(fields) {
   return blocks;
 }
 
-export default function JobDetails({ details, title, onPickAlias }) {
+export default function JobDetails({ details, title, onPickAlias, className = "mt-6" }) {
   if (!details?.length) return null;
   const named = details.length > 1;
 
   return (
-    <div className="mt-6 pt-5 border-t border-slate-200">
-      {title && (
-        <p className="text-xs font-medium text-slate-500 m-0 mb-3 flex items-center gap-2">
-          <span className="w-6 h-px bg-slate-300" />
-          {title}
-        </p>
-      )}
-      {details.map((job) => (
-        <div key={job.job_title}>
+    <div className={className}>
+      {title && <SectionHeading title={title} />}
+      {details.map((job, index) => (
+        <div key={job.job_title} className={index > 0 ? "mt-8" : ""}>
           {named && (
-            <p className="text-sm font-bold text-slate-800 mt-5 mb-2 pb-2 border-b border-slate-100">
-              {job.job_title}
-            </p>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-6 h-6 rounded-full bg-slate-800 text-white text-xs font-bold flex items-center justify-center shrink-0">
+                {faCount(index + 1)}
+              </span>
+              <h4 className="text-[15px] font-bold text-slate-800 m-0 leading-7">{job.job_title}</h4>
+            </div>
           )}
-          <div className="divide-y divide-slate-100">
+          <div className="flex flex-col gap-4">
             {arrange(job.fields).map((block) =>
               block.group ? (
                 <CompetencyGroup key="competencies" fields={block.group} />
               ) : (
-                <FieldSection
+                <FieldCard
                   key={block.field.key}
                   field={block.field}
                   jobTitle={job.job_title}

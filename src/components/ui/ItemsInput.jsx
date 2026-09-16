@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useController, useFormContext } from "react-hook-form";
 import { faNumber } from "@utils/jalali";
 
 const SEPARATORS = /[،,;؛|\n\t]+/;
+
+const SUGGESTION_LIMIT = 8;
 
 const PlusGlyph = (
   <svg
@@ -60,6 +62,45 @@ export function cellFromItems(items) {
   return (items ?? []).join(" | ");
 }
 
+// Suggestions are compared the way the backend compares profile items: Arabic letter forms and hamza
+// folded, marks dropped and a half-space read as a space, so «روانشناسی» still finds «روان‌شناسی».
+const FOLDS = [
+  [/[ً-ٰٟـ]/g, ""],
+  [/[يى]/g, "ی"],
+  [/ك/g, "ک"],
+  [/ؤ/g, "و"],
+  [/[أإٱ]/g, "ا"],
+  [/ئ/g, "ی"],
+  [/[ةۀ]/g, "ه"],
+  [/‌/g, " "],
+];
+
+function fold(text) {
+  let folded = String(text ?? "").toLowerCase();
+  for (const [pattern, replacement] of FOLDS) folded = folded.replace(pattern, replacement);
+  return folded.replace(/\s+/g, " ").trim();
+}
+
+// The suggestions still worth offering, most common first as the backend sends them: every typed word
+// starts a word of the suggestion, or the whole query sits inside it once spaces are ignored.
+function suggest(suggestions, query, taken) {
+  const words = fold(query).split(" ").filter(Boolean);
+  const compact = words.join("");
+  const found = [];
+  for (const option of suggestions) {
+    const text = fold(option.text);
+    if (taken.has(text)) continue;
+    if (words.length) {
+      const optionWords = text.split(" ");
+      const byWords = words.every((word) => optionWords.some((other) => other.startsWith(word)));
+      if (!byWords && !text.replace(/ /g, "").includes(compact)) continue;
+    }
+    found.push(option);
+    if (found.length >= SUGGESTION_LIMIT) break;
+  }
+  return found;
+}
+
 export default function ItemsInput({
   name,
   label,
@@ -71,6 +112,7 @@ export default function ItemsInput({
   className = "",
   onPick,
   pickLabel = (item) => item,
+  suggestions,
 }) {
   const { control } = useFormContext();
   const {
@@ -93,10 +135,19 @@ export default function ItemsInput({
   const [draft, setDraft] = useState("");
   const [editing, setEditing] = useState(null);
   const [editDraft, setEditDraft] = useState("");
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(-1);
   const editRef = useRef(null);
   const cancelled = useRef(false);
+  const listId = useId();
 
   const full = value.length >= max;
+  const taken = useMemo(() => new Set(value.map(fold)), [value]);
+  const options = useMemo(
+    () => (suggestions?.length && open ? suggest(suggestions, draft, taken) : []),
+    [suggestions, open, draft, taken],
+  );
+  const showList = open && !full && options.length > 0;
 
   useEffect(() => {
     if (editing === null) return;
@@ -104,8 +155,7 @@ export default function ItemsInput({
     editRef.current?.select();
   }, [editing]);
 
-  const add = (text) => {
-    const incoming = splitItems(text);
+  const append = (incoming) => {
     if (!incoming.length) return;
     const seen = new Set(value.map((item) => item.toLowerCase()));
     const next = [...value];
@@ -117,6 +167,16 @@ export default function ItemsInput({
     }
     onChange(next);
     setDraft("");
+  };
+
+  const add = (text) => append(splitItems(text));
+
+  // A suggestion is taken whole: a job title such as «متخصصان دندان‌پزشکی، سایر تخصص‌ها» holds the
+  // «،» that typing treats as a separator between items.
+  const choose = (text) => {
+    append([text]);
+    setActive(-1);
+    setOpen(false);
   };
 
   const remove = (index) => {
@@ -158,36 +218,115 @@ export default function ItemsInput({
     onChange(next);
   };
 
+  const onKeyDown = (event) => {
+    if (suggestions?.length && event.key === "ArrowDown") {
+      event.preventDefault();
+      if (!showList) {
+        setOpen(true);
+        return;
+      }
+      setActive((index) => (index + 1) % options.length);
+      return;
+    }
+    if (showList && event.key === "ArrowUp") {
+      event.preventDefault();
+      setActive((index) => (index <= 0 ? options.length - 1 : index - 1));
+      return;
+    }
+    if (showList && event.key === "Escape") {
+      event.preventDefault();
+      setOpen(false);
+      setActive(-1);
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      if (showList && active >= 0) choose(options[active].text);
+      else add(draft);
+    }
+  };
+
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       {label && <span className="text-sm font-medium text-slate-700">{label}</span>}
 
       <div className="flex items-stretch gap-2">
-        <input
-          type="text"
-          value={draft}
-          disabled={full}
-          placeholder={full ? `حداکثر ${faNumber(max)} مورد` : placeholder}
-          onChange={(event) => setDraft(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              event.preventDefault();
+        <div className="relative flex-1 min-w-0">
+          <input
+            type="text"
+            value={draft}
+            disabled={full}
+            placeholder={full ? `حداکثر ${faNumber(max)} مورد` : placeholder}
+            role={suggestions ? "combobox" : undefined}
+            aria-autocomplete={suggestions ? "list" : undefined}
+            aria-expanded={suggestions ? showList : undefined}
+            aria-controls={suggestions ? listId : undefined}
+            aria-activedescendant={showList && active >= 0 ? `${listId}-${active}` : undefined}
+            onFocus={() => setOpen(true)}
+            onChange={(event) => {
+              setDraft(event.target.value);
+              setOpen(true);
+              setActive(-1);
+            }}
+            onKeyDown={onKeyDown}
+            onBlur={() => {
+              setOpen(false);
+              setActive(-1);
               add(draft);
-            }
-          }}
-          onBlur={() => add(draft)}
-          className={`
-            flex-1 h-11 px-4 rounded-xl bg-white text-sm text-slate-800
-            border transition-all duration-200 outline-none
-            placeholder:text-slate-400 disabled:bg-slate-50 disabled:text-slate-400
-            focus:ring-2 focus:ring-blue-500/30
-            ${
-              error
-                ? "border-red-400 focus:border-red-500 focus:ring-red-500/30"
-                : "border-slate-200 hover:border-slate-300 focus:border-blue-500"
-            }
-          `}
-        />
+            }}
+            className={`
+              w-full h-11 px-4 rounded-xl bg-white text-sm text-slate-800
+              border transition-all duration-200 outline-none
+              placeholder:text-slate-400 disabled:bg-slate-50 disabled:text-slate-400
+              focus:ring-2 focus:ring-blue-500/30
+              ${
+                error
+                  ? "border-red-400 focus:border-red-500 focus:ring-red-500/30"
+                  : "border-slate-200 hover:border-slate-300 focus:border-blue-500"
+              }
+            `}
+          />
+
+          {showList && (
+            <div
+              className="absolute z-30 inset-x-0 top-full mt-1.5 rounded-xl border border-slate-200
+                         bg-white shadow-xl shadow-slate-900/10 overflow-hidden"
+            >
+              <p className="px-3.5 pt-2 pb-1 m-0 text-[11px] text-slate-400">
+                عبارت‌های موجود در پایگاه داده
+              </p>
+              <ul
+                id={listId}
+                role="listbox"
+                aria-label={`پیشنهادهای ${label ?? ""}`}
+                className="list-none m-0 p-0 pb-1.5 max-h-64 overflow-y-auto"
+              >
+                {options.map((option, index) => (
+                  <li
+                    key={option.text}
+                    id={`${listId}-${index}`}
+                    role="option"
+                    aria-selected={index === active}
+                    onMouseDown={(event) => {
+                      event.preventDefault();
+                      choose(option.text);
+                    }}
+                    onMouseEnter={() => setActive(index)}
+                    className={`flex items-center justify-between gap-3 px-3.5 py-2 text-sm cursor-pointer
+                                transition-colors duration-150 ${
+                                  index === active ? "bg-blue-50 text-blue-900" : "text-slate-700"
+                                }`}
+                  >
+                    <span className="min-w-0 truncate">{option.text}</span>
+                    <span className="shrink-0 text-[11px] text-slate-400">
+                      {faNumber(option.count)} شغل
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
         <button
           type="button"
           onClick={() => add(draft)}
