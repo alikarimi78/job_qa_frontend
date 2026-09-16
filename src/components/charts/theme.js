@@ -1,5 +1,11 @@
 export const SERIES = ["#2a78d6", "#eb6834", "#4a3aa7"];
 
+// The line joining a series' bar tips, a shade darker than its bars so it still reads where it crosses
+// them; the dots mark the tips themselves.
+export const SERIES_LINE = ["#1b5aa8", "#c24e1c", "#352985"];
+
+export const LINE = { width: 2, dot: 3.5 };
+
 export const INK = {
   primary: "#0f172a",
   secondary: "#475569",
