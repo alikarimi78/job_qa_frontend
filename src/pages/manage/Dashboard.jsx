@@ -132,7 +132,7 @@ export default function Dashboard() {
 
       <Card
         title="رشد ماهانه"
-        hint="تعداد رکوردهای جدید در هر ماه شمسی — ماه‌ها از راست به چپ"
+        hint="تعداد رکوردهای جدید در هر ماه"
         actions={
           <div className="flex items-center gap-2">
             {[6, 12].map((count) => (
