@@ -75,7 +75,6 @@ export default function MonthlyBars({ months, series, height = 280 }) {
             <CartesianGrid stroke={INK.grid} vertical={false} />
             <XAxis
               dataKey="label"
-              reversed
               tick={AXIS_TICK}
               tickLine={false}
               axisLine={{ stroke: INK.grid }}
@@ -83,7 +82,7 @@ export default function MonthlyBars({ months, series, height = 280 }) {
               height={36}
             />
             <YAxis
-              orientation="right"
+              orientation="left"
               allowDecimals={false}
               width={36}
               tick={AXIS_TICK}
