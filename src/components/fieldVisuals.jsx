@@ -79,6 +79,7 @@ export const THEMES = {
 };
 
 const FIELD_THEME = {
+  job_title: "emerald",
   responsibilities: "emerald",
   description: "emerald",
   skills: "violet",
@@ -109,6 +110,12 @@ export const icon = (path, className = "w-4 h-4") => (
 
 // One icon per column; a column the client does not know yet gets the list icon rather than none.
 export const FIELD_ICONS = {
+  job_title: icon(
+    <>
+      <rect x="3" y="7" width="18" height="13" rx="2" />
+      <path d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2M3 12h18" />
+    </>
+  ),
   responsibilities: icon(
     <>
       <rect x="8" y="2" width="8" height="4" rx="1" />

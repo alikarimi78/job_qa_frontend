@@ -3,11 +3,11 @@ import { IconBadge, icon, themeOf } from "@components/fieldVisuals";
 import SectionHeading from "@components/ui/SectionHeading";
 import { fieldLabel } from "@constant/fieldLabels";
 
-const LIST_AS_LINES = new Set(["responsibilities"]);
+export const LIST_AS_LINES = new Set(["responsibilities"]);
 
 // The client shows these three as one «شایستگی‌های شغلی» card, placed where the first of them falls
 // in the backend's order. The backend still sends three fields; each keeps its own box and toggle.
-const COMPETENCIES = ["skills", "knowledge", "abilities"];
+export const COMPETENCIES = ["skills", "knowledge", "abilities"];
 const COMPETENCY_TITLE = "شایستگی‌های شغلی";
 const COMPETENCY_HINT = "مهارت‌ها، دانش و توانایی‌های لازم برای این شغل";
 const COMPETENCY_COLUMNS = { 1: "", 2: "@2xl:grid-cols-2", 3: "@2xl:grid-cols-3" };
@@ -26,7 +26,7 @@ const SparkleGlyph = icon(
   "w-3 h-3 shrink-0",
 );
 
-const CheckGlyph = icon(<path d="M5 12.5l4.5 4.5L19 7.5" />, "w-3 h-3");
+export const CheckGlyph = icon(<path d="M5 12.5l4.5 4.5L19 7.5" />, "w-3 h-3");
 
 const SwapGlyph = icon(<path d="M7 7h13l-3-3M17 17H4l3 3" />, "w-3 h-3 shrink-0");
 
@@ -63,7 +63,7 @@ function countText(field, shown) {
     : `${faCount(field.items.length)} مورد`;
 }
 
-function RelevantPill({ theme }) {
+export function RelevantPill({ theme }) {
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium leading-5 ${theme.pill}`}
@@ -103,7 +103,7 @@ function ExpandButton({ expanded, total, theme, onToggle, compact = false }) {
 
 // `career_path_next` is a set of jobs this one can lead to, not a sequence — «پرستاران» lists
 // «بهیاران» beside «پرستاران بیهوشی» — so it is drawn as branches from the job, not as a staircase.
-function CareerPath({ root, steps, theme }) {
+export function CareerPath({ root, steps, theme, renderStep }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-0">
       <div className="flex items-center shrink-0">
@@ -128,13 +128,31 @@ function CareerPath({ root, steps, theme }) {
             />
             <span className={`absolute start-0 top-1/2 -translate-y-1/2 w-4 h-0.5 ${theme.line}`} />
             <PathChevron className={`-ms-1.5 ${theme.arrow}`} />
-            <span className={`rounded-full px-3 py-1 text-[13px] leading-6 border ${theme.chip}`}>
-              {step}
-            </span>
+            {renderStep ? (
+              renderStep(step, i)
+            ) : (
+              <span className={`rounded-full px-3 py-1 text-[13px] leading-6 border ${theme.chip}`}>
+                {step}
+              </span>
+            )}
           </li>
         ))}
       </ol>
     </div>
+  );
+}
+
+export const LINES_CLASS =
+  "list-none p-0 m-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] gap-x-8 gap-y-2";
+
+export function LineBullet({ theme }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`mt-1 w-5 h-5 rounded-full ${theme.soft} flex items-center justify-center shrink-0`}
+    >
+      {CheckGlyph}
+    </span>
   );
 }
 
@@ -190,15 +208,10 @@ function FieldItems({ field, theme, shown, hidden, onExpand, jobTitle, onPickAli
         </p>
       )}
       {!asChips && !asPath && shown.length > 0 && (
-        <ul className="list-none p-0 m-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] gap-x-8 gap-y-2">
+        <ul className={LINES_CLASS}>
           {shown.map((item, i) => (
             <li key={i} className="flex items-start gap-2.5 leading-7">
-              <span
-                aria-hidden="true"
-                className={`mt-1 w-5 h-5 rounded-full ${theme.soft} flex items-center justify-center shrink-0`}
-              >
-                {CheckGlyph}
-              </span>
+              <LineBullet theme={theme} />
               <span>{item}</span>
             </li>
           ))}
@@ -210,67 +223,112 @@ function FieldItems({ field, theme, shown, hidden, onExpand, jobTitle, onPickAli
   );
 }
 
-function FieldCard({ field, jobTitle, onPickAlias }) {
-  const theme = themeOf(field.key);
-  const { expanded, toggle, shown, hidden, foldable } = useExpandable(field);
-  const count = countText(field, shown);
-
+// A field's box — its coloured header with icon, name and count, and the body under it. The job form
+// draws the same box around its inputs, so a job reads the same while it is being edited.
+export function FieldShell({ fieldKey, label, primary, count, aside, invalid, children }) {
+  const theme = themeOf(fieldKey);
   return (
     <section
       className={`rounded-2xl border bg-white shadow-sm shadow-slate-900/5 overflow-hidden ${
-        field.primary ? `ring-2 ${theme.ring} border-transparent` : "border-slate-200/80"
+        invalid
+          ? "ring-2 ring-red-300 border-transparent"
+          : primary
+            ? `ring-2 ${theme.ring} border-transparent`
+            : "border-slate-200/80"
       }`}
     >
       <header className={`flex items-center gap-3 px-4 py-3 bg-gradient-to-l ${theme.header} to-white`}>
-        <IconBadge theme={theme} fieldKey={field.key} />
+        <IconBadge theme={theme} fieldKey={fieldKey} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-x-2 gap-y-1 flex-wrap">
             <h4 className="text-[15px] font-bold text-slate-800 m-0 leading-7">
-              {fieldLabel(field.key, field.label)}
+              {fieldLabel(fieldKey, label)}
             </h4>
-            {field.primary && <RelevantPill theme={theme} />}
+            {primary && <RelevantPill theme={theme} />}
           </div>
           {count && <p className="text-xs text-slate-500 m-0 leading-5">{count}</p>}
         </div>
-        {foldable && (
-          <ExpandButton expanded={expanded} total={field.items.length} theme={theme} onToggle={toggle} />
-        )}
+        {aside}
       </header>
 
-      <div className="px-4 pt-2 pb-4 text-sm text-slate-700">
-        <FieldItems
-          field={field}
-          theme={theme}
-          shown={shown}
-          hidden={hidden}
-          onExpand={toggle}
-          jobTitle={jobTitle}
-          onPickAlias={onPickAlias}
-        />
-      </div>
+      <div className="px-4 pt-2 pb-4 text-sm text-slate-700">{children}</div>
     </section>
+  );
+}
+
+function FieldCard({ field, jobTitle, onPickAlias }) {
+  const theme = themeOf(field.key);
+  const { expanded, toggle, shown, hidden, foldable } = useExpandable(field);
+
+  return (
+    <FieldShell
+      fieldKey={field.key}
+      label={field.label}
+      primary={field.primary}
+      count={countText(field, shown)}
+      aside={
+        foldable && (
+          <ExpandButton expanded={expanded} total={field.items.length} theme={theme} onToggle={toggle} />
+        )
+      }
+    >
+      <FieldItems
+        field={field}
+        theme={theme}
+        shown={shown}
+        hidden={hidden}
+        onExpand={toggle}
+        jobTitle={jobTitle}
+        onPickAlias={onPickAlias}
+      />
+    </FieldShell>
+  );
+}
+
+// One competency's card inside the group, shared with the job form as FieldShell is.
+export function CompetencyItemShell({ fieldKey, label, primary, count, aside, invalid, children }) {
+  const theme = themeOf(COMPETENCIES[0]);
+  return (
+    <div
+      className={`@container flex flex-col gap-3 min-w-0 rounded-xl border bg-white p-3.5 shadow-sm shadow-slate-900/5 ${
+        invalid
+          ? "ring-2 ring-red-300 border-transparent"
+          : primary
+            ? `ring-2 ${theme.ring} border-transparent`
+            : "border-slate-200/70"
+      }`}
+    >
+      <div className="flex items-start gap-2.5">
+        <IconBadge theme={theme} fieldKey={fieldKey} size="md" />
+        <div className="min-w-0 flex-1">
+          <h5 className="text-[13px] font-bold text-slate-800 m-0 leading-6">
+            {fieldLabel(fieldKey, label)}
+          </h5>
+          {count && <p className="text-[11px] text-slate-500 m-0 leading-5">{count}</p>}
+        </div>
+        {aside}
+      </div>
+      {primary && (
+        <div>
+          <RelevantPill theme={theme} />
+        </div>
+      )}
+      <div className="text-sm text-slate-700">{children}</div>
+    </div>
   );
 }
 
 function CompetencyCard({ field, theme }) {
   const { expanded, toggle, shown, hidden, foldable } = useExpandable(field);
-  const count = countText(field, shown);
 
   return (
-    <div
-      className={`@container flex flex-col gap-3 min-w-0 rounded-xl border bg-white p-3.5 shadow-sm shadow-slate-900/5 ${
-        field.primary ? `ring-2 ${theme.ring} border-transparent` : "border-slate-200/70"
-      }`}
-    >
-      <div className="flex items-start gap-2.5">
-        <IconBadge theme={theme} fieldKey={field.key} size="md" />
-        <div className="min-w-0 flex-1">
-          <h5 className="text-[13px] font-bold text-slate-800 m-0 leading-6">
-            {fieldLabel(field.key, field.label)}
-          </h5>
-          {count && <p className="text-[11px] text-slate-500 m-0 leading-5">{count}</p>}
-        </div>
-        {foldable && (
+    <CompetencyItemShell
+      fieldKey={field.key}
+      label={field.label}
+      primary={field.primary}
+      count={countText(field, shown)}
+      aside={
+        foldable && (
           <ExpandButton
             expanded={expanded}
             total={field.items.length}
@@ -278,21 +336,16 @@ function CompetencyCard({ field, theme }) {
             onToggle={toggle}
             compact
           />
-        )}
-      </div>
-      {field.primary && (
-        <div>
-          <RelevantPill theme={theme} />
-        </div>
-      )}
-      <div className="text-sm text-slate-700">
-        <FieldItems field={field} theme={theme} shown={shown} hidden={hidden} onExpand={toggle} />
-      </div>
-    </div>
+        )
+      }
+    >
+      <FieldItems field={field} theme={theme} shown={shown} hidden={hidden} onExpand={toggle} />
+    </CompetencyItemShell>
   );
 }
 
-function CompetencyGroup({ fields }) {
+// The group's own box, which holds one card per competency in as many columns as there are.
+export function CompetencyShell({ size, children }) {
   const theme = themeOf(COMPETENCIES[0]);
 
   return (
@@ -306,19 +359,26 @@ function CompetencyGroup({ fields }) {
       </header>
 
       <div className={`@container ${theme.body} p-3 sm:p-4`}>
-        <div className={`grid grid-cols-1 gap-3 ${COMPETENCY_COLUMNS[fields.length]}`}>
-          {fields.map((field) => (
-            <CompetencyCard key={field.key} field={field} theme={theme} />
-          ))}
-        </div>
+        <div className={`grid grid-cols-1 gap-3 ${COMPETENCY_COLUMNS[size]}`}>{children}</div>
       </div>
     </section>
   );
 }
 
+function CompetencyGroup({ fields }) {
+  const theme = themeOf(COMPETENCIES[0]);
+  return (
+    <CompetencyShell size={fields.length}>
+      {fields.map((field) => (
+        <CompetencyCard key={field.key} field={field} theme={theme} />
+      ))}
+    </CompetencyShell>
+  );
+}
+
 // The fields in the backend's order, with the three competencies folded into one group where the
 // first of them appears.
-function arrange(fields) {
+export function arrange(fields) {
   const members = COMPETENCIES.map((key) => fields.find((field) => field.key === key)).filter(
     Boolean,
   );

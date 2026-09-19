@@ -10,7 +10,7 @@ import Modal from "@components/ui/Modal";
 import Select from "@components/ui/Select";
 import IconButton, { EyeGlyph, PencilGlyph, TrashGlyph } from "@components/ui/IconButton";
 import { CloseButton, ConfirmDialog, DialogFooter } from "@components/manage/Forms";
-import { splitItems } from "@components/ui/ItemsInput";
+import { itemsFromCell } from "@components/ui/ItemsInput";
 import JobForm from "@components/JobForm";
 import JobRecordFields from "@components/JobRecordFields";
 import { useOrganizationsQuery } from "@services/accountsApi";
@@ -43,7 +43,7 @@ function canEdit(me, job) {
 }
 
 function AliasCell({ value }) {
-  const items = splitItems(value);
+  const items = itemsFromCell(value);
   if (!items.length) return <span className="text-sm text-slate-400">—</span>;
 
   const shown = items.slice(0, ALIAS_CHIPS);

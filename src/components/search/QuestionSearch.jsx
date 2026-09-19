@@ -122,7 +122,6 @@ const Glyphs = {
       <path d="M15 9l-6 6M9 9l6 6" />
     </>,
   ),
-  pencil: glyph("w-4 h-4", <path d="M4 20h4L18.5 9.5a2.12 2.12 0 00-3-3L5 17v3z" />),
 };
 
 const Chevron = ({ open }) =>
@@ -478,24 +477,12 @@ export default function QuestionSearch() {
             )}
 
             {offered && !filed && !declined && editing && (
-              <section className="rounded-2xl border border-slate-200 bg-white p-4 md:p-5 shadow-sm shadow-slate-900/5">
-                <div className="flex items-center gap-2.5 mb-4">
-                  <span
-                    aria-hidden="true"
-                    className="w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0"
-                  >
-                    {Glyphs.pencil}
-                  </span>
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-bold text-slate-800 m-0 leading-6">ویرایش شغل پیشنهادی</h3>
-                    <p className="text-xs text-slate-500 m-0 leading-5">
-                      پس از اعمال تغییرات، پیشنهاد را ثبت نمایید.
-                    </p>
-                  </div>
-                </div>
+              // The form takes the place of the boxes it edits, drawn as they were.
+              <section>
                 <JobForm
                   key={`${runId}-edit`}
                   initial={{ ...(seed ?? draft), organization_id: ownerBody }}
+                  primary={draftDetail.fields.filter((field) => field.primary).map((field) => field.key)}
                   onSubmit={fileSuggestion}
                   submitLabel="ثبت پیشنهاد"
                   busy={isFiling}
