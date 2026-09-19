@@ -161,15 +161,21 @@ export const FIELD_ICONS = {
 export const FALLBACK_ICON = icon(<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />);
 
 const BADGE_SIZES = {
+  tile: "w-14 h-14 rounded-2xl [&>svg]:size-7",
+  panel: "w-14 h-14 rounded-2xl [&>svg]:size-7",
   lg: "w-10 h-10 rounded-xl [&>svg]:size-5",
   md: "w-9 h-9 rounded-lg [&>svg]:size-[18px]",
   sm: "w-8 h-8 rounded-lg [&>svg]:size-4",
 };
 
-// The large badge is the field's solid gradient, heading a field's own card; the smaller ones its
-// soft tint, for cards and rows that sit inside another card.
+// A card's heading wears the solid gradient — `lg` a job field's card, `panel` a dashboard panel's; the
+// others take the soft tint, for cards and rows that sit inside another card. The dashboard's two are
+// its biggest, each as tall as the text beside it (a panel's title and hint, a tile's label, number and
+// hint), so they grow the icon without growing the row.
+const SOLID = new Set(["panel", "lg"]);
+
 export function IconBadge({ theme, fieldKey, glyph, size = "lg" }) {
-  const tone = size === "lg" ? `bg-gradient-to-br ${theme.badge} text-white shadow-md` : theme.soft;
+  const tone = SOLID.has(size) ? `bg-gradient-to-br ${theme.badge} text-white shadow-md` : theme.soft;
   return (
     <span
       aria-hidden="true"

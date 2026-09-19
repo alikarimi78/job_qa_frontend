@@ -2,6 +2,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   LabelList,
   ResponsiveContainer,
   Tooltip,
@@ -65,8 +66,19 @@ function makeCategoryTick(rows) {
   };
 }
 
-export default function CategoryBars({ rows, valueLabel = "تعداد", rowHeight = 38, minHeight = 120 }) {
+// The chart takes the `hue` of what it counts (one of theme's HUES), and a row may name its own where
+// the rows are states rather than kinds — active and blocked accounts. The tooltip is told the row's
+// colour, recharts giving it the bar's.
+export default function CategoryBars({
+  rows,
+  valueLabel = "تعداد",
+  hue = SERIES[0],
+  rowHeight = 38,
+  minHeight = 120,
+}) {
   if (rows.length === 0) return <ChartEmpty>موردی برای نمایش وجود ندارد.</ChartEmpty>;
+
+  const fillOf = (row) => (row?.hue ?? hue).bar;
 
   const height = Math.max(minHeight, rows.length * rowHeight + 24);
   const longest = Math.max(...rows.map((row) => row.value), 0);
@@ -96,7 +108,7 @@ export default function CategoryBars({ rows, valueLabel = "تعداد", rowHeigh
             content={({ active, payload }) => (
               <ChartTooltip
                 active={active}
-                payload={payload}
+                payload={payload?.map((entry) => ({ ...entry, color: fillOf(entry.payload) }))}
                 label={payload?.[0]?.payload?.name}
               />
             )}
@@ -104,11 +116,14 @@ export default function CategoryBars({ rows, valueLabel = "تعداد", rowHeigh
           <Bar
             dataKey="value"
             name={valueLabel}
-            fill={SERIES[0]}
+            fill={hue.bar}
             radius={BAR.rowRadius}
             maxBarSize={BAR.maxBarSize}
             isAnimationActive={false}
           >
+            {rows.map((row) => (
+              <Cell key={row.name} fill={fillOf(row)} />
+            ))}
             <LabelList dataKey="value" content={<TipLabel />} />
           </Bar>
         </BarChart>

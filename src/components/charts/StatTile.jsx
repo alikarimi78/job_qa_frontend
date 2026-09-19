@@ -1,20 +1,29 @@
+import { IconBadge, THEMES } from "@components/fieldVisuals";
 import { faNumber } from "@utils/jalali";
 import { SERIES } from "./theme";
 
-export function StatTile({ label, value, hint, tone = "default" }) {
+// A tile's state colours its icon as it does its number, so a waiting queue is amber and an empty or
+// refused count grey whatever `theme` the tile otherwise wears.
+const TONE_THEMES = { warning: THEMES.orange, muted: THEMES.slate };
+
+export function StatTile({ label, value, hint, tone = "default", glyph, theme = THEMES.slate }) {
   const accent =
     tone === "warning" ? "text-amber-600" : tone === "muted" ? "text-slate-500" : "text-slate-900";
 
+  // The icon at the start and the text beside it, as a card's heading has them.
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-4 py-4 flex flex-col gap-1">
-      <span className="text-xs text-slate-500 leading-6">{label}</span>
-      <span className={`text-2xl font-bold ${accent}`}>{faNumber(value)}</span>
-      {hint && <span className="text-[11px] text-slate-400 leading-5">{hint}</span>}
+    <div className="rounded-xl border border-slate-200 bg-white p-4 flex items-center gap-3.5">
+      {glyph && <IconBadge theme={TONE_THEMES[tone] ?? theme} glyph={glyph} size="tile" />}
+      <div className="min-w-0 flex flex-col">
+        <span className="text-xs text-slate-500 leading-6">{label}</span>
+        <span className={`text-2xl font-bold leading-9 ${accent}`}>{faNumber(value)}</span>
+        {hint && <span className="text-[11px] text-slate-400 leading-5">{hint}</span>}
+      </div>
     </div>
   );
 }
 
-export function Meter({ label, value, total, note }) {
+export function Meter({ label, value, total, note, hue = SERIES[0] }) {
   const ratio = total > 0 ? Math.min(1, value / total) : 0;
   const remaining = Math.max(0, total - value);
 
@@ -28,10 +37,10 @@ export function Meter({ label, value, total, note }) {
           {faNumber(total)}
         </span>
       </div>
-      <div className="h-3 w-full rounded-full overflow-hidden" style={{ backgroundColor: "#cde2fb" }}>
+      <div className="h-3 w-full rounded-full overflow-hidden" style={{ backgroundColor: hue.track }}>
         <div
           className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${ratio * 100}%`, backgroundColor: SERIES[0] }}
+          style={{ width: `${ratio * 100}%`, backgroundColor: hue.bar }}
         />
       </div>
       <span className="text-xs text-slate-500 leading-6">

@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useState } from "react";
+import { memo, useCallback, useLayoutEffect, useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -9,8 +9,12 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { AXIS_TICK, BAR, INK, LINE, SERIES, SERIES_LINE } from "./theme";
+import { AXIS_TICK, BAR, INK, LINE, SERIES } from "./theme";
 import { ChartEmpty, ChartLegend, ChartTooltip, HOVER_CURSOR } from "./parts";
+
+// A series names its colour (`hue`, one of theme's HUES) by what it counts, so a filter that drops the
+// series before it cannot repaint it; one that names none falls back on its place.
+const hueOf = (item, index) => item.hue ?? SERIES[index];
 
 // A bar that reports where its tip is, so the line joining a series' tips is drawn from the positions
 // recharts itself computed. Side-by-side bars sit off the centre of their month, which is where a
@@ -26,6 +30,60 @@ function TipBar({ report, series, ...props }) {
   return <Rectangle {...props} />;
 }
 
+// The bars alone, memoized apart from the line drawn over them. recharts remounts every bar whenever it
+// is handed a new `rows`, and a remounted bar reports its tip again; were the tips state to re-render
+// this part, each report would lead to another — a loop that a resize can start and that React ends by
+// unmounting the whole page ("Maximum update depth exceeded"). So `rows` is memoized too, and only a
+// change of months or series re-renders the chart.
+const Chart = memo(function Chart({ rows, series, report }) {
+  return (
+    <ResponsiveContainer>
+      <BarChart data={rows} barGap={BAR.gap} barCategoryGap={BAR.categoryGap}
+                margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
+        <CartesianGrid stroke={INK.grid} vertical={false} />
+        <XAxis
+          dataKey="label"
+          tick={AXIS_TICK}
+          tickLine={false}
+          axisLine={{ stroke: INK.grid }}
+          interval={0}
+          height={36}
+        />
+        <YAxis
+          orientation="left"
+          allowDecimals={false}
+          width={36}
+          tick={AXIS_TICK}
+          tickLine={false}
+          axisLine={false}
+        />
+        <Tooltip
+          cursor={HOVER_CURSOR}
+          content={({ active, payload }) => (
+            <ChartTooltip
+              active={active}
+              payload={payload}
+              label={payload?.[0]?.payload?.full}
+            />
+          )}
+        />
+        {series.map((item, index) => (
+          <Bar
+            key={item.key}
+            dataKey={item.key}
+            name={item.label}
+            fill={hueOf(item, index).bar}
+            radius={BAR.columnRadius}
+            maxBarSize={BAR.maxBarSize}
+            isAnimationActive={false}
+            shape={(props) => <TipBar {...props} report={report} series={item.key} />}
+          />
+        ))}
+      </BarChart>
+    </ResponsiveContainer>
+  );
+});
+
 export default function MonthlyBars({ months, series, height = 280 }) {
   const [tips, setTips] = useState({});
 
@@ -39,11 +97,15 @@ export default function MonthlyBars({ months, series, height = 280 }) {
     });
   }, []);
 
-  const rows = months.map((month, index) => {
-    const row = { label: month.label, full: month.full };
-    for (const item of series) row[item.key] = item.values[index];
-    return row;
-  });
+  const rows = useMemo(
+    () =>
+      months.map((month, index) => {
+        const row = { label: month.label, full: month.full };
+        for (const item of series) row[item.key] = item.values[index];
+        return row;
+      }),
+    [months, series]
+  );
 
   const total = series.reduce(
     (sum, item) => sum + item.values.reduce((a, b) => a + b, 0),
@@ -58,7 +120,7 @@ export default function MonthlyBars({ months, series, height = 280 }) {
   const lines = series
     .map((item, index) => ({
       key: item.key,
-      color: SERIES_LINE[index],
+      color: hueOf(item, index).line,
       points: (tips[item.key] ?? []).slice(0, rows.length),
     }))
     .filter((line) => line.points.length === rows.length && line.points.every(Boolean));
@@ -66,53 +128,10 @@ export default function MonthlyBars({ months, series, height = 280 }) {
   return (
     <>
       <ChartLegend
-        items={series.map((item, index) => ({ label: item.label, color: SERIES[index] }))}
+        items={series.map((item, index) => ({ label: item.label, color: hueOf(item, index).bar }))}
       />
       <div className="relative" style={{ width: "100%", height }}>
-        <ResponsiveContainer>
-          <BarChart data={rows} barGap={BAR.gap} barCategoryGap={BAR.categoryGap}
-                    margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
-            <CartesianGrid stroke={INK.grid} vertical={false} />
-            <XAxis
-              dataKey="label"
-              tick={AXIS_TICK}
-              tickLine={false}
-              axisLine={{ stroke: INK.grid }}
-              interval={0}
-              height={36}
-            />
-            <YAxis
-              orientation="left"
-              allowDecimals={false}
-              width={36}
-              tick={AXIS_TICK}
-              tickLine={false}
-              axisLine={false}
-            />
-            <Tooltip
-              cursor={HOVER_CURSOR}
-              content={({ active, payload }) => (
-                <ChartTooltip
-                  active={active}
-                  payload={payload}
-                  label={payload?.[0]?.payload?.full}
-                />
-              )}
-            />
-            {series.map((item, index) => (
-              <Bar
-                key={item.key}
-                dataKey={item.key}
-                name={item.label}
-                fill={SERIES[index]}
-                radius={BAR.columnRadius}
-                maxBarSize={BAR.maxBarSize}
-                isAnimationActive={false}
-                shape={(props) => <TipBar {...props} report={report} series={item.key} />}
-              />
-            ))}
-          </BarChart>
-        </ResponsiveContainer>
+        <Chart rows={rows} series={series} report={report} />
 
         {/* Over the chart rather than inside it, so no bar can cover a line; it takes no pointer
             events, so hovering still reaches the bars and their tooltip. */}
