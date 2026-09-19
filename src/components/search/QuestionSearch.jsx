@@ -408,7 +408,7 @@ export default function QuestionSearch() {
                                     }`}
                       >
                         {ownerId == null ? Glyphs.globe : Glyphs.building}
-                        {ownerId == null ? "شغل عمومی" : `شغل اختصاصی سازمان «${ownerName}»`}
+                        {ownerId == null ? "شغل عمومی" : `شغل سازمانی - ${ownerName}`}
                       </span>
                       <span className="text-xs text-slate-500 leading-6">
                         {ownerId == null

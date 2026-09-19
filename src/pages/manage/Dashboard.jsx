@@ -201,12 +201,9 @@ export default function Dashboard() {
     .filter((row) => countableRoles.includes(row.role))
     .map((row) => ({ name: ROLE_LABELS[row.role] ?? row.role, value: row.count }));
 
-  const scopeNote =
-    stats.scope === "global"
-      ? "همه سازمان‌ها"
-      : stats.scope_name
-        ? `محدود به ${stats.scope_name}`
-        : "محدود به دامنه شما";
+  // Only the unfiltered view says whose figures these are: a filtered one already names its
+  // organization in the select beside the title, and an org_admin's is always their own.
+  const scopeNote = stats.scope === "global" ? "همه سازمان‌ها" : null;
 
   const orgRows = stats.jobs_by_organization.map((row) => ({
     name: row.name,
