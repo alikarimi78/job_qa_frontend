@@ -139,10 +139,9 @@ export default function Organizations() {
       <PageToolbar
         title="مدیریت سازمان‌ها"
         hint="سازمان بالاترین سطح است؛ ادمین سازمان و کاربران آن ذیل سازمان ایجاد می‌شوند"
+        status={<Badge tone="neutral">{faNumber(orgs.length)} سازمان</Badge>}
         action={{ label: "افزودن سازمان جدید", onClick: () => setDialog({ kind: "create" }) }}
-      >
-        <Badge tone="neutral">{faNumber(orgs.length)} سازمان</Badge>
-      </PageToolbar>
+      />
 
       <Card>
         <DataTable

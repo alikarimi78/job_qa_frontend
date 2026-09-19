@@ -203,6 +203,16 @@ export default function Jobs() {
     <>
       <PageToolbar
         title="مدیریت مشاغل"
+        status={
+          rebuilding ? (
+            <Badge tone="warning">
+              <Spinner />
+              بازسازی امبدینگ‌ها
+            </Badge>
+          ) : (
+            <Badge tone="neutral">{faNumber(shown.total)} شغل</Badge>
+          )
+        }
         hint={
           isSuper
             ? "مشاغل ثبت‌شده در پایگاه داده. با ذخیره هر ویرایش یا حذف هر شغل، بازسازی امبدینگ‌ها بی‌درنگ آغاز می‌شود و تحلیل در این مدت با نسخه پیشین پاسخ می‌دهد."
@@ -250,14 +260,6 @@ export default function Jobs() {
                      placeholder:text-slate-400
                      hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
         />
-        {rebuilding ? (
-          <Badge tone="warning">
-            <Spinner />
-            بازسازی امبدینگ‌ها
-          </Badge>
-        ) : (
-          <Badge tone="neutral">{faNumber(shown.total)} شغل</Badge>
-        )}
       </PageToolbar>
 
       <Card>

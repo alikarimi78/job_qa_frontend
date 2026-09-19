@@ -143,9 +143,8 @@ export default function Accounts() {
             ? { label: "افزودن کاربر جدید", onClick: openAddDialog }
             : undefined
         }
-      >
-        <Badge tone="neutral">{faNumber(listed.length)} کاربر</Badge>
-      </PageToolbar>
+        status={<Badge tone="neutral">{faNumber(listed.length)} کاربر</Badge>}
+      />
 
       <Card>
         {isSuper && (
