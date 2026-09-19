@@ -4,10 +4,15 @@ import { useOrganizationsQuery } from "@services/accountsApi";
 // Which owners a suggestion may name, mirroring the backend's `assert_can_suggest_job`: the
 // public corpus is always open, a super_admin may name any organization, and every other
 // account only the one it sits in. An account in no organization gets no owners at all, so
-// JobForm draws no choice and the suggestion goes public.
+// JobForm draws no choice and the suggestion goes public. `defaultOwner` is the choice made
+// until the reader makes one: the organization they sit in, so the suggestion reaches their
+// own admin's queue, or null — the public corpus — for a super_admin and an account in none.
 export function suggestionOwners(me, organizations = []) {
-  if (me?.role === "super_admin") return { owners: organizations, allowPublic: true };
-  return { owners: me?.organization ? [me.organization] : [], allowPublic: true };
+  if (me?.role === "super_admin") {
+    return { owners: organizations, allowPublic: true, defaultOwner: null };
+  }
+  const own = me?.organization ?? null;
+  return { owners: own ? [own] : [], allowPublic: true, defaultOwner: own?.id ?? null };
 }
 
 export function useSuggestionOwners() {

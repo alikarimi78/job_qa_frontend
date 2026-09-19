@@ -8,10 +8,11 @@ import PageToolbar from "@components/ui/PageToolbar";
 import Pager from "@components/ui/Pager";
 import Modal from "@components/ui/Modal";
 import Select from "@components/ui/Select";
-import IconButton, { PencilGlyph, TrashGlyph } from "@components/ui/IconButton";
+import IconButton, { EyeGlyph, PencilGlyph, TrashGlyph } from "@components/ui/IconButton";
 import { CloseButton, ConfirmDialog, DialogFooter } from "@components/manage/Forms";
 import { splitItems } from "@components/ui/ItemsInput";
 import JobForm from "@components/JobForm";
+import JobRecordFields from "@components/JobRecordFields";
 import { useOrganizationsQuery } from "@services/accountsApi";
 import {
   useDeleteJobMutation,
@@ -32,6 +33,14 @@ const ALIAS_CHIPS = 2;
 
 // The records that belong to no organization — the corpus every organization searches.
 const PUBLIC = "public";
+
+// An org_admin lists what their organization's searches reach — the public corpus beside their
+// own records — and changes their own alone, as the server's `assert_can_admit_job` does; a row
+// they may not change gets «مشاهده» in place of the edit and delete buttons.
+function canEdit(me, job) {
+  if (me.role === "super_admin") return true;
+  return job.organization_id != null && job.organization_id === me.organization_id;
+}
 
 function AliasCell({ value }) {
   const items = splitItems(value);
@@ -66,6 +75,7 @@ export default function Jobs() {
   const [page, setPage] = useState(1);
   const [editing, setEditing] = useState(null);
   const [deleting, setDeleting] = useState(null);
+  const [viewing, setViewing] = useState(null);
   const [scope, setScope] = useState("");
 
   const { data: orgs = [] } = useOrganizationsQuery();
@@ -101,6 +111,7 @@ export default function Jobs() {
   const rebuilding = rebuild?.running ?? false;
 
   const row = editing === null ? null : shown.items.find((it) => it.id === editing);
+  const viewed = viewing === null ? null : shown.items.find((it) => it.id === viewing);
 
   async function save(body) {
     const done = await runAction(
@@ -156,24 +167,35 @@ export default function Jobs() {
       key: "actions",
       header: "عملیات‌ها",
       align: "end",
-      cell: (job) => (
-        <RowActions>
-          <IconButton
-            tone="edit"
-            title={`ویرایش «${job.job_title}»`}
-            onClick={() => setEditing(job.id)}
-          >
-            {PencilGlyph}
-          </IconButton>
-          <IconButton
-            tone="danger"
-            title={`حذف «${job.job_title}»`}
-            onClick={() => setDeleting(job)}
-          >
-            {TrashGlyph}
-          </IconButton>
-        </RowActions>
-      ),
+      cell: (job) =>
+        canEdit(me, job) ? (
+          <RowActions>
+            <IconButton
+              tone="edit"
+              title={`ویرایش «${job.job_title}»`}
+              onClick={() => setEditing(job.id)}
+            >
+              {PencilGlyph}
+            </IconButton>
+            <IconButton
+              tone="danger"
+              title={`حذف «${job.job_title}»`}
+              onClick={() => setDeleting(job)}
+            >
+              {TrashGlyph}
+            </IconButton>
+          </RowActions>
+        ) : (
+          <RowActions>
+            <IconButton
+              tone="view"
+              title={`مشاهده «${job.job_title}»`}
+              onClick={() => setViewing(job.id)}
+            >
+              {EyeGlyph}
+            </IconButton>
+          </RowActions>
+        ),
     },
   ];
 
@@ -184,9 +206,22 @@ export default function Jobs() {
         hint={
           isSuper
             ? "مشاغل ثبت‌شده در پایگاه داده. با ذخیره هر ویرایش یا حذف هر شغل، بازسازی امبدینگ‌ها بی‌درنگ آغاز می‌شود و تحلیل در این مدت با نسخه پیشین پاسخ می‌دهد."
-            : "مشاغل اختصاصی سازمان شما. با ذخیره هر ویرایش یا حذف هر شغل، بازسازی امبدینگ‌ها بی‌درنگ آغاز می‌شود و تحلیل در این مدت با نسخه پیشین پاسخ می‌دهد."
+            : "مشاغلی که در نتایج تحلیل سازمان شما دیده می‌شوند. مشاغل اختصاصی سازمان شما قابل ویرایش و حذف است و مشاغل عمومی تنها قابل مشاهده است؛ با ذخیره هر ویرایش یا حذف هر شغل، بازسازی امبدینگ‌ها بی‌درنگ آغاز می‌شود."
         }
       >
+        {!isSuper && (
+          <Select
+            value={scope}
+            onChange={(event) => {
+              setScope(event.target.value);
+              setPage(1);
+            }}
+            className="h-11 min-w-44"
+          >
+            <option value="">همه مشاغل</option>
+            <option value={me.organization_id}>مشاغل اختصاصی سازمان شما</option>
+          </Select>
+        )}
         {isSuper && (
           <Select
             value={scope}
@@ -276,6 +311,19 @@ export default function Jobs() {
             allowPublic={isSuper}
             onSubmit={save}
           />
+        </Modal>
+      )}
+
+      {viewed && (
+        <Modal
+          open
+          title={`مشاهده «${viewed.job_title}»`}
+          hint="این شغل در پایگاه داده مشترک تمامی سازمان‌ها ثبت شده است و ویرایش یا حذف آن تنها از سوی مدیر سامانه امکان‌پذیر است."
+          size="lg"
+          onClose={() => setViewing(null)}
+          footer={<CloseButton onClose={() => setViewing(null)} />}
+        >
+          <JobRecordFields record={viewed} />
         </Modal>
       )}
 

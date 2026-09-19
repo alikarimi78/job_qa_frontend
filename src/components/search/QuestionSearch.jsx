@@ -179,7 +179,8 @@ const DRAFT_REASONS = {
 };
 
 // One notice for every job composed rather than found — a name or question the corpus lacks, or a
-// combination of two fields — so the two flows say the same thing in the same words.
+// combination of two fields — so the two flows say the same thing in the same words. It is not
+// shown while «ویرایش» is open, the user already acting on the composed job there.
 const COMPOSED_NOTICE = {
   title: "این شغل در پایگاه داده موجود نیست",
   body: "مشخصات زیر بر اساس ورودی شما و نزدیک‌ترین رکورد موجود در پایگاه داده تدوین شده است.",
@@ -206,7 +207,7 @@ export default function QuestionSearch() {
   const [declined, setDeclined] = useState(false);
   const [filed, setFiled] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [owner, setOwner] = useState(PUBLIC_OWNER);
+  const [owner, setOwner] = useState(null);
   const [choosing, setChoosing] = useState(false);
   const [seed, setSeed] = useState(null);
   const [runId, setRunId] = useState(0);
@@ -216,7 +217,9 @@ export default function QuestionSearch() {
   const [suggestJob, { isLoading: isFiling }] = useSuggestJobMutation();
   // The owner choice the suggestion page offers, so a job composed here can be filed for the
   // caller's own organization too; without it this page could only ever file public records.
-  const { owners, allowPublic, loading: ownersLoading } = useSuggestionOwners();
+  const { owners, allowPublic, defaultOwner, loading: ownersLoading } = useSuggestionOwners();
+  // Until the reader picks in «پذیرش», the job goes to the organization they sit in.
+  const chosenOwner = owner ?? (defaultOwner == null ? PUBLIC_OWNER : String(defaultOwner));
 
   async function runSearch(text) {
     const asking = text.trim();
@@ -225,7 +228,7 @@ export default function QuestionSearch() {
     setDeclined(false);
     setFiled(false);
     setEditing(false);
-    setOwner(PUBLIC_OWNER);
+    setOwner(null);
     setChoosing(false);
     setSeed(null);
     setOpenNearest(false);
@@ -328,7 +331,7 @@ export default function QuestionSearch() {
       icon: Glyphs.building,
     })),
   ];
-  const ownerBody = owner === PUBLIC_OWNER ? null : Number(owner);
+  const ownerBody = chosenOwner === PUBLIC_OWNER ? null : Number(chosenOwner);
 
   // The owner of the stored record a match answered from. A record the caller cannot see could
   // not have matched, so its organization is always among the ones they may name.
@@ -441,7 +444,7 @@ export default function QuestionSearch() {
               </div>
             </header>
 
-            {composed && <Notice title={COMPOSED_NOTICE.title}>{COMPOSED_NOTICE.body}</Notice>}
+            {composed && !editing && <Notice title={COMPOSED_NOTICE.title}>{COMPOSED_NOTICE.body}</Notice>}
 
             <AnswerPanel label={answerLabel} text={result.answer} />
 
@@ -454,7 +457,7 @@ export default function QuestionSearch() {
               />
             )}
 
-            {combination && (offered || result.draft_reason) && (
+            {combination && (offered || result.draft_reason) && !(offered && editing) && (
               <div className="flex flex-col gap-4">
                 <Notice
                   title={offered ? COMPOSED_NOTICE.title : "شغل ترکیبی برای پیشنهاد ایجاد نشد"}
@@ -463,7 +466,7 @@ export default function QuestionSearch() {
                     ? COMPOSED_NOTICE.body
                     : (DRAFT_REASONS[result.draft_reason] ?? DRAFT_REASONS.unavailable)(result)}
                 </Notice>
-                {offered && !editing && (
+                {offered && (
                   <JobDetails
                     details={[draftDetail]}
                     title={`مشخصات تدوین‌شده «${draftDetail.job_title}»`}
@@ -550,7 +553,7 @@ export default function QuestionSearch() {
                   <Button
                     variant="outline"
                     size="md"
-                    buttonProps={{ type: "button", onClick: () => { setSeed(null); setEditing(true); }, disabled: isFiling }}
+                    buttonProps={{ type: "button", onClick: () => { setSeed(null); setEditing(true); }, disabled: isFiling || ownersLoading }}
                   >
                     ویرایش
                   </Button>
@@ -664,7 +667,7 @@ export default function QuestionSearch() {
                   key={choice.value}
                   className={`flex items-start gap-3 px-4 py-3 rounded-xl border cursor-pointer
                               transition-colors duration-200 ${
-                                owner === choice.value
+                                chosenOwner === choice.value
                                   ? "border-blue-400 bg-blue-50"
                                   : "border-slate-200 hover:border-slate-300"
                               }`}
@@ -673,7 +676,7 @@ export default function QuestionSearch() {
                     type="radio"
                     name="suggestion-owner"
                     value={choice.value}
-                    checked={owner === choice.value}
+                    checked={chosenOwner === choice.value}
                     onChange={() => setOwner(choice.value)}
                     disabled={isFiling}
                     className="mt-1.5 accent-blue-600"

@@ -30,8 +30,9 @@ export const PUBLIC_OWNER = PUBLIC;
 // `owners` is the organizations this caller may hand the record to, and `allowPublic`
 // whether the shared corpus is one of the choices. With neither — a user who sits in no
 // organization — the field is not drawn and the body never mentions the owner, which is
-// what leaves an existing record where it already was.
-function toFormValues(initial, owners, allowPublic) {
+// what leaves an existing record where it already was. `defaultOwner` is where a new record
+// goes until the reader picks; a record being edited keeps its own owner instead.
+function toFormValues(initial, owners, allowPublic, defaultOwner = null) {
   const values = { job_title: "", description: "" };
   for (const key of ["job_title", "description"]) {
     values[key] = initial?.[key] ?? "";
@@ -42,7 +43,9 @@ function toFormValues(initial, owners, allowPublic) {
   values.organization_id =
     initial?.organization_id != null
       ? String(initial.organization_id)
-      : allowPublic
+      : defaultOwner != null
+        ? String(defaultOwner)
+        : allowPublic
         ? PUBLIC
         : String(owners[0]?.id ?? PUBLIC);
   return values;
@@ -57,8 +60,11 @@ export default function JobForm({
   formId,
   owners = [],
   allowPublic = true,
+  defaultOwner = null,
 }) {
-  const methods = useForm({ defaultValues: toFormValues(initial, owners, allowPublic) });
+  const methods = useForm({
+    defaultValues: toFormValues(initial, owners, allowPublic, defaultOwner),
+  });
   const owner = methods.watch("organization_id");
 
   // An other name becomes the title and the title takes its place among the other names, so the
@@ -80,7 +86,7 @@ export default function JobForm({
       body.organization_id =
         values.organization_id === PUBLIC ? null : Number(values.organization_id);
     }
-    onSubmit(body, () => methods.reset(toFormValues(null, owners, allowPublic)));
+    onSubmit(body, () => methods.reset(toFormValues(null, owners, allowPublic, defaultOwner)));
   };
 
   return (

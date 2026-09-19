@@ -1,4 +1,3 @@
-import { FIELD_LABELS } from "@constant/fieldLabels";
 import { useState } from "react";
 import Card from "@components/ui/Card";
 import Button from "@components/ui/Button";
@@ -8,7 +7,7 @@ import JobForm from "@components/JobForm";
 import Modal from "@components/ui/Modal";
 import Select from "@components/ui/Select";
 import { CloseButton, DialogFooter } from "@components/manage/Forms";
-import { splitItems } from "@components/ui/ItemsInput";
+import JobRecordFields from "@components/JobRecordFields";
 import { useCurrentUserQuery } from "@services/authApi";
 import { useOrganizationsQuery } from "@services/accountsApi";
 import {
@@ -22,42 +21,6 @@ import {
 import { errorMessage } from "@utils/errors";
 import { showMessage } from "@utils/toast";
 
-
-const DETAIL_ROWS = [
-  ["aliases", "نام‌های دیگر", true],
-  ["tools", FIELD_LABELS.tools, true],
-  ["skills", FIELD_LABELS.skills, true],
-  ["knowledge", FIELD_LABELS.knowledge, true],
-  ["abilities", FIELD_LABELS.abilities, true],
-  ["description", "شرح شغل", false],
-  ["responsibilities", "وظایف و مسئولیت‌ها", true],
-  ["work_context", FIELD_LABELS.work_context, false],
-  ["career_path_next", FIELD_LABELS.career_path_next, true],
-];
-
-function FieldRow({ label, value, list }) {
-  const items = list ? splitItems(value) : [];
-
-  return (
-    <div className="py-2.5 border-t border-slate-200 first:border-t-0">
-      <span className="text-xs font-semibold text-slate-500">{label}</span>
-      {items.length > 0 ? (
-        <div className="flex flex-wrap gap-1.5 mt-1.5">
-          {items.map((item, i) => (
-            <span
-              key={i}
-              className="bg-white border border-slate-200 rounded-full px-2.5 py-0.5 text-[13px] text-slate-700"
-            >
-              {item}
-            </span>
-          ))}
-        </div>
-      ) : (
-        <p className="m-0 mt-1 text-[13px] leading-7 text-slate-700">{value || "—"}</p>
-      )}
-    </div>
-  );
-}
 
 const EDIT_FORM_ID = "suggestion-edit-form";
 
@@ -238,13 +201,7 @@ export default function Admin() {
                 </div>
               </div>
 
-              {open === it.id && (
-                <div className="mb-3 px-4 py-2 rounded-xl bg-slate-50 border border-slate-200">
-                  {DETAIL_ROWS.map(([key, label, list]) => (
-                    <FieldRow key={key} label={label} value={it[key]} list={list} />
-                  ))}
-                </div>
-              )}
+              {open === it.id && <JobRecordFields record={it} className="mb-3" />}
             </div>
           ))}
         </div>

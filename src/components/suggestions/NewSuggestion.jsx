@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Card from "@components/ui/Card";
+import Loader from "@components/ui/Loader";
 import JobForm from "@components/JobForm";
 import useSuggestionOwners from "@hook/useSuggestionOwners";
 import { useSuggestJobMutation } from "@services/jobsApi";
@@ -11,7 +12,8 @@ export default function NewSuggestion() {
   const [suggestJob, { isLoading }] = useSuggestJobMutation();
   // A super_admin may name any organization, everyone else only their own, and an account
   // in none is shown no choice — the super_admin, who sits in none, used to get none either.
-  const { owners, allowPublic } = useSuggestionOwners();
+  // The form waits for them: its default owner is fixed when it mounts.
+  const { owners, allowPublic, defaultOwner, loading } = useSuggestionOwners();
 
   async function submit(form, reset) {
     setDone(false);
@@ -36,13 +38,18 @@ export default function NewSuggestion() {
         </div>
       )}
 
-      <JobForm
-        onSubmit={submit}
-        submitLabel="ثبت پیشنهاد"
-        busy={isLoading}
-        owners={owners}
-        allowPublic={allowPublic}
-      />
+      {loading ? (
+        <Loader />
+      ) : (
+        <JobForm
+          onSubmit={submit}
+          submitLabel="ثبت پیشنهاد"
+          busy={isLoading}
+          owners={owners}
+          allowPublic={allowPublic}
+          defaultOwner={defaultOwner}
+        />
+      )}
     </Card>
   );
 }
