@@ -48,7 +48,7 @@ const Star = (
 );
 
 const MODES = [
-  ["simple", "تحلیل معمولی", Magnifier],
+  ["simple", "تحلیل عمومی", Magnifier],
   ["advanced", "تحلیل پیشرفته", Sliders],
   ["saved", "ستاره‌دارها", Star],
 ];

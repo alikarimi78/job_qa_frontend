@@ -12,20 +12,21 @@ import { showMessage } from "@utils/toast";
 
 // The examples in the boxes are one job read column by column — «حسابداران و حسابرسان», whose record
 // holds every one of them — so a reader sees what a profile of a single person looks like rather than
-// six unrelated words.
+// six unrelated words. The fourth entry is how many items the field must carry, 0 where it is
+// optional: the client's copy of `routers/search/schemas.py:PROFILE_REQUIRED`, which refuses a
+// profile falling short of it. The required four are what tell two jobs with the same skills apart;
+// duties and where the reader wants to go stay optional.
 const FIELDS = [
-  ["skills", FIELD_LABELS.skills, "تفکر انتقادی", true],
-  ["knowledge", FIELD_LABELS.knowledge, "اقتصاد و حسابداری", false],
-  ["abilities", FIELD_LABELS.abilities, "استدلال ریاضی", false],
-  ["responsibilities", "وظایف و مسئولیت‌ها", "تهیه صورت‌های مالی", false],
-  ["work_context", FIELD_LABELS.work_context, "اهمیت بالای دقت در کار", false],
-  ["career_path_next", FIELD_LABELS.career_path_next, "مدیران امور مالی", false],
+  ["skills", FIELD_LABELS.skills, "تفکر انتقادی", 2],
+  ["knowledge", FIELD_LABELS.knowledge, "اقتصاد و حسابداری", 1],
+  ["abilities", FIELD_LABELS.abilities, "استدلال ریاضی", 1],
+  ["work_context", FIELD_LABELS.work_context, "اهمیت بالای دقت در کار", 1],
+  ["responsibilities", "وظایف و مسئولیت‌ها", "تهیه صورت‌های مالی", 0],
+  ["career_path_next", FIELD_LABELS.career_path_next, "مدیران امور مالی", 0],
 ];
 
 const BLANK = Object.fromEntries(FIELDS.map(([key]) => [key, []]));
-
-const MIN_SKILLS = 2;
-const MIN_FIELDS = 2;
+const REQUIRED = FIELDS.filter(([, , , min]) => min > 0);
 
 export default function AdvancedSearch() {
   const methods = useForm({ defaultValues: BLANK });
@@ -36,9 +37,9 @@ export default function AdvancedSearch() {
   const { data: vocabulary } = useProfileVocabularyQuery();
 
   const values = methods.watch();
-  const filled = FIELDS.filter(([key]) => (values[key]?.length ?? 0) > 0).length;
-  const enoughSkills = (values.skills?.length ?? 0) >= MIN_SKILLS;
-  const ready = enoughSkills && filled >= MIN_FIELDS;
+  // What is still missing, named, so the button says why it is disabled rather than only that it is.
+  const missing = REQUIRED.filter(([key, , , min]) => (values[key]?.length ?? 0) < min);
+  const ready = missing.length === 0;
 
   async function submit(form) {
     const profile = Object.fromEntries(
@@ -56,21 +57,21 @@ export default function AdvancedSearch() {
   return (
     <Card
       title="تحلیل پیشرفته"
-      hint="به‌جای طرح پرسش، مهارت‌ها و ویژگی‌های خود را وارد نمایید تا نزدیک‌ترین مشاغل پایگاه داده رتبه‌بندی شوند و میزان پوشش هر شغل نسبت به موارد واردشده مشخص گردد. هر مورد را جداگانه وارد و با + اضافه نمایید؛ برای محاسبه دقیق پوشش، موارد را از فهرست پیشنهادی که هنگام تایپ نمایش داده می‌شود انتخاب نمایید."
+      hint="به‌جای طرح پرسش، مهارت‌ها و ویژگی‌های خود را وارد نمایید تا نزدیک‌ترین مشاغل پایگاه داده رتبه‌بندی شوند و میزان پوشش هر شغل نسبت به موارد واردشده مشخص گردد. بخش‌های ستاره‌دار الزامی هستند. هر مورد را جداگانه وارد و با + اضافه نمایید؛ برای محاسبه دقیق پوشش، موارد را از فهرست پیشنهادی که هنگام تایپ نمایش داده می‌شود انتخاب نمایید."
     >
       <FormProvider {...methods}>
         <form onSubmit={methods.handleSubmit(submit)} className="flex flex-col gap-4">
           <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-4 items-start">
-            {FIELDS.map(([key, label, placeholder, required]) => (
+            {FIELDS.map(([key, label, placeholder, min]) => (
               <ItemsInput
                 key={key}
                 name={key}
-                label={required ? `${label} *` : label}
+                label={label}
                 placeholder={placeholder}
-                required={required}
-                min={required ? MIN_SKILLS : 1}
+                required={min > 0}
+                min={Math.max(min, 1)}
                 hint={[
-                  required ? `دست‌کم ${faNumber(MIN_SKILLS)} مورد` : "اختیاری",
+                  min > 0 ? `الزامی — دست‌کم ${faNumber(min)} مورد` : "اختیاری",
                   vocabulary?.fields?.[key] ? "از فهرست پیشنهادی انتخاب نمایید" : null,
                 ]
                   .filter(Boolean)
@@ -88,7 +89,9 @@ export default function AdvancedSearch() {
             hint={
               ready
                 ? undefined
-                : "برای انجام تحلیل، دست‌کم دو مهارت و در مجموع دو فیلد را تکمیل نمایید."
+                : `برای انجام تحلیل، این بخش‌ها را تکمیل نمایید: ${missing
+                    .map(([, label, , min]) => `${label} (${faNumber(min)} مورد)`)
+                    .join("، ")}`
             }
           />
         </form>

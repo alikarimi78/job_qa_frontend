@@ -462,10 +462,25 @@ export default function ItemsInput({
   suggestions,
 }) {
   const list = useItemList(name, { required, min, max });
+  // A required field still short of its minimum says so in red, before the form is ever submitted.
+  const unmet = required && list.value.length < min;
 
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
-      {label && <span className="text-sm font-medium text-slate-700">{label}</span>}
+      {label && (
+        <span
+          className={
+            required ? "text-sm font-bold text-slate-900" : "text-sm font-medium text-slate-700"
+          }
+        >
+          {label}
+          {required && (
+            <span className="text-red-600" title="تکمیل این بخش الزامی است">
+              {" *"}
+            </span>
+          )}
+        </span>
+      )}
 
       <ItemAdder list={list} label={label} placeholder={placeholder} suggestions={suggestions} />
 
@@ -487,7 +502,9 @@ export default function ItemsInput({
       {list.error ? (
         <span className="text-xs text-red-600">{list.error.message}</span>
       ) : (
-        hint && <span className="text-xs text-slate-400">{hint}</span>
+        hint && (
+          <span className={unmet ? "text-xs text-red-600" : "text-xs text-slate-400"}>{hint}</span>
+        )
       )}
     </div>
   );

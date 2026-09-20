@@ -1,3 +1,4 @@
+import { FIELD_LABELS } from "@constant/fieldLabels";
 import { ROLE_LABELS } from "@routes/roles";
 
 const GENERIC = "خطایی رخ داده است؛ لطفاً مجدداً تلاش نمایید.";
@@ -5,6 +6,12 @@ const SESSION_ENDED = "اعتبار ورود شما به پایان رسیده �
 const ENGINE_COLD = "سرویس تحلیل هنوز آماده نیست؛ لطفاً دقایقی بعد مجدداً تلاش نمایید.";
 
 const fa = (value) => Number(value).toLocaleString("fa-IR");
+
+// The profile fields the validator can name, in the words the form gives them.
+const PROFILE_LABELS = {
+  ...FIELD_LABELS,
+  responsibilities: "وظایف و مسئولیت‌ها",
+};
 
 const STATUS_LABELS = {
   pending: "در انتظار بررسی",
@@ -80,10 +87,9 @@ const PATTERNS = [
     ([, fields]) => `این فیلدها در پروفایل شناخته نمی‌شوند: ${fields}`],
   [/^\w+: at most (\d+) items$/,
     ([, limit]) => `برای هر فیلد حداکثر ${fa(limit)} مورد می‌توانید وارد نمایید.`],
-  [/^skills: at least (\d+) items are required$/,
-    ([, min]) => `برای تحلیل پیشرفته باید دست‌کم ${fa(min)} مهارت وارد نمایید.`],
-  [/^At least (\d+) fields must be filled in$/,
-    ([, min]) => `دست‌کم ${fa(min)} فیلد باید تکمیل شود.`],
+  [/^(\w+): at least (\d+) items are required$/,
+    ([, field, min]) =>
+      `برای تحلیل پیشرفته، «${PROFILE_LABELS[field] ?? field}» باید دست‌کم ${fa(min)} مورد داشته باشد.`],
 
   // pydantic's own messages, which arrive for ordinary typing mistakes — a username left
   // empty or a password one character short — and were reaching the reader in English.
