@@ -1,6 +1,9 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useController, useFormContext } from "react-hook-form";
 import { faNumber } from "@utils/jalali";
+// Suggestions are compared the way the backend compares profile items, so «روانشناسی»
+// still finds «روان‌شناسی».
+import { foldText as fold } from "@utils/text";
 
 const SEPARATORS = /[،,;؛|\n\t]+/;
 
@@ -77,25 +80,6 @@ export function itemsFromCell(cell) {
 
 export function cellFromItems(items) {
   return (items ?? []).join(" | ");
-}
-
-// Suggestions are compared the way the backend compares profile items: Arabic letter forms and hamza
-// folded, marks dropped and a half-space read as a space, so «روانشناسی» still finds «روان‌شناسی».
-const FOLDS = [
-  [/[ً-ٰٟـ]/g, ""],
-  [/[يى]/g, "ی"],
-  [/ك/g, "ک"],
-  [/ؤ/g, "و"],
-  [/[أإٱ]/g, "ا"],
-  [/ئ/g, "ی"],
-  [/[ةۀ]/g, "ه"],
-  [/‌/g, " "],
-];
-
-function fold(text) {
-  let folded = String(text ?? "").toLowerCase();
-  for (const [pattern, replacement] of FOLDS) folded = folded.replace(pattern, replacement);
-  return folded.replace(/\s+/g, " ").trim();
 }
 
 // The suggestions still worth offering, most common first as the backend sends them: every typed word

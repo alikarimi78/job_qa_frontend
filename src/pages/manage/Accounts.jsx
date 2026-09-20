@@ -23,6 +23,7 @@ import {
 import { useChangeOwnNameMutation, useChangeOwnPasswordMutation } from "@services/authApi";
 import { runAction } from "@utils/action";
 import { faNumber } from "@utils/jalali";
+import { foldText, matchesQuery } from "@utils/text";
 
 
 const CREATABLE = {
@@ -41,6 +42,7 @@ export default function Accounts() {
   const isSuper = me.role === "super_admin";
 
   const [orgFilter, setOrgFilter] = useState("");
+  const [term, setTerm] = useState("");
 
   const [adding, setAdding] = useState(false);
   const [newRole, setNewRole] = useState("");
@@ -66,8 +68,14 @@ export default function Accounts() {
   const orgsById = Object.fromEntries(orgs.map((o) => [o.id, o]));
 
   const organizationId = orgFilter === "" ? null : Number(orgFilter);
+  // The listing is whole — `GET /accounts` is scoped by the server but not paged — so the search over
+  // it is the client's own: a username holding what was typed, folded (`utils/text`) as «مدیریت
+  // سازمان‌ها» folds a name.
+  const query = foldText(term);
   const listed = accounts.filter(
-    (account) => organizationId == null || account.organization_id === organizationId
+    (account) =>
+      (organizationId == null || account.organization_id === organizationId) &&
+      matchesQuery(account.username, query)
   );
 
   const creatableRoles = CREATABLE[me.role] ?? [];
@@ -144,7 +152,18 @@ export default function Accounts() {
             : undefined
         }
         status={<Badge tone="neutral">{faNumber(listed.length)} کاربر</Badge>}
-      />
+      >
+        <input
+          value={term}
+          onChange={(event) => setTerm(event.target.value)}
+          placeholder="جست‌وجو بر اساس نام کاربری"
+          maxLength={60}
+          className="h-11 w-56 md:w-72 px-4 rounded-xl bg-white text-sm text-slate-800
+                     border border-slate-200 outline-none transition-all duration-200
+                     placeholder:text-slate-400
+                     hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
+        />
+      </PageToolbar>
 
       <Card>
         {isSuper && (
@@ -169,6 +188,11 @@ export default function Accounts() {
 
         <AccountsTable
           accounts={listed}
+          empty={
+            query
+              ? `کاربری با نام کاربری «${term.trim()}» یافت نشد.`
+              : "تاکنون کاربری در دسترس شما ثبت نشده است."
+          }
           me={me}
           orgs={orgs}
           orgsById={orgsById}

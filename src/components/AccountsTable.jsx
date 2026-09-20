@@ -59,6 +59,7 @@ export default function AccountsTable({
   onChangeOwnPassword,
   onSaveAccount,
   onDelete,
+  empty = "تاکنون کاربری در دسترس شما ثبت نشده است.",
 }) {
   const [dialog, setDialog] = useState(null);
   const [destination, setDestination] = useState("");
@@ -198,11 +199,7 @@ export default function AccountsTable({
 
   return (
     <>
-      <DataTable
-        columns={columns}
-        rows={accounts}
-        empty="تاکنون کاربری در دسترس شما ثبت نشده است."
-      />
+      <DataTable columns={columns} rows={accounts} empty={empty} />
 
       <DetailsDialog
         open={is("view")}

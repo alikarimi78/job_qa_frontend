@@ -26,6 +26,7 @@ import {
 } from "@services/accountsApi";
 import { runAction } from "@utils/action";
 import { faDigits, faNumber } from "@utils/jalali";
+import { foldText, matchesQuery } from "@utils/text";
 
 const Cell = ({ children }) => (
   <span className="text-sm text-slate-600 fa-nums">{children}</span>
@@ -33,10 +34,15 @@ const Cell = ({ children }) => (
 
 export default function Organizations() {
   const [dialog, setDialog] = useState(null);
+  const [term, setTerm] = useState("");
   const close = () => setDialog(null);
   const is = (kind) => dialog?.kind === kind;
 
   const { data: orgs = [] } = useOrganizationsQuery();
+  // `GET /orgs` is not paged either, so the search is the client's own, as «مدیریت کاربران» does it:
+  // a name holding what was typed. Only the table narrows — the dialogs still read the whole list.
+  const query = foldText(term);
+  const listed = orgs.filter((org) => matchesQuery(org.name, query));
   const { data: accounts = [] } = useAccountsQuery();
 
   const [createOrganization, { isLoading: creating }] = useCreateOrganizationMutation();
@@ -139,15 +145,28 @@ export default function Organizations() {
       <PageToolbar
         title="مدیریت سازمان‌ها"
         hint="سازمان بالاترین سطح است؛ ادمین سازمان و کاربران آن ذیل سازمان ایجاد می‌شوند"
-        status={<Badge tone="neutral">{faNumber(orgs.length)} سازمان</Badge>}
+        status={<Badge tone="neutral">{faNumber(listed.length)} سازمان</Badge>}
         action={{ label: "افزودن سازمان جدید", onClick: () => setDialog({ kind: "create" }) }}
-      />
+      >
+        <input
+          value={term}
+          onChange={(event) => setTerm(event.target.value)}
+          placeholder="جست‌وجو بر اساس نام سازمان"
+          maxLength={120}
+          className="h-11 w-56 md:w-72 px-4 rounded-xl bg-white text-sm text-slate-800
+                     border border-slate-200 outline-none transition-all duration-200
+                     placeholder:text-slate-400
+                     hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
+        />
+      </PageToolbar>
 
       <Card>
         <DataTable
           columns={columns}
-          rows={orgs}
-          empty="تاکنون سازمانی ایجاد نشده است."
+          rows={listed}
+          empty={
+            query ? `سازمانی با نام «${term.trim()}» یافت نشد.` : "تاکنون سازمانی ایجاد نشده است."
+          }
         />
       </Card>
 
