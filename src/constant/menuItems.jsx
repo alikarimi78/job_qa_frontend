@@ -49,8 +49,9 @@ const GearIcon = icon(
   </>
 );
 
-// Five items and no more: organizations, accounts and the review queue are tabs of «تنظیمات»
-// (pages/Settings.jsx), which stays lit on each of them.
+// Five items and no more: the review queue is a tab of «مدیریت مشاغل» (pages/manage/JobsSection.jsx)
+// and organizations and accounts are tabs of «تنظیمات» (pages/Settings.jsx), each staying lit on its
+// own tabs.
 export const menuItems = [
   {
     href: "/manage/dashboard",
@@ -60,7 +61,7 @@ export const menuItems = [
   },
   {
     href: "/search",
-    label: "تحلیل هوشمند",
+    label: "تحلیل هوشمند مشاغل",
     icon: SearchIcon,
   },
   {

@@ -34,19 +34,11 @@ const Users = glyph(
   </>
 );
 
-const Shield = glyph(
-  <>
-    <path d="M12 3l7 3v6c0 4.4-3 7.9-7 9-4-1.1-7-4.6-7-9V6l7-3z" />
-    <path d="M9 12l2 2 4-4" />
-  </>
-);
-
-// Everything the sidebar no longer lists on its own sits here as a tab, each under the roles
-// its page has always required, so the sidebar can stay at five items.
+// The two the sidebar no longer lists on their own, each under the roles its page has always
+// required. An org_admin may reach only the second, and is shown no switch over a single tab.
 const TABS = [
   { path: "organizations", label: "مدیریت سازمان‌ها", icon: Building, roles: ["super_admin"] },
   { path: "accounts", label: "مدیریت کاربران", icon: Users, roles: ADMIN_ROLES },
-  { path: "reviews", label: "بررسی پیشنهادها", icon: Shield, roles: ADMIN_ROLES },
 ];
 
 const tabsFor = (role) => TABS.filter((tab) => hasRole(role, tab.roles));
@@ -65,14 +57,16 @@ export default function Settings() {
 
   return (
     <>
-      <div className="flex justify-center">
-        <SegmentedSwitch
-          options={tabs.map((tab) => [tab.path, tab.label, tab.icon])}
-          value={current}
-          onChange={(path) => navigate(`/settings/${path}`)}
-          label="بخش‌های تنظیمات"
-        />
-      </div>
+      {tabs.length > 1 && (
+        <div className="flex justify-center">
+          <SegmentedSwitch
+            options={tabs.map((tab) => [tab.path, tab.label, tab.icon])}
+            value={current}
+            onChange={(path) => navigate(`/settings/${path}`)}
+            label="بخش‌های تنظیمات"
+          />
+        </div>
+      )}
 
       <Outlet context={me} />
     </>

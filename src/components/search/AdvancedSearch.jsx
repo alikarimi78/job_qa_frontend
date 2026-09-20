@@ -10,13 +10,16 @@ import { faNumber } from "@utils/jalali";
 import { errorMessage } from "@utils/errors";
 import { showMessage } from "@utils/toast";
 
+// The examples in the boxes are one job read column by column — «حسابداران و حسابرسان», whose record
+// holds every one of them — so a reader sees what a profile of a single person looks like rather than
+// six unrelated words.
 const FIELDS = [
   ["skills", FIELD_LABELS.skills, "تفکر انتقادی", true],
-  ["knowledge", FIELD_LABELS.knowledge, "روان‌شناسی", false],
-  ["abilities", FIELD_LABELS.abilities, "استدلال قیاسی", false],
-  ["responsibilities", "وظایف و مسئولیت‌ها", "هدایت خودرو زرهی", false],
-  ["work_context", FIELD_LABELS.work_context, "کار گروهی و تیمی", false],
-  ["career_path_next", FIELD_LABELS.career_path_next, "کارگران ساختمانی", false],
+  ["knowledge", FIELD_LABELS.knowledge, "اقتصاد و حسابداری", false],
+  ["abilities", FIELD_LABELS.abilities, "استدلال ریاضی", false],
+  ["responsibilities", "وظایف و مسئولیت‌ها", "تهیه صورت‌های مالی", false],
+  ["work_context", FIELD_LABELS.work_context, "اهمیت بالای دقت در کار", false],
+  ["career_path_next", FIELD_LABELS.career_path_next, "مدیران امور مالی", false],
 ];
 
 const BLANK = Object.fromEntries(FIELDS.map(([key]) => [key, []]));

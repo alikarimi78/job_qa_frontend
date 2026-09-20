@@ -8,6 +8,7 @@ import Search from "@pages/Search";
 import Login from "@pages/Login";
 import Suggestions from "@pages/Suggestions";
 import Admin from "@pages/Admin";
+import JobsSection from "@pages/manage/JobsSection";
 import ManageLayout from "@pages/manage/ManageLayout";
 import Dashboard from "@pages/manage/Dashboard";
 import Organizations from "@pages/manage/Organizations";
@@ -68,7 +69,10 @@ export default function App() {
             />
             <Route path="users" element={<Navigate to="/settings/accounts" replace />} />
             <Route path="accounts" element={<Navigate to="/settings/accounts" replace />} />
-            <Route path="jobs" element={<Jobs />} />
+            <Route path="jobs" element={<JobsSection />}>
+              <Route index element={<Jobs />} />
+              <Route path="reviews" element={<Admin />} />
+            </Route>
           </Route>
           <Route
             path="/settings"
@@ -89,10 +93,10 @@ export default function App() {
                 }
               />
               <Route path="accounts" element={<Accounts />} />
-              <Route path="reviews" element={<Admin />} />
+              <Route path="reviews" element={<Navigate to="/manage/jobs/reviews" replace />} />
             </Route>
           </Route>
-          <Route path="/admin" element={<Navigate to="/settings/reviews" replace />} />
+          <Route path="/admin" element={<Navigate to="/manage/jobs/reviews" replace />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

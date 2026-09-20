@@ -400,7 +400,7 @@ function DescriptionCard({ primary }) {
           type="button"
           onClick={() => setEditing(true)}
           title="ویرایش شرح شغل"
-          className="block w-full text-start leading-8 text-slate-700 cursor-text rounded-lg -mx-1 px-1
+          className="block w-full text-justify leading-8 text-slate-700 cursor-text rounded-lg -mx-1 px-1
                      transition-colors duration-200 hover:bg-slate-100 focus:outline-none
                      focus-visible:ring-2 focus-visible:ring-blue-500/40"
         >

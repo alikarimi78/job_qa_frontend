@@ -15,6 +15,15 @@ body {
   line-height: 1.8;
 }
 
+/* Persian prose is read justified — the analysis, a job's description, every hint and notice. A
+   paragraph of one line is untouched, justification never stretching a last line. It goes in the base
+   layer so a utility on the element still wins: an unlayered rule would outrank every one of them. */
+@layer base {
+  p {
+    text-align: justify;
+  }
+}
+
 .fa-nums {
   font-feature-settings: "ss02";
 }
