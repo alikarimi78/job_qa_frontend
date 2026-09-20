@@ -9,10 +9,11 @@ import AnswerPanel from "@components/AnswerPanel";
 import JobDetails from "@components/JobDetails";
 import JobForm, { PUBLIC_OWNER } from "@components/JobForm";
 import { cellFromItems, itemsFromCell } from "@components/ui/ItemsInput";
-import { relabelDetail } from "@constant/fieldLabels";
 import useSuggestionOwners from "@hook/useSuggestionOwners";
 import { useSearchMutation, useSearchReportMutation, useSuggestJobMutation } from "@services/jobsApi";
+import { useDeleteSavedSearchMutation, useSaveSearchMutation } from "@services/savedApi";
 import { downloadBlob, safeFileName } from "@utils/download";
+import { reportBody, reportSubject } from "@utils/report";
 import { errorMessage } from "@utils/errors";
 import { showMessage } from "@utils/toast";
 
@@ -34,6 +35,10 @@ const glyph = (className, path) => (
 
 const Glyphs = {
   download: glyph("w-3.5 h-3.5", <path d="M12 3v12M7 12l5 5 5-5M4 20h16" />),
+  star: glyph(
+    "w-3.5 h-3.5",
+    <path d="M12 3.6l2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z" />,
+  ),
   briefcase: glyph(
     "w-6 h-6",
     <>
@@ -211,9 +216,14 @@ export default function QuestionSearch() {
   const [seed, setSeed] = useState(null);
   const [runId, setRunId] = useState(0);
   const [openNearest, setOpenNearest] = useState(false);
+  // The row this answer was starred into, so the same button removes it again. A new search
+  // clears it: the star belongs to the answer on screen, not to the page.
+  const [savedId, setSavedId] = useState(null);
   const [search, { isLoading }] = useSearchMutation();
   const [searchReport, { isLoading: isReporting }] = useSearchReportMutation();
   const [suggestJob, { isLoading: isFiling }] = useSuggestJobMutation();
+  const [saveSearch, { isLoading: isStarring }] = useSaveSearchMutation();
+  const [deleteSavedSearch, { isLoading: isUnstarring }] = useDeleteSavedSearchMutation();
   // The owner choice the suggestion page offers, so a job composed here can be filed for the
   // caller's own organization too; without it this page could only ever file public records.
   const { owners, allowPublic, defaultOwner, loading: ownersLoading } = useSuggestionOwners();
@@ -231,6 +241,7 @@ export default function QuestionSearch() {
     setChoosing(false);
     setSeed(null);
     setOpenNearest(false);
+    setSavedId(null);
     try {
       const data = await search(asking).unwrap();
       setResult(data);
@@ -248,17 +259,27 @@ export default function QuestionSearch() {
 
   async function downloadReport() {
     try {
-      const blob = await searchReport({
-        question: asked,
-        mode: result.mode,
-        answer: result.answer,
-        job: result.job ?? null,
-        jobs: result.jobs ?? null,
-        details: (result.details ?? []).map(relabelDetail),
-        related_jobs: result.related_jobs ?? null,
-      }).unwrap();
-      const subject = result.job ?? result.jobs?.join(" و ") ?? result.details?.[0]?.job_title;
+      const blob = await searchReport(reportBody(asked, result)).unwrap();
+      const subject = reportSubject(result);
       downloadBlob(blob, `${safeFileName(`گزارش ${subject ?? ""}`, "گزارش تحلیل شغل")}.pdf`);
+    } catch (err) {
+      showMessage.error(errorMessage(err));
+    }
+  }
+
+  // One button both ways: the answer is kept as it is on screen, and starring the same question
+  // again refreshes what was kept rather than adding a second row.
+  async function toggleStar() {
+    try {
+      if (savedId != null) {
+        await deleteSavedSearch(savedId).unwrap();
+        setSavedId(null);
+        showMessage.info("از تحلیل‌های ستاره‌دار حذف شد.");
+        return;
+      }
+      const row = await saveSearch({ question: asked, result }).unwrap();
+      setSavedId(row.id);
+      showMessage.success("در تحلیل‌های ستاره‌دار ذخیره شد.");
     } catch (err) {
       showMessage.error(errorMessage(err));
     }
@@ -429,6 +450,23 @@ export default function QuestionSearch() {
                     ratio={result.score}
                     title="میزان شباهت پرسش شما با اطلاعات این شغل"
                   />
+                )}
+                {!NO_REPORT.has(mode) && (
+                  <Button
+                    variant={savedId != null ? "primary" : "outline"}
+                    size="sm"
+                    buttonProps={{
+                      onClick: toggleStar,
+                      disabled: isStarring || isUnstarring,
+                      title:
+                        savedId != null
+                          ? "حذف از تحلیل‌های ستاره‌دار"
+                          : "نگه‌داشتن این تحلیل در تحلیل‌های ستاره‌دار",
+                    }}
+                  >
+                    {isStarring || isUnstarring ? <Spinner /> : Glyphs.star}
+                    {savedId != null ? "ستاره‌دار شد" : "ستاره‌دار کردن"}
+                  </Button>
                 )}
                 {!NO_REPORT.has(mode) && (
                   <Button

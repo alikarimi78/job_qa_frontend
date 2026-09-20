@@ -33,9 +33,24 @@ const Sliders = (
   </svg>
 );
 
+const Star = (
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    viewBox="0 0 24 24"
+  >
+    <path d="M12 3.6l2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z" />
+  </svg>
+);
+
 const MODES = [
   ["simple", "تحلیل معمولی", Magnifier],
   ["advanced", "تحلیل پیشرفته", Sliders],
+  ["saved", "ستاره‌دارها", Star],
 ];
 
 export default function ModeSwitch({ value, onChange }) {
