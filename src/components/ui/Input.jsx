@@ -7,6 +7,7 @@ export default function Input({
   type = "text",
   className = "",
   hint,
+  suffix,
   registerProps = {},
   inputProps = {},
 }) {
@@ -24,24 +25,30 @@ export default function Input({
           {label}
         </label>
       )}
-      <input
-        id={name}
-        type={type}
-        placeholder={placeholder}
-        {...inputProps}
-        {...register(name, registerProps)}
-        className={`
-          w-full h-11 px-4 rounded-xl bg-white text-sm text-slate-800
-          border transition-all duration-200 outline-none
-          placeholder:text-slate-400
-          focus:ring-2 focus:ring-blue-500/30
-          ${
-            error
-              ? "border-red-400 focus:border-red-500 focus:ring-red-500/30"
-              : "border-slate-200 hover:border-slate-300 focus:border-blue-500"
-          }
-        `}
-      />
+      <div className="relative">
+        <input
+          id={name}
+          type={type}
+          placeholder={placeholder}
+          {...inputProps}
+          {...register(name, registerProps)}
+          className={`
+            w-full h-11 px-4 rounded-xl bg-white text-sm text-slate-800
+            border transition-all duration-200 outline-none
+            placeholder:text-slate-400
+            focus:ring-2 focus:ring-blue-500/30
+            ${suffix ? "pe-11" : ""}
+            ${
+              error
+                ? "border-red-400 focus:border-red-500 focus:ring-red-500/30"
+                : "border-slate-200 hover:border-slate-300 focus:border-blue-500"
+            }
+          `}
+        />
+        {suffix && (
+          <span className="absolute inset-y-0 end-1.5 flex items-center">{suffix}</span>
+        )}
+      </div>
       {error ? (
         <span className="text-xs text-red-600">{error.message || "تکمیل این فیلد الزامی است"}</span>
       ) : (
