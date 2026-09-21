@@ -12,15 +12,17 @@ import { showMessage } from "@utils/toast";
 
 // The examples in the boxes are one job read column by column — «حسابداران و حسابرسان», whose record
 // holds every one of them — so a reader sees what a profile of a single person looks like rather than
-// six unrelated words. The fourth entry is how many items the field must carry, 0 where it is
+// seven unrelated words. The fourth entry is how many items the field must carry, 0 where it is
 // optional: the client's copy of `routers/search/schemas.py:PROFILE_REQUIRED`, which refuses a
 // profile falling short of it. The required four are what tell two jobs with the same skills apart;
-// duties and where the reader wants to go stay optional.
+// duties and where the reader wants to go stay optional. Tools are a field again: the column is
+// mostly written in Latin, so its example is too, and «پایتون» finds `Python` on its own.
 const FIELDS = [
   ["skills", FIELD_LABELS.skills, "تفکر انتقادی", 2],
   ["knowledge", FIELD_LABELS.knowledge, "اقتصاد و حسابداری", 1],
   ["abilities", FIELD_LABELS.abilities, "استدلال ریاضی", 1],
   ["work_context", FIELD_LABELS.work_context, "اهمیت بالای دقت در کار", 1],
+  ["tools", FIELD_LABELS.tools, "Microsoft Excel", 0],
   ["responsibilities", "وظایف و مسئولیت‌ها", "تهیه صورت‌های مالی", 0],
   ["career_path_next", FIELD_LABELS.career_path_next, "مدیران امور مالی", 0],
 ];

@@ -13,6 +13,23 @@ const SparkleGlyph = icon(
 );
 const CheckGlyph = icon(<path d="M5 12.5l4.5 4.5L19 7.5" />, "w-3 h-3 shrink-0");
 const CrossGlyph = icon(<path d="M7 7l10 10M17 7L7 17" />, "w-3 h-3 shrink-0");
+const AskGlyph = icon(
+  <>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M9.4 9.2a2.7 2.7 0 015.2.9c0 1.8-2.6 2.4-2.6 2.4M12 16.5h.01" />
+  </>,
+  "w-3 h-3 shrink-0",
+);
+
+// The columns a matched item can be found in beyond the six the client renames; the backend sends
+// only the key.
+const COLUMN_NAMES = {
+  job_title: "عنوان شغل",
+  aliases: "نام‌های دیگر",
+  description: "شرح شغل",
+  responsibilities: "وظایف و مسئولیت‌ها",
+};
+const columnName = (key) => fieldLabel(key, COLUMN_NAMES[key] ?? key);
 
 const Chevron = ({ open }) =>
   icon(
@@ -23,10 +40,17 @@ const Chevron = ({ open }) =>
 const faCount = (n) => n.toLocaleString("fa-IR");
 const faPercent = (ratio) => `${Math.round(ratio * 100).toLocaleString("fa-IR")}٪`;
 
-// One profile field against one job: which of the user's items it holds and which it does not. The
-// two differ by icon and border as well as colour, and the legend above the rows names both.
+// One profile field against one job: which of the user's items it holds, which it does not, and
+// which the database has no word for at all. The three differ by icon and border as well as colour,
+// and the legend above the rows names all three. A matched item found in another column of the same
+// record says so — «برنامه‌نویسی» is covered by a record whose duties describe it, even though the
+// skills column is a closed vocabulary that cannot hold the word.
 function FieldRow({ field }) {
   const theme = themeOf(field.key);
+  const where = field.found_in ?? {};
+  // A field whose every item is outside the database's vocabulary has no coverage to state — «۰٪»
+  // there reads as a job that holds none of it, which is the opposite of what happened.
+  const asked = field.matched.length + field.missing.length;
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4 py-3">
@@ -36,18 +60,26 @@ function FieldRow({ field }) {
           <p className="text-[13px] font-bold text-slate-700 m-0 leading-5">
             {fieldLabel(field.key, field.label)}
           </p>
-          <p className="text-[11px] text-slate-500 m-0 leading-5">پوشش {faPercent(field.ratio)}</p>
+          <p className="text-[11px] text-slate-500 m-0 leading-5">
+            {asked > 0 ? `پوشش ${faPercent(field.ratio)}` : "خارج از واژگان"}
+          </p>
         </div>
       </div>
       <div className="flex flex-wrap gap-1.5 flex-1 min-w-0 sm:pt-0.5">
         {field.matched.map((item, i) => (
           <span
             key={`m${i}`}
+            title={where[item] ? `در «${columnName(where[item])}» این شغل یافت شد` : undefined}
             className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[13px] leading-6
                        bg-emerald-50 border-emerald-200 text-emerald-900"
           >
             <span className="text-emerald-600">{CheckGlyph}</span>
             {item}
+            {where[item] && (
+              <span className="text-[11px] text-emerald-700/80">
+                — {columnName(where[item])}
+              </span>
+            )}
           </span>
         ))}
         {field.missing.map((item, i) => (
@@ -57,6 +89,17 @@ function FieldRow({ field }) {
                        bg-slate-50 border-slate-300 text-slate-500"
           >
             <span className="text-slate-400">{CrossGlyph}</span>
+            {item}
+          </span>
+        ))}
+        {(field.unknown ?? []).map((item, i) => (
+          <span
+            key={`u${i}`}
+            title="این عبارت در هیچ رکورد پایگاه داده ثبت نشده است و در محاسبه پوشش به حساب نیامده"
+            className="inline-flex items-center gap-1 rounded-full border border-dashed px-2.5 py-0.5 text-[13px] leading-6
+                       bg-amber-50 border-amber-300 text-amber-900"
+          >
+            <span className="text-amber-500">{AskGlyph}</span>
             {item}
           </span>
         ))}
@@ -70,9 +113,13 @@ function FieldRow({ field }) {
 function MatchCard({ match, rank }) {
   const [open, setOpen] = useState(rank === 0);
   const best = rank === 0;
-  const fields = match.fields.filter((field) => field.matched.length || field.missing.length);
+  const fields = match.fields.filter(
+    (field) => field.matched.length || field.missing.length || (field.unknown ?? []).length,
+  );
   const found = fields.reduce((n, field) => n + field.matched.length, 0);
+  // Items the database has no word for are not counted against the job: they were never asked of it.
   const asked = fields.reduce((n, field) => n + field.matched.length + field.missing.length, 0);
+  const unknown = fields.reduce((n, field) => n + (field.unknown ?? []).length, 0);
 
   return (
     <article
@@ -109,9 +156,11 @@ function MatchCard({ match, rank }) {
                 </span>
               )}
             </div>
-            {asked > 0 && (
+            {(asked > 0 || unknown > 0) && (
               <p className="text-xs text-slate-500 m-0 leading-5">
-                {faCount(found)} از {faCount(asked)} مورد واردشده در این شغل یافت شد
+                {asked > 0 && `${faCount(found)} از ${faCount(asked)} مورد واردشده در این شغل یافت شد`}
+                {asked > 0 && unknown > 0 && "؛ "}
+                {unknown > 0 && `${faCount(unknown)} مورد در واژگان پایگاه داده ثبت نشده است`}
               </p>
             )}
           </div>
@@ -135,7 +184,7 @@ function MatchCard({ match, rank }) {
         <div className="px-4 pt-3">
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <h5 className="text-[13px] font-bold text-slate-700 m-0 leading-6">پوشش موارد واردشده</h5>
-            <div className="flex items-center gap-3 text-[11px] text-slate-500">
+            <div className="flex items-center gap-3 flex-wrap text-[11px] text-slate-500">
               <span className="inline-flex items-center gap-1">
                 <span className="text-emerald-600">{CheckGlyph}</span>
                 پوشش داده شد
@@ -144,6 +193,12 @@ function MatchCard({ match, rank }) {
                 <span className="text-slate-400">{CrossGlyph}</span>
                 پوشش داده نشد
               </span>
+              {unknown > 0 && (
+                <span className="inline-flex items-center gap-1">
+                  <span className="text-amber-500">{AskGlyph}</span>
+                  در واژگان پایگاه داده نبود
+                </span>
+              )}
             </div>
           </div>
           <div className="divide-y divide-slate-100">
