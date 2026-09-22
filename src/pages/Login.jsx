@@ -7,37 +7,17 @@ import { Spinner } from "@components/ui/Loader";
 import { useLoginMutation, useLazyCurrentUserQuery } from "@services/authApi";
 import { landingPath } from "@routes/landing";
 import { useAppDispatch } from "@store/hooks";
-import { setAuthToken, setRoleUser, setUserInfo } from "@store/slices/authSlice";
+import { setAuthToken, setUserInfo } from "@store/slices/authSlice";
 import { showMessage } from "@utils/toast";
 import { errorMessage } from "@utils/errors";
 import { APP_TITLE, APP_SUBTITLE, ORGANISATION, UNIVERSITY } from "@constant/config";
 import Illustration from "@assets/images/login-analysis.svg";
 import Logo from "@assets/images/logo.png";
+import { icon } from "@components/ui/icon";
 
-const glyph = (path) => (
-  <svg
-    aria-hidden="true"
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    viewBox="0 0 24 24"
-  >
-    {path}
-  </svg>
-);
+const glyph = (path) => icon(path, "w-5 h-5");
 
-const LoginIcon = (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M11 16l-4-4m0 0l4-4m-4 4h14M13 4h3a3 3 0 013 3v10a3 3 0 01-3 3h-3"
-    />
-  </svg>
-);
+const LoginIcon = icon(<path d="M11 16l-4-4m0 0l4-4m-4 4h14M13 4h3a3 3 0 013 3v10a3 3 0 01-3 3h-3" />);
 
 const EyeGlyph = glyph(
   <>
@@ -53,7 +33,6 @@ const EyeOffGlyph = glyph(
   </>,
 );
 
-// What the system does, named in the three things a reader can do with it once inside.
 const FEATURES = [
   {
     title: "تحلیل شغل با نام آن",
@@ -112,7 +91,6 @@ export default function Login() {
       );
 
       const me = await getCurrentUser().unwrap();
-      dispatch(setRoleUser(me.role));
       dispatch(setUserInfo(me));
 
       showMessage.success(`به ${APP_TITLE} خوش آمدید`);
@@ -124,8 +102,6 @@ export default function Login() {
     }
   };
 
-  // The form takes the page's own side — the start of an RTL line — and the picture the other; the
-  // form is therefore first in the document, which also puts it first on a narrow screen.
   return (
     <div className="min-h-screen w-full bg-white flex flex-col lg:grid lg:grid-cols-[minmax(340px,30%)_1fr]">
       <section className="flex items-center justify-center lg:justify-start px-6 py-10 sm:px-10 lg:ps-10 lg:pe-6">
@@ -216,8 +192,6 @@ export default function Login() {
         </div>
       </section>
 
-      {/* The picture side: what the system is, over a dark ground, with the illustration between the
-          text and the three things it does. */}
       <section className="relative overflow-hidden text-white min-h-[20rem] lg:min-h-screen
                           bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950">
         <div

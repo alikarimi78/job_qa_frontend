@@ -13,28 +13,16 @@ import {
   useSavedSearchQuery,
   useSavedSearchesQuery,
 } from "@services/savedApi";
-import { downloadBlob, safeFileName } from "@utils/download";
+import { downloadBlob } from "@utils/download";
 import { errorMessage } from "@utils/errors";
 import { faDate, faNumber } from "@utils/jalali";
-import { reportBody, reportSubject } from "@utils/report";
+import { reportBody, reportFileName } from "@utils/report";
 import { showMessage } from "@utils/toast";
+import { icon } from "@components/ui/icon";
 
 const PAGE_SIZE = 10;
 
-const glyph = (className, path) => (
-  <svg
-    aria-hidden="true"
-    className={className}
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    viewBox="0 0 24 24"
-  >
-    {path}
-  </svg>
-);
+const glyph = (className, path) => icon(path, className);
 
 const StarGlyph = glyph(
   "w-5 h-5",
@@ -44,7 +32,6 @@ const TrashGlyph = glyph("w-3.5 h-3.5", <path d="M4 7h16M9 7V5h6v2M7 7l1 13h8l1-
 const DownloadGlyph = glyph("w-3.5 h-3.5", <path d="M12 3v12M7 12l5 5 5-5M4 20h16" />);
 const BackGlyph = glyph("w-3.5 h-3.5", <path d="M9 6l6 6-6 6" />);
 
-// What each kind of answer was, in the words the result card uses for it.
 const MODE_LABELS = {
   single: "شغل موجود در پایگاه داده",
   job_match: "شغل موجود در پایگاه داده",
@@ -56,8 +43,6 @@ const MODE_LABELS = {
   out_of_domain: "خارج از دامنه",
 };
 
-// One starred analysis, opened: the answer and the boxes exactly as they were when it was starred —
-// the model is not deterministic, so this is the kept copy rather than the question asked again.
 function SavedView({ id, onBack, onRemove }) {
   const { data, isLoading, error } = useSavedSearchQuery(id);
   const [searchReport, { isLoading: isReporting }] = useSearchReportMutation();
@@ -76,8 +61,7 @@ function SavedView({ id, onBack, onRemove }) {
   async function downloadReport() {
     try {
       const blob = await searchReport(reportBody(question, result)).unwrap();
-      const subject = reportSubject(result);
-      downloadBlob(blob, `${safeFileName(`گزارش ${subject ?? ""}`, "گزارش تحلیل شغل")}.pdf`);
+      downloadBlob(blob, reportFileName(result));
     } catch (err) {
       showMessage.error(errorMessage(err));
     }
@@ -154,7 +138,6 @@ export default function SavedSearches() {
       await deleteSavedSearch(row.id).unwrap();
       setRemoving(null);
       if (openId === row.id) setOpenId(null);
-      // The last row of a page past the first leaves that page empty, so step back a page.
       if (items.length === 1 && page > 1) setPage(page - 1);
       showMessage.success("از تحلیل‌های ستاره‌دار حذف شد.");
     } catch (err) {

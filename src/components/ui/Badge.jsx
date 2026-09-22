@@ -6,15 +6,13 @@ const TONES = {
   neutral: "bg-slate-100 text-slate-600 border-slate-200",
 };
 
-export default function Badge({ children, tone = "accent", wrap = false, className = "" }) {
+export default function Badge({ children, tone = "accent" }) {
   return (
     <span
       className={`
         inline-flex items-center gap-1 px-3 py-0.5 rounded-full
-        text-xs font-medium border
-        ${wrap ? "whitespace-normal text-start leading-6 py-1" : "whitespace-nowrap"}
+        text-xs font-medium border whitespace-nowrap
         ${TONES[tone] ?? TONES.accent}
-        ${className}
       `}
     >
       {children}

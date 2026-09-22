@@ -1,6 +1,4 @@
-import { INK } from "./theme";
 import { faNumber } from "@utils/jalali";
-
 
 export function ChartTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
@@ -50,5 +48,3 @@ export function ChartEmpty({ children }) {
 }
 
 export const HOVER_CURSOR = { fill: "rgba(15, 23, 42, 0.04)" };
-
-export { INK };

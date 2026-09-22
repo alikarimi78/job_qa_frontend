@@ -8,15 +8,7 @@ import { APP_TITLE, APP_SUBTITLE, ORGANISATION } from "@constant/config";
 export default function SideBar({ isOpen, setIsOpen }) {
   const role = useAppSelector((state) => state.auth.role);
 
-  const visibleMenuItems = menuItems
-    .map((item) => {
-      if (!hasRole(role, item.roles)) return null;
-      if (!item.submenuItems) return item;
-
-      const submenuItems = item.submenuItems.filter((sub) => hasRole(role, sub.roles));
-      return submenuItems.length ? { ...item, submenuItems } : null;
-    })
-    .filter(Boolean);
+  const visibleMenuItems = menuItems.filter((item) => hasRole(role, item.roles));
 
   return (
     <>
@@ -61,8 +53,8 @@ export default function SideBar({ isOpen, setIsOpen }) {
 
           <nav className="flex-1 min-h-0 overflow-y-auto">
             <ul className="flex flex-col gap-3">
-              {visibleMenuItems.map((item, index) => (
-                <MenuItem key={index} {...item} sidebarOpen={isOpen} />
+              {visibleMenuItems.map((item) => (
+                <MenuItem key={item.href} {...item} />
               ))}
             </ul>
           </nav>

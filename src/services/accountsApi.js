@@ -1,9 +1,9 @@
 import { baseApi } from "./baseApi";
 
-export const accountsApi = baseApi.injectEndpoints({
+const accountsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     accounts: builder.query({
-      query: (params) => ({ url: "/accounts", params }),
+      query: () => "/accounts",
       providesTags: ["Account"],
     }),
     createSuperAdmin: builder.mutation({

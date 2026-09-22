@@ -12,5 +12,3 @@ export async function runAction(run, message, reset) {
     return false;
   }
 }
-
-export default runAction;

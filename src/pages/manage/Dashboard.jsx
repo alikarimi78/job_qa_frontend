@@ -9,22 +9,16 @@ import CategoryBars from "@components/charts/CategoryBars";
 import MonthlyBars from "@components/charts/MonthlyBars";
 import { Meter, StatTile } from "@components/charts/StatTile";
 import { HUES } from "@components/charts/theme";
-import { IconBadge, THEMES, icon } from "@components/fieldVisuals";
+import { IconBadge, THEMES } from "@components/fieldVisuals";
+import { icon } from "@components/ui/icon";
 import { ROLE_LABELS } from "@routes/roles";
 import { useOrganizationsQuery } from "@services/accountsApi";
 import { useStatsQuery } from "@services/statsApi";
 import { bucketByMonth, faNumber, lastPersianMonths } from "@utils/jalali";
 import { errorMessage } from "@utils/errors";
 
-// Every panel and tile carries an icon in the colour of what it counts, in the job details' own
-// language: people violet, organizations sky, job records emerald; the two panels mixing kinds wear the
-// app's blue. A chart is drawn in the same colours (theme's HUES): its panel's, each series its own kind's
-// in the monthly growth, and a state's where the rows are states — active emerald, blocked rose. A thing
-// already drawn elsewhere is drawn the same here — the building and the globe are the analysis page's
-// owner chips, the briefcase the sidebar's «مدیریت مشاغل».
 const BRAND = {
   badge: "from-blue-600 to-indigo-600 shadow-indigo-600/25",
-  soft: "bg-blue-100 text-blue-700",
   header: "from-blue-50",
 };
 
@@ -110,12 +104,6 @@ const Glyphs = {
   ),
 };
 
-// A tile needs 11.75rem (188px) to keep its label on one line: its padding, the 3.5rem icon, the gap and
-// the widest label, «مشاغل پایگاه داده». And a row should never leave one tile alone. So the columns follow
-// the number of tiles and the card's own width (a container query, as the competency group's are), not
-// one auto-fit track that wraps four into three and one: n columns from n × 11.75rem plus the gaps. In
-// rem, never px: Tailwind sorts an arbitrary rem size among the named ones, but emits a px one before
-// them all, where a narrower named rule then wins the cascade.
 const TILE_GRID = {
   3: "grid-cols-1 @min-[36.75rem]:grid-cols-3",
   4: "grid-cols-1 @min-[24.25rem]:grid-cols-2 @min-[49.25rem]:grid-cols-4",
@@ -131,7 +119,6 @@ const Tiles = ({ children, className = "" }) => {
   );
 };
 
-// A panel's heading as a job field's card has it: the solid badge on a band of the same colour.
 const heading = (theme, glyph) => ({
   icon: <IconBadge theme={theme} glyph={glyph} size="panel" />,
   tint: theme.header,
@@ -142,9 +129,6 @@ export default function Dashboard() {
   const isSuper = me.role === "super_admin";
 
   const [range, setRange] = useState(12);
-  // Every number on the page is the filter's: the accounts, the series and the job
-  // records alike. An org_admin is narrowed to their own organization by the server and
-  // is shown no filter.
   const [orgFilter, setOrgFilter] = useState("");
   const { data: orgs = [] } = useOrganizationsQuery();
   const { data: stats, isLoading, error } = useStatsQuery(
@@ -165,12 +149,7 @@ export default function Dashboard() {
       },
     ];
     const shown = isSuper && !orgFilter ? all : all.slice(0, 1);
-    return shown.map((item) => ({
-      key: item.key,
-      label: item.label,
-      hue: item.hue,
-      values: bucketByMonth(item.series, months),
-    }));
+    return shown.map(({ series, ...item }) => ({ ...item, values: bucketByMonth(series, months) }));
   }, [stats, months, isSuper, orgFilter]);
 
   const suggestions = useMemo(() => {
@@ -201,8 +180,6 @@ export default function Dashboard() {
     .filter((row) => countableRoles.includes(row.role))
     .map((row) => ({ name: ROLE_LABELS[row.role] ?? row.role, value: row.count }));
 
-  // Only the unfiltered view says whose figures these are: a filtered one already names its
-  // organization in the select beside the title, and an org_admin's is always their own.
   const scopeNote = stats.scope === "global" ? "همه سازمان‌ها" : null;
 
   const orgRows = stats.jobs_by_organization.map((row) => ({

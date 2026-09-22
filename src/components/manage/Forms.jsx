@@ -5,11 +5,10 @@ import Input from "@components/ui/Input";
 import Modal from "@components/ui/Modal";
 import { Spinner } from "@components/ui/Loader";
 
-
-export function DialogFooter({ formId, label, busy, disabled, tone = "submit" }) {
+export function DialogFooter({ formId, label, busy, disabled }) {
   return (
     <Button
-      variant={tone}
+      variant="submit"
       size="lg"
       className="max-w-md"
       buttonProps={{ type: "submit", form: formId, disabled: disabled || busy }}
@@ -33,7 +32,6 @@ export function CloseButton({ onClose, busy, label = "بستن" }) {
     </Button>
   );
 }
-
 
 const LOGO_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 const LOGO_MAX_BYTES = 512 * 1024;
@@ -503,7 +501,6 @@ export function ConfirmDialog({
   title,
   message,
   confirmLabel = "بله، حذف شود",
-  cancelLabel = "انصراف",
   busy,
   onClose,
   onConfirm,
@@ -531,7 +528,7 @@ export function ConfirmDialog({
               confirmLabel
             )}
           </Button>
-          <CloseButton onClose={onClose} busy={busy} label={cancelLabel} />
+          <CloseButton onClose={onClose} busy={busy} label="انصراف" />
         </>
       }
     >
@@ -540,12 +537,11 @@ export function ConfirmDialog({
   );
 }
 
-export function DetailsDialog({ open, title, hint, rows, onClose }) {
+export function DetailsDialog({ open, title, rows, onClose }) {
   return (
     <Modal
       open={open}
       title={title}
-      hint={hint}
       onClose={onClose}
       size="md"
       footer={<CloseButton onClose={onClose} />}

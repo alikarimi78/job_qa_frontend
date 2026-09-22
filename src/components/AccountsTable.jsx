@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import Badge from "@components/ui/Badge";
-import Button from "@components/ui/Button";
 import Select from "@components/ui/Select";
 import Modal from "@components/ui/Modal";
 import DataTable, { RowActions } from "@components/ui/DataTable";
@@ -14,38 +13,31 @@ import IconButton, {
   UnlockGlyph,
 } from "@components/ui/IconButton";
 import {
+  CloseButton,
   ConfirmDialog,
   DetailsDialog,
+  DialogFooter,
   PasswordDialog,
   PersonNameFields,
   SelfPasswordDialog,
 } from "@components/manage/Forms";
 import { ROLE_LABELS } from "@routes/roles";
 
-export { ROLE_LABELS };
-
 function canManage(me, target) {
   if (!me || me.id === target.id) return false;
   if (me.role === "super_admin") return true;
-  if (me.role === "org_admin") {
-    return target.role === "user" && target.organization_id === me.organization_id;
-  }
-  return false;
+  return me.role === "org_admin" && target.role === "user" && target.organization_id === me.organization_id;
 }
 
-function canMoveOrganization(me, target) {
-  return (
-    canManage(me, target) &&
-    me.role === "super_admin" &&
-    target.organization_id != null
-  );
-}
+const canMoveOrganization = (me, target) =>
+  canManage(me, target) && me.role === "super_admin" && target.organization_id != null;
 
-const ROLE_TONE = {
-  super_admin: "danger",
-  org_admin: "warning",
-  user: "neutral",
-};
+const ROLE_TONE = { super_admin: "danger", org_admin: "warning", user: "neutral" };
+
+const roleBadge = (role) => <Badge tone={ROLE_TONE[role] ?? "neutral"}>{ROLE_LABELS[role] ?? role}</Badge>;
+
+const statusBadge = (active) =>
+  active ? <Badge tone="success">فعال</Badge> : <Badge tone="danger">مسدود</Badge>;
 
 export default function AccountsTable({
   accounts,
@@ -59,7 +51,7 @@ export default function AccountsTable({
   onChangeOwnPassword,
   onSaveAccount,
   onDelete,
-  empty = "تاکنون کاربری در دسترس شما ثبت نشده است.",
+  empty,
 }) {
   const [dialog, setDialog] = useState(null);
   const [destination, setDestination] = useState("");
@@ -110,9 +102,7 @@ export default function AccountsTable({
     {
       key: "role",
       header: "نقش",
-      cell: (row) => (
-        <Badge tone={ROLE_TONE[row.role] ?? "neutral"}>{ROLE_LABELS[row.role] ?? row.role}</Badge>
-      ),
+      cell: (row) => roleBadge(row.role),
     },
     {
       key: "where",
@@ -123,8 +113,7 @@ export default function AccountsTable({
     {
       key: "status",
       header: "وضعیت",
-      cell: (row) =>
-        row.is_active ? <Badge tone="success">فعال</Badge> : <Badge tone="danger">مسدود</Badge>,
+      cell: (row) => statusBadge(row.is_active),
     },
     {
       key: "actions",
@@ -210,23 +199,9 @@ export default function AccountsTable({
             ? [
                 { label: "نام و نام خانوادگی", value: account.full_name || "—" },
                 { label: "نام کاربری", value: account.username },
-                {
-                  label: "نقش",
-                  value: (
-                    <Badge tone={ROLE_TONE[account.role] ?? "neutral"}>
-                      {ROLE_LABELS[account.role] ?? account.role}
-                    </Badge>
-                  ),
-                },
+                { label: "نقش", value: roleBadge(account.role) },
                 { label: "جایگاه", value: where(account) },
-                {
-                  label: "وضعیت",
-                  value: account.is_active ? (
-                    <Badge tone="success">فعال</Badge>
-                  ) : (
-                    <Badge tone="danger">مسدود</Badge>
-                  ),
-                },
+                { label: "وضعیت", value: statusBadge(account.is_active) },
               ]
             : []
         }
@@ -247,7 +222,7 @@ export default function AccountsTable({
         hint="رمز فعلی پرسیده می‌شود، زیرا در این حالت تنها نشست باز شما گواه مالکیت حساب است."
         busy={busy}
         onClose={close}
-        onSubmit={(values, done) => onChangeOwnPassword(values, done)}
+        onSubmit={onChangeOwnPassword}
       />
 
       <Modal
@@ -262,17 +237,8 @@ export default function AccountsTable({
         size="md"
         footer={
           <>
-            <Button
-              variant="submit"
-              size="lg"
-              className="max-w-md"
-              buttonProps={{ type: "submit", form: "account-edit-form", disabled: busy }}
-            >
-              ثبت تغییر
-            </Button>
-            <Button variant="outline" size="lg" buttonProps={{ onClick: close, disabled: busy }}>
-              بستن
-            </Button>
+            <DialogFooter formId="account-edit-form" label="ثبت تغییر" busy={busy} />
+            <CloseButton onClose={close} busy={busy} />
           </>
         }
       >

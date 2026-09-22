@@ -1,11 +1,12 @@
 import { useState } from "react";
 import AnswerPanel from "@components/AnswerPanel";
 import JobDetails from "@components/JobDetails";
-import { IconBadge, icon, themeOf } from "@components/fieldVisuals";
+import { IconBadge, themeOf } from "@components/fieldVisuals";
+import { icon } from "@components/ui/icon";
 import Meter from "@components/ui/Meter";
 import SectionHeading from "@components/ui/SectionHeading";
 import { fieldLabel } from "@constant/fieldLabels";
-
+import { faNumber } from "@utils/jalali";
 
 const SparkleGlyph = icon(
   <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z" />,
@@ -21,8 +22,6 @@ const AskGlyph = icon(
   "w-3 h-3 shrink-0",
 );
 
-// The columns a matched item can be found in beyond the six the client renames; the backend sends
-// only the key.
 const COLUMN_NAMES = {
   job_title: "عنوان شغل",
   aliases: "نام‌های دیگر",
@@ -37,19 +36,11 @@ const Chevron = ({ open }) =>
     `w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`,
   );
 
-const faCount = (n) => n.toLocaleString("fa-IR");
-const faPercent = (ratio) => `${Math.round(ratio * 100).toLocaleString("fa-IR")}٪`;
+const faPercent = (ratio) => `${faNumber(Math.round(ratio * 100))}٪`;
 
-// One profile field against one job: which of the user's items it holds, which it does not, and
-// which the database has no word for at all. The three differ by icon and border as well as colour,
-// and the legend above the rows names all three. A matched item found in another column of the same
-// record says so — «برنامه‌نویسی» is covered by a record whose duties describe it, even though the
-// skills column is a closed vocabulary that cannot hold the word.
 function FieldRow({ field }) {
   const theme = themeOf(field.key);
   const where = field.found_in ?? {};
-  // A field whose every item is outside the database's vocabulary has no coverage to state — «۰٪»
-  // there reads as a job that holds none of it, which is the opposite of what happened.
   const asked = field.matched.length + field.missing.length;
 
   return (
@@ -108,8 +99,6 @@ function FieldRow({ field }) {
   );
 }
 
-// A ranked job: the first in the app's blue-to-indigo, as the best match, every other one neutral.
-// Its fields and its details use the same colours and icons as the question page's job details.
 function MatchCard({ match, rank }) {
   const [open, setOpen] = useState(rank === 0);
   const best = rank === 0;
@@ -117,7 +106,6 @@ function MatchCard({ match, rank }) {
     (field) => field.matched.length || field.missing.length || (field.unknown ?? []).length,
   );
   const found = fields.reduce((n, field) => n + field.matched.length, 0);
-  // Items the database has no word for are not counted against the job: they were never asked of it.
   const asked = fields.reduce((n, field) => n + field.matched.length + field.missing.length, 0);
   const unknown = fields.reduce((n, field) => n + (field.unknown ?? []).length, 0);
 
@@ -141,12 +129,12 @@ function MatchCard({ match, rank }) {
                 : "bg-slate-100 text-slate-600"
             }`}
           >
-            {faCount(rank + 1)}
+            {faNumber(rank + 1)}
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-x-2 gap-y-1 flex-wrap">
               <h4 className="text-[15px] font-bold text-slate-800 m-0 leading-7">
-                <span className="sr-only">رتبه {faCount(rank + 1)}: </span>
+                <span className="sr-only">رتبه {faNumber(rank + 1)}: </span>
                 {match.job_title}
               </h4>
               {best && (
@@ -158,9 +146,9 @@ function MatchCard({ match, rank }) {
             </div>
             {(asked > 0 || unknown > 0) && (
               <p className="text-xs text-slate-500 m-0 leading-5">
-                {asked > 0 && `${faCount(found)} از ${faCount(asked)} مورد واردشده در این شغل یافت شد`}
+                {asked > 0 && `${faNumber(found)} از ${faNumber(asked)} مورد واردشده در این شغل یافت شد`}
                 {asked > 0 && unknown > 0 && "؛ "}
-                {unknown > 0 && `${faCount(unknown)} مورد در واژگان پایگاه داده ثبت نشده است`}
+                {unknown > 0 && `${faNumber(unknown)} مورد در واژگان پایگاه داده ثبت نشده است`}
               </p>
             )}
           </div>
@@ -169,13 +157,7 @@ function MatchCard({ match, rank }) {
           <Meter
             label="پوشش موارد شما"
             ratio={match.coverage}
-            fill="from-emerald-400 to-emerald-600"
             title="سهم مواردی از پروفایل شما که در این شغل یافت شد"
-          />
-          <Meter
-            label="میزان تطابق"
-            ratio={match.score}
-            title="امتیاز کلی تطابق این شغل با پروفایل شما"
           />
         </div>
       </header>
@@ -245,7 +227,7 @@ export default function ProfileMatches({ result }) {
         <div>
           <SectionHeading
             title="مشاغل متناسب با پروفایل شما"
-            note={`(${faCount(matches.length)} شغل)`}
+            note={`(${faNumber(matches.length)} شغل)`}
           />
           <div className="flex flex-col gap-4">
             {matches.map((match, rank) => (

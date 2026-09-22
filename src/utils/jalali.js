@@ -72,5 +72,3 @@ export const faNumber = (value) => Number(value ?? 0).toLocaleString("fa-IR");
 
 export const faDigits = (value) =>
   String(value ?? "").replace(/[0-9]/g, (digit) => "۰۱۲۳۴۵۶۷۸۹"[digit]);
-
-export default lastPersianMonths;

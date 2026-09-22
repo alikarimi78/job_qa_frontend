@@ -10,13 +10,6 @@ import { faNumber } from "@utils/jalali";
 import { errorMessage } from "@utils/errors";
 import { showMessage } from "@utils/toast";
 
-// The examples in the boxes are one job read column by column — «حسابداران و حسابرسان», whose record
-// holds every one of them — so a reader sees what a profile of a single person looks like rather than
-// seven unrelated words. The fourth entry is how many items the field must carry, 0 where it is
-// optional: the client's copy of `routers/search/schemas.py:PROFILE_REQUIRED`, which refuses a
-// profile falling short of it. The required four are what tell two jobs with the same skills apart;
-// duties and where the reader wants to go stay optional. Tools are a field again: the column is
-// mostly written in Latin, so its example is too, and «پایتون» finds `Python` on its own.
 const FIELDS = [
   ["skills", FIELD_LABELS.skills, "تفکر انتقادی", 2],
   ["knowledge", FIELD_LABELS.knowledge, "اقتصاد و حسابداری", 1],
@@ -34,12 +27,9 @@ export default function AdvancedSearch() {
   const methods = useForm({ defaultValues: BLANK });
   const [result, setResult] = useState(null);
   const [advancedSearch, { isLoading }] = useAdvancedSearchMutation();
-  // The phrases the records themselves use, per field. An item picked from them is one coverage can
-  // find, where the same skill in other words («ارتباط مؤثر» for «سخن گفتن») often matches nothing.
   const { data: vocabulary } = useProfileVocabularyQuery();
 
   const values = methods.watch();
-  // What is still missing, named, so the button says why it is disabled rather than only that it is.
   const missing = REQUIRED.filter(([key, , , min]) => (values[key]?.length ?? 0) < min);
   const ready = missing.length === 0;
 

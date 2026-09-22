@@ -1,6 +1,6 @@
 import { baseApi } from "./baseApi";
 
-export const jobsApi = baseApi.injectEndpoints({
+const jobsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     search: builder.mutation({
       query: (question) => ({ url: "/search", method: "POST", body: { question } }),
@@ -8,7 +8,6 @@ export const jobsApi = baseApi.injectEndpoints({
     advancedSearch: builder.mutation({
       query: (profile) => ({ url: "/search/advanced", method: "POST", body: { profile } }),
     }),
-    // The phrases the records use per profile field, offered while typing in advanced analysis.
     profileVocabulary: builder.query({
       query: () => "/search/vocabulary",
       keepUnusedDataFor: 600,

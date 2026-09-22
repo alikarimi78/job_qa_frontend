@@ -1,13 +1,11 @@
 import { FIELD_LABELS } from "@constant/fieldLabels";
 import { ROLE_LABELS } from "@routes/roles";
+import { faNumber } from "@utils/jalali";
 
 const GENERIC = "خطایی رخ داده است؛ لطفاً مجدداً تلاش نمایید.";
 const SESSION_ENDED = "اعتبار ورود شما به پایان رسیده است؛ لطفاً مجدداً وارد شوید.";
 const ENGINE_COLD = "سرویس تحلیل هنوز آماده نیست؛ لطفاً دقایقی بعد مجدداً تلاش نمایید.";
 
-const fa = (value) => Number(value).toLocaleString("fa-IR");
-
-// The profile fields the validator can name, in the words the form gives them.
 const PROFILE_LABELS = {
   ...FIELD_LABELS,
   responsibilities: "وظایف و مسئولیت‌ها",
@@ -19,14 +17,7 @@ const STATUS_LABELS = {
   rejected: "رد شده",
 };
 
-// `src/` answers in English by design — the rate limiter's 429 is the single exception —
-// so the Persian the customer reads is written here. Every key below is a `detail` the
-// backend can actually produce, or a pydantic `msg` behind its "Value error, " prefix.
-// Anything unrecognised is printed as it arrived, which is what lets the rate limiter's
-// own Persian through untouched.
 const EXACT = {
-  // The backend answers 401 for three different things and only one is a dead session:
-  // `/auth/login` and `/auth/password` use it for a wrong password too.
   "Invalid credentials": "نام کاربری یا رمز عبور اشتباه است.",
   "Current password is incorrect": "رمز عبور فعلی اشتباه است.",
   "Invalid or expired token": SESSION_ENDED,
@@ -63,15 +54,13 @@ const EXACT = {
   "Field required": "تکمیل این فیلد الزامی است.",
 };
 
-// The details that carry a value the reader needs. Each rewrites what it captured, and
-// the role and status names are given the same labels the tables use.
 const PATTERNS = [
   [/^Record is already (\w+)$/,
     ([, status]) => `این رکورد پیش‌تر بررسی شده است؛ وضعیت فعلی آن «${STATUS_LABELS[status] ?? status}» است.`],
   [/^Record is (\w+); a suggestion is edited through/,
     ([, status]) => `این رکورد یک پیشنهاد «${STATUS_LABELS[status] ?? status}» است و از بخش پیشنهادها ویرایش می‌شود.`],
   [/^Organization still has (\d+) account\(s\)/,
-    ([, count]) => `این سازمان هنوز ${fa(count)} حساب کاربری دارد؛ ابتدا آن‌ها را حذف نمایید.`],
+    ([, count]) => `این سازمان هنوز ${faNumber(count)} حساب کاربری دارد؛ ابتدا آن‌ها را حذف نمایید.`],
   [/^A (\w+) does not belong to an organization$/,
     ([, role]) => `نقش «${ROLE_LABELS[role] ?? role}» به سازمان تعلق نمی‌گیرد.`],
   [/^Organization already has an admin \((.+)\)$/,
@@ -79,34 +68,31 @@ const PATTERNS = [
   [/^Unsupported logo type (.+); use (.+)$/,
     ([, mime, allowed]) => `قالب تصویر ${mime} پشتیبانی نمی‌شود؛ از ${allowed} استفاده نمایید.`],
   [/^Logo is (\d+) KB; the limit is (\d+) KB$/,
-    ([, size, limit]) => `حجم نشان سازمان ${fa(size)} کیلوبایت است؛ حداکثر مجاز ${fa(limit)} کیلوبایت است.`],
+    ([, size, limit]) => `حجم نشان سازمان ${faNumber(size)} کیلوبایت است؛ حداکثر مجاز ${faNumber(limit)} کیلوبایت است.`],
   [/^Logo content does not look like (.+)$/,
     ([, mime]) => `محتوای فایل با قالب اعلام‌شده (${mime}) هم‌خوانی ندارد.`],
 
   [/^Unknown profile fields: (.+)$/,
     ([, fields]) => `این فیلدها در پروفایل شناخته نمی‌شوند: ${fields}`],
   [/^\w+: at most (\d+) items$/,
-    ([, limit]) => `برای هر فیلد حداکثر ${fa(limit)} مورد می‌توانید وارد نمایید.`],
+    ([, limit]) => `برای هر فیلد حداکثر ${faNumber(limit)} مورد می‌توانید وارد نمایید.`],
   [/^(\w+): at least (\d+) items are required$/,
     ([, field, min]) =>
-      `برای تحلیل پیشرفته، «${PROFILE_LABELS[field] ?? field}» باید دست‌کم ${fa(min)} مورد داشته باشد.`],
+      `برای تحلیل پیشرفته، «${PROFILE_LABELS[field] ?? field}» باید دست‌کم ${faNumber(min)} مورد داشته باشد.`],
 
-  // pydantic's own messages, which arrive for ordinary typing mistakes — a username left
-  // empty or a password one character short — and were reaching the reader in English.
   [/^String should have at least (\d+) characters?$/,
-    ([, min]) => `این فیلد باید دست‌کم ${fa(min)} نویسه داشته باشد.`],
+    ([, min]) => `این فیلد باید دست‌کم ${faNumber(min)} نویسه داشته باشد.`],
   [/^String should have at most (\d+) characters?$/,
-    ([, max]) => `این فیلد حداکثر ${fa(max)} نویسه می‌تواند داشته باشد.`],
+    ([, max]) => `این فیلد حداکثر ${faNumber(max)} نویسه می‌تواند داشته باشد.`],
   [/^List should have at least (\d+) items?/,
-    ([, min]) => `دست‌کم ${fa(min)} مورد وارد نمایید.`],
+    ([, min]) => `دست‌کم ${faNumber(min)} مورد وارد نمایید.`],
   [/^List should have at most (\d+) items?/,
-    ([, max]) => `حداکثر ${fa(max)} مورد می‌توانید وارد نمایید.`],
+    ([, max]) => `حداکثر ${faNumber(max)} مورد می‌توانید وارد نمایید.`],
   [/^Input should be a valid (integer|number)/, () => "مقدار واردشده باید عدد باشد."],
   [/^Input should be a valid (string|list|array)/, () => "قالب مقدار واردشده درست نیست."],
   [/^Input should be /, () => "مقدار واردشده مجاز نیست."],
 ];
 
-// pydantic prefixes a validator's own message with "Value error, ".
 const stripPrefix = (text) => text.replace(/^Value error, /, "");
 
 function translate(text) {
@@ -128,18 +114,12 @@ export function errorMessage(err) {
   if (err.status === 503) return ENGINE_COLD;
 
   const detail = err.data?.detail;
-  // An unrecognised 401 is still a dead session, that being the only one a signed-in user
-  // can reach without having just typed a password.
   if (err.status === 401) return translate(detail) ?? SESSION_ENDED;
   if (typeof detail === "string") return translate(detail) ?? detail;
   if (Array.isArray(detail)) {
-    // Whole sentences now, so they are joined with a space rather than a comma, and a
-    // body missing ten fields says it once.
     const seen = detail.map((item) => translate(item.msg) ?? item.msg);
     return [...new Set(seen)].join(" ");
   }
 
   return GENERIC;
 }
-
-export default errorMessage;

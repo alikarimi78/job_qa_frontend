@@ -1,9 +1,6 @@
 import Button from "./Button";
 import { PlusGlyph } from "./IconButton";
 
-// `status` — a count, or the rebuild in progress — sits beside the title rather than among the
-// controls: its width changes with every filter, and in the controls row it slid the search box and
-// the filter along with it.
 export default function PageToolbar({ title, hint, status, action, children }) {
   return (
     <div className="flex items-end justify-between gap-4 flex-wrap">

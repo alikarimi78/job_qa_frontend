@@ -10,9 +10,6 @@ const rawBaseQuery = fetchBaseQuery({
   },
 });
 
-// The two endpoints that check a password answer 401 when it is wrong, which is not a
-// dead session: logging out there threw a signed-in user out of the app over a typo in
-// the *current* password field.
 const CREDENTIAL_CHECKS = ["/auth/login", "/auth/password"];
 
 const baseQuery = async (args, api, extraOptions) => {

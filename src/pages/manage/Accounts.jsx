@@ -25,7 +25,6 @@ import { runAction } from "@utils/action";
 import { faNumber } from "@utils/jalali";
 import { foldText, matchesQuery } from "@utils/text";
 
-
 const CREATABLE = {
   super_admin: ["super_admin", "org_admin", "user"],
   org_admin: ["user"],
@@ -68,9 +67,6 @@ export default function Accounts() {
   const orgsById = Object.fromEntries(orgs.map((o) => [o.id, o]));
 
   const organizationId = orgFilter === "" ? null : Number(orgFilter);
-  // The listing is whole — `GET /accounts` is scoped by the server but not paged — so the search over
-  // it is the client's own: a username holding what was typed, folded (`utils/text`) as «مدیریت
-  // سازمان‌ها» folds a name.
   const query = foldText(term);
   const listed = accounts.filter(
     (account) =>
@@ -86,9 +82,7 @@ export default function Accounts() {
     const taken = new Set(
       accounts.filter((a) => a.role === "org_admin").map((a) => a.organization_id)
     );
-    return orgs
-      .filter((org) => newRole !== "org_admin" || !taken.has(org.id))
-      .map((org) => ({ id: org.id, label: org.name }));
+    return orgs.filter((org) => newRole !== "org_admin" || !taken.has(org.id));
   }, [scopeNeeded, newRole, accounts, orgs]);
 
   const scopeIsImplicit = scopeNeeded === "organization" && !isSuper;
@@ -130,11 +124,7 @@ export default function Accounts() {
         `«${a.username}» به سازمان «${orgsById[organizationId]?.name ?? organizationId}» منتقل شد.`
       );
       if (!moved) return;
-    } else if (!renamed) {
-      done?.();
-      return;
     }
-
     done?.();
   }
 
@@ -259,9 +249,9 @@ export default function Accounts() {
                 className="w-full h-11"
               >
                 <option value="">— انتخاب نمایید —</option>
-                {scopeOptions.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.label}
+                {scopeOptions.map((org) => (
+                  <option key={org.id} value={org.id}>
+                    {org.name}
                   </option>
                 ))}
               </Select>

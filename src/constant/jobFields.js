@@ -1,10 +1,6 @@
 import { FIELD_LABELS } from "./fieldLabels";
 import { itemsFromCell } from "@components/ui/ItemsInput";
 
-// The nine columns a job's boxes show, in the order the backend's `DETAIL_FIELDS` draws them. The
-// client needs its own copy only where it lays out a record the backend did not send as details:
-// the job form, and a stored record read in the admin panels. Keep it in step with
-// `job_qa_service/columns.py`.
 export const DETAIL_ORDER = [
   "description",
   "responsibilities",
@@ -27,9 +23,6 @@ export const COLUMN_LABELS = {
   ...FIELD_LABELS,
 };
 
-// A stored record in the shape `render.job_detail` sends, so JobDetails can draw it: prose as its
-// value, a list column split into items, empty columns left out. Nothing folds — whoever reads a
-// record here is reviewing it, and needs every item.
 export function recordDetail(record) {
   const fields = [];
   for (const key of DETAIL_ORDER) {

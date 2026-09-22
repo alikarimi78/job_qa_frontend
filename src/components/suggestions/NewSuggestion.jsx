@@ -10,10 +10,7 @@ import { showMessage } from "@utils/toast";
 export default function NewSuggestion() {
   const [done, setDone] = useState(false);
   const [suggestJob, { isLoading }] = useSuggestJobMutation();
-  // A super_admin may name any organization, everyone else only their own, and an account
-  // in none is shown no choice — the super_admin, who sits in none, used to get none either.
-  // The form waits for them: its default owner is fixed when it mounts.
-  const { owners, allowPublic, defaultOwner, loading } = useSuggestionOwners();
+  const { owners, defaultOwner, loading } = useSuggestionOwners();
 
   async function submit(form, reset) {
     setDone(false);
@@ -46,7 +43,6 @@ export default function NewSuggestion() {
           submitLabel="ثبت پیشنهاد"
           busy={isLoading}
           owners={owners}
-          allowPublic={allowPublic}
           defaultOwner={defaultOwner}
         />
       )}

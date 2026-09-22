@@ -23,45 +23,27 @@ import {
 } from "@components/JobDetails";
 import { FIELD_ICONS, themeOf } from "@components/fieldVisuals";
 import { COLUMN_LABELS, DETAIL_ORDER, PROSE_KEYS } from "@constant/jobFields";
-
-// The job form is the job's details, editable. At rest every box is what JobDetails draws — the
-// title as the heading over the boxes, the description as text, duties as check-lines, the career
-// path as branches, the rest as chips — in the same order and colours. A click on anything turns it
-// into its input in place; a dashed «افزودن» at the end of each box adds to it. The one other
-// difference is that nothing folds, every item being there to edit.
+import { icon } from "@components/ui/icon";
+import { faNumber } from "@utils/jalali";
 
 const LIST_KEYS = DETAIL_ORDER.filter((key) => !PROSE_KEYS.has(key));
 
-const PUBLIC = "";
-// The same "no organization" value, for a caller that files a record without opening the form.
-export const PUBLIC_OWNER = PUBLIC;
+export const PUBLIC_OWNER = "";
 
-// `owners` is the organizations this caller may hand the record to, and `allowPublic`
-// whether the shared corpus is one of the choices. With neither — a user who sits in no
-// organization — the field is not drawn and the body never mentions the owner, which is
-// what leaves an existing record where it already was. `defaultOwner` is where a new record
-// goes until the reader picks; a record being edited keeps its own owner instead.
 function toFormValues(initial, owners, allowPublic, defaultOwner = null) {
-  const values = { job_title: "", description: "" };
-  for (const key of ["job_title", "description"]) {
-    values[key] = initial?.[key] ?? "";
-  }
-  for (const key of LIST_KEYS) {
-    values[key] = itemsFromCell(initial?.[key] ?? "");
-  }
+  const values = { job_title: initial?.job_title ?? "", description: initial?.description ?? "" };
+  for (const key of LIST_KEYS) values[key] = itemsFromCell(initial?.[key] ?? "");
   values.organization_id =
     initial?.organization_id != null
       ? String(initial.organization_id)
       : defaultOwner != null
         ? String(defaultOwner)
         : allowPublic
-        ? PUBLIC
-        : String(owners[0]?.id ?? PUBLIC);
+        ? PUBLIC_OWNER
+        : String(owners[0]?.id ?? PUBLIC_OWNER);
   return values;
 }
 
-// The boxes in the order `render.job_detail` sends them: the description first, then the columns the
-// answer used (`primary`), then the rest in `DETAIL_ORDER`.
 function formFields(primary) {
   const used = new Set(primary);
   return DETAIL_ORDER.map((key) => ({ key, primary: used.has(key) })).sort(
@@ -69,33 +51,19 @@ function formFields(primary) {
   );
 }
 
-const faCount = (n) => n.toLocaleString("fa-IR");
 const countOf = (list) =>
-  list.value.length ? `${faCount(list.value.length)} مورد` : "هنوز موردی افزوده نشده است";
+  list.value.length ? `${faNumber(list.value.length)} مورد` : "هنوز موردی افزوده نشده است";
 
-const PlusGlyph = (
-  <svg aria-hidden="true" className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5}
-       strokeLinecap="round" viewBox="0 0 24 24">
-    <path d="M12 5v14M5 12h14" />
-  </svg>
-);
+const PlusGlyph = icon(<path d="M12 5v14M5 12h14" />, "w-3 h-3 shrink-0", 2.5);
 
-const ChevronGlyph = (
-  <svg aria-hidden="true" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2.5}
-       strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-    <path d="M6 9l6 6 6-6" />
-  </svg>
-);
+const ChevronGlyph = icon(<path d="M6 9l6 6 6-6" />, "w-3 h-3", 2.5);
 
-// A box's input takes the width of what is typed in it, as the chip it replaces did.
 const fitWidth = (text) => ({ width: `${Math.min(Math.max(text.length * 1.3 + 5, 12), 60)}ch` });
 
 const EDIT_INPUT =
   "max-w-full h-8 px-3 bg-white text-[13px] text-slate-800 border border-blue-400 outline-none " +
   "focus:ring-2 focus:ring-blue-500/30";
 
-// Shown beside an item only while it is being edited. `onMouseDown` keeps the focus in the input, so
-// the click is not preceded by a blur that would commit the edit first.
 function ItemButton({ title, onClick, danger = false, children }) {
   return (
     <button
@@ -116,11 +84,9 @@ function ItemButton({ title, onClick, danger = false, children }) {
   );
 }
 
-// An item emptied and committed is removed, which is how the keyboard deletes one.
 const commitItem = (list, index) => (text) =>
   text.trim() ? list.replace(index, text, splitLines) : list.remove(index);
 
-// One item, drawn as the details draw it until it is clicked.
 function ItemChip({ item, index, list, theme, onPromote }) {
   const edit = useInlineEdit(commitItem(list, index));
 
@@ -173,8 +139,6 @@ function ItemChip({ item, index, list, theme, onPromote }) {
   );
 }
 
-// The dashed chip the details use for «نمایش … مورد دیگر», here opening a box for a new item. Enter
-// adds and leaves the box open for the next one; leaving it adds what was typed and closes it.
 function AddChip({ list, theme, wide = false }) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState("");
@@ -276,7 +240,6 @@ function ItemLine({ item, index, list, theme }) {
   );
 }
 
-// A list column's items as JobDetails lays them out, each editable, with «افزودن» after the last.
 function ListBody({ fieldKey, list, onPromote }) {
   const theme = themeOf(fieldKey);
   const jobTitle = useWatch({ name: "job_title" });
@@ -300,7 +263,6 @@ function ListBody({ fieldKey, list, onPromote }) {
       </ul>
     );
   } else if (fieldKey === "career_path_next") {
-    // «افزودن» is one more branch from the job, where the next step would go.
     const ADD = {};
     body = (
       <CareerPath
@@ -365,7 +327,6 @@ function CompetencyCardEditor({ fieldKey, primary }) {
   );
 }
 
-// The description as the details print it, a textarea in its place while it is being written.
 function DescriptionCard({ primary }) {
   const { field, fieldState } = useController({
     name: "description",
@@ -417,10 +378,9 @@ const OWNER_TONES = {
   own: "bg-blue-50 text-blue-700 border-blue-200",
 };
 
-// Whose the job is, as the small badge the tables draw it with — a select dressed as one.
 function OwnerBadge({ owners, allowPublic }) {
   const { field } = useController({ name: "organization_id" });
-  const tone = field.value === PUBLIC ? OWNER_TONES.public : OWNER_TONES.own;
+  const tone = field.value === PUBLIC_OWNER ? OWNER_TONES.public : OWNER_TONES.own;
 
   return (
     <span className="relative inline-flex shrink-0">
@@ -432,7 +392,7 @@ function OwnerBadge({ owners, allowPublic }) {
         className={`appearance-none rounded-full border ps-3 pe-7 py-0.5 text-xs font-medium leading-6
                     cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${tone}`}
       >
-        {allowPublic && <option value={PUBLIC}>عمومی — همه سازمان‌ها</option>}
+        {allowPublic && <option value={PUBLIC_OWNER}>عمومی — همه سازمان‌ها</option>}
         {owners.map((organization) => (
           <option key={organization.id} value={String(organization.id)}>
             اختصاصی — {organization.name}
@@ -446,8 +406,6 @@ function OwnerBadge({ owners, allowPublic }) {
   );
 }
 
-// The heading over the boxes, as the details have one: the job's title, which a click edits, and
-// the owner beside it.
 function TitleHeading({ owners, allowPublic }) {
   const { field, fieldState } = useController({
     name: "job_title",
@@ -515,8 +473,6 @@ export default function JobForm({
     defaultValues: toFormValues(initial, owners, allowPublic, defaultOwner),
   });
 
-  // An other name becomes the title and the title takes its place among the other names, so the
-  // swap loses neither.
   const promoteAlias = (alias) => {
     const title = methods.getValues("job_title").trim();
     const aliases = methods.getValues("aliases") ?? [];
@@ -532,7 +488,7 @@ export default function JobForm({
     for (const key of LIST_KEYS) body[key] = cellFromItems(values[key]);
     if (owners.length) {
       body.organization_id =
-        values.organization_id === PUBLIC ? null : Number(values.organization_id);
+        values.organization_id === PUBLIC_OWNER ? null : Number(values.organization_id);
     }
     onSubmit(body, () => methods.reset(toFormValues(null, owners, allowPublic, defaultOwner)));
   };

@@ -1,6 +1,6 @@
 import { baseApi } from "./baseApi";
 
-export const statsApi = baseApi.injectEndpoints({
+const statsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     stats: builder.query({
       query: (organizationId) => ({

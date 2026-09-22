@@ -1,3 +1,5 @@
+import { icon } from "@components/ui/icon";
+
 const TONES = {
   danger: "bg-red-500 hover:bg-red-600 shadow-red-500/25",
   view: "bg-blue-500 hover:bg-blue-600 shadow-blue-500/25",
@@ -12,7 +14,6 @@ export default function IconButton({
   tone = "neutral",
   disabled = false,
   onClick,
-  className = "",
 }) {
   return (
     <button
@@ -29,7 +30,6 @@ export default function IconButton({
         disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none
         disabled:hover:translate-y-0
         ${TONES[tone] ?? TONES.neutral}
-        ${className}
       `}
     >
       {children}
@@ -37,21 +37,8 @@ export default function IconButton({
   );
 }
 
-const glyph = (path) => (
-  <svg
-    className="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    viewBox="0 0 24 24"
-  >
-    {path}
-  </svg>
-);
 
-export const TrashGlyph = glyph(
+export const TrashGlyph = icon(
   <>
     <path d="M4 7h16M10 11v6M14 11v6" />
     <path d="M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12" />
@@ -59,21 +46,21 @@ export const TrashGlyph = glyph(
   </>
 );
 
-export const EyeGlyph = glyph(
+export const EyeGlyph = icon(
   <>
     <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z" />
     <circle cx="12" cy="12" r="3" />
   </>
 );
 
-export const PencilGlyph = glyph(
+export const PencilGlyph = icon(
   <>
     <path d="M12 20h9" />
     <path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4 12.5-12.5z" />
   </>
 );
 
-export const UserPlusGlyph = glyph(
+export const UserPlusGlyph = icon(
   <>
     <path d="M15 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
     <circle cx="8.5" cy="7" r="4" />
@@ -81,28 +68,28 @@ export const UserPlusGlyph = glyph(
   </>
 );
 
-export const LockGlyph = glyph(
+export const LockGlyph = icon(
   <>
     <rect x="4" y="11" width="16" height="10" rx="2" />
     <path d="M8 11V7a4 4 0 018 0v4" />
   </>
 );
 
-export const UnlockGlyph = glyph(
+export const UnlockGlyph = icon(
   <>
     <rect x="4" y="11" width="16" height="10" rx="2" />
     <path d="M8 11V7a4 4 0 017.5-2" />
   </>
 );
 
-export const KeyGlyph = glyph(
+export const KeyGlyph = icon(
   <>
     <circle cx="7.5" cy="15.5" r="3.5" />
     <path d="M10 13L20 3M17 6l2 2M14 9l2 2" />
   </>
 );
 
-export const PlusGlyph = glyph(
+export const PlusGlyph = icon(
   <>
     <circle cx="12" cy="12" r="9" />
     <path d="M12 8v8M8 12h8" />

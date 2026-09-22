@@ -24,8 +24,6 @@ export default function MainLayout() {
       <Header toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
       <main className="flex flex-1 gap-2 overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-100">
         <SideBar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-        {/* The scrollbar's gutter is kept whether or not a page overflows, so a list shrinking
-            under a filter does not widen the column and re-wrap everything above it. */}
         <div
           data-active={isMobile || undefined}
           className="flex flex-col gap-6 data-active:p-3 p-8 w-full overflow-y-auto [scrollbar-gutter:stable]"

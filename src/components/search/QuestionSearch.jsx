@@ -4,7 +4,6 @@ import Card from "@components/ui/Card";
 import Button from "@components/ui/Button";
 import Modal from "@components/ui/Modal";
 import { Spinner } from "@components/ui/Loader";
-import Meter from "@components/ui/Meter";
 import AnswerPanel from "@components/AnswerPanel";
 import JobDetails from "@components/JobDetails";
 import JobForm, { PUBLIC_OWNER } from "@components/JobForm";
@@ -12,26 +11,13 @@ import { cellFromItems, itemsFromCell } from "@components/ui/ItemsInput";
 import useSuggestionOwners from "@hook/useSuggestionOwners";
 import { useSearchMutation, useSearchReportMutation, useSuggestJobMutation } from "@services/jobsApi";
 import { useDeleteSavedSearchMutation, useSaveSearchMutation } from "@services/savedApi";
-import { downloadBlob, safeFileName } from "@utils/download";
-import { reportBody, reportSubject } from "@utils/report";
+import { downloadBlob } from "@utils/download";
+import { reportBody, reportFileName } from "@utils/report";
 import { errorMessage } from "@utils/errors";
 import { showMessage } from "@utils/toast";
+import { icon } from "@components/ui/icon";
 
-
-const glyph = (className, path) => (
-  <svg
-    aria-hidden="true"
-    className={className}
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    viewBox="0 0 24 24"
-  >
-    {path}
-  </svg>
-);
+const glyph = (className, path) => icon(path, className);
 
 const Glyphs = {
   download: glyph("w-3.5 h-3.5", <path d="M12 3v12M7 12l5 5 5-5M4 20h16" />),
@@ -135,9 +121,6 @@ const Chevron = ({ open }) =>
     <path d="M6 9l6 6 6-6" />,
   );
 
-// The result's heading introduces each mode with a line above the title and an icon beside it:
-// the app's own blue-to-indigo for an analysis, the semantic colours for a refusal, a request for
-// more detail and the guide.
 const BRAND = "from-blue-600 to-indigo-600 shadow-indigo-600/25";
 const JOB_META = { eyebrow: "نتیجه تحلیل", icon: Glyphs.briefcase, tone: BRAND };
 const MODE_META = {
@@ -164,14 +147,10 @@ const MODE_META = {
   job_adapted: { eyebrow: "شغل پیشنهادی", icon: Glyphs.briefcase, tone: BRAND },
 };
 
-// `needs_detail` carries no record either: the question named a field, not a job.
 const NO_REPORT = new Set(["out_of_domain", "about", "needs_detail"]);
 
-// The modes whose record was composed rather than found — typed as a name or asked as a
-// question, it is the same kind of record, and it is shown and offered the same way.
 const COMPOSED = new Set(["job_generated", "job_adapted"]);
 
-// Why a combination came back with no job to offer, keyed on its `draft_reason`.
 const DRAFT_REASONS = {
   exists: ({ draft_job }) =>
     `شغلی با عنوان «${draft_job}» که این ترکیب را پوشش می‌دهد در پایگاه داده موجود است؛ برای مشاهده مشخصات آن، همین عنوان را تحلیل نمایید.`,
@@ -182,9 +161,6 @@ const DRAFT_REASONS = {
   unavailable: () => "امکان ایجاد شغل ترکیبی پیشنهادی در حال حاضر فراهم نیست.",
 };
 
-// One notice for every job composed rather than found — a name or question the corpus lacks, or a
-// combination of two fields — so the two flows say the same thing in the same words. It is not
-// shown while «ویرایش» is open, the user already acting on the composed job there.
 const COMPOSED_NOTICE = {
   title: "این شغل در پایگاه داده موجود نیست",
   body: "مشخصات زیر بر اساس ورودی شما و نزدیک‌ترین رکورد موجود در پایگاه داده تدوین شده است.",
@@ -216,18 +192,13 @@ export default function QuestionSearch() {
   const [seed, setSeed] = useState(null);
   const [runId, setRunId] = useState(0);
   const [openNearest, setOpenNearest] = useState(false);
-  // The row this answer was starred into, so the same button removes it again. A new search
-  // clears it: the star belongs to the answer on screen, not to the page.
   const [savedId, setSavedId] = useState(null);
   const [search, { isLoading }] = useSearchMutation();
   const [searchReport, { isLoading: isReporting }] = useSearchReportMutation();
   const [suggestJob, { isLoading: isFiling }] = useSuggestJobMutation();
   const [saveSearch, { isLoading: isStarring }] = useSaveSearchMutation();
   const [deleteSavedSearch, { isLoading: isUnstarring }] = useDeleteSavedSearchMutation();
-  // The owner choice the suggestion page offers, so a job composed here can be filed for the
-  // caller's own organization too; without it this page could only ever file public records.
-  const { owners, allowPublic, defaultOwner, loading: ownersLoading } = useSuggestionOwners();
-  // Until the reader picks in «پذیرش», the job goes to the organization they sit in.
+  const { owners, defaultOwner, loading: ownersLoading } = useSuggestionOwners();
   const chosenOwner = owner ?? (defaultOwner == null ? PUBLIC_OWNER : String(defaultOwner));
 
   async function runSearch(text) {
@@ -260,15 +231,12 @@ export default function QuestionSearch() {
   async function downloadReport() {
     try {
       const blob = await searchReport(reportBody(asked, result)).unwrap();
-      const subject = reportSubject(result);
-      downloadBlob(blob, `${safeFileName(`گزارش ${subject ?? ""}`, "گزارش تحلیل شغل")}.pdf`);
+      downloadBlob(blob, reportFileName(result));
     } catch (err) {
       showMessage.error(errorMessage(err));
     }
   }
 
-  // One button both ways: the answer is kept as it is on screen, and starring the same question
-  // again refreshes what was kept rather than adding a second row.
   async function toggleStar() {
     try {
       if (savedId != null) {
@@ -300,16 +268,11 @@ export default function QuestionSearch() {
   const mode = result?.mode;
   const composed = COMPOSED.has(mode);
   const combination = mode === "interdisciplinary";
-  // The job this search offers for filing, and the boxes that show it: a composed record is
-  // itself the answer's boxes, while a combination composes one beside its two stored records.
-  // Every offer is then shown the same way — boxes, and «پذیرش» / «رد» / «ویرایش» under them.
   const draft = result?.job_draft ?? null;
   const draftDetail = composed ? result?.details?.[0] : result?.draft_detail;
   const offered = Boolean(draft && draftDetail);
   const pickable = offered && !filed && !declined;
 
-  // Choosing one of the composed job's other names opens «ویرایش» on the draft with that name as
-  // the title, the old title taking its place among the other names.
   function pickAlias(alias) {
     const aliases = itemsFromCell(draft.aliases ?? "").map((name) =>
       name === alias ? draft.job_title : name,
@@ -332,18 +295,13 @@ export default function QuestionSearch() {
   const heading = meta.title ?? (combination ? result?.jobs?.join(" + ") : result?.job);
   const answerLabel = NO_REPORT.has(mode) ? "پاسخ دستیار" : "تحلیل هوشمند";
 
-  // «پذیرش» files the record exactly as shown, after one question: where it belongs. The public
-  // corpus, then every organization the caller may file for — each one for a super_admin, their
-  // own for anyone else — the same choices JobForm's owner field offers under «ویرایش».
   const ownerChoices = [
-    ...(allowPublic
-      ? [{
-          value: PUBLIC_OWNER,
-          title: "عمومی — همه سازمان‌ها",
-          hint: "این شغل در نتایج تحلیل کاربران تمامی سازمان‌ها دیده می‌شود.",
-          icon: Glyphs.globe,
-        }]
-      : []),
+    {
+      value: PUBLIC_OWNER,
+      title: "عمومی — همه سازمان‌ها",
+      hint: "این شغل در نتایج تحلیل کاربران تمامی سازمان‌ها دیده می‌شود.",
+      icon: Glyphs.globe,
+    },
     ...owners.map((organization) => ({
       value: String(organization.id),
       title: `اختصاصی — ${organization.name}`,
@@ -353,8 +311,6 @@ export default function QuestionSearch() {
   ];
   const ownerBody = chosenOwner === PUBLIC_OWNER ? null : Number(chosenOwner);
 
-  // The owner of the stored record a match answered from. A record the caller cannot see could
-  // not have matched, so its organization is always among the ones they may name.
   const stored = mode === "single" || mode === "job_match";
   const ownerId = result?.organization_id ?? null;
   const ownerName =
@@ -415,8 +371,6 @@ export default function QuestionSearch() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-medium text-slate-500 m-0 leading-5">{meta.eyebrow}</p>
-                  {/* The job the question was about — the one the engine resolved it to, not the
-                      question itself and not the nearest record it was ranked against. */}
                   <h2 className="text-lg md:text-xl font-bold text-slate-800 m-0 leading-8 break-words">
                     {heading}
                   </h2>
@@ -444,39 +398,32 @@ export default function QuestionSearch() {
               </div>
 
               <div className="flex items-center justify-between sm:justify-start gap-4 shrink-0">
-                {result.score != null && !NO_REPORT.has(mode) && (
-                  <Meter
-                    label="میزان تطابق"
-                    ratio={result.score}
-                    title="میزان شباهت پرسش شما با اطلاعات این شغل"
-                  />
-                )}
                 {!NO_REPORT.has(mode) && (
-                  <Button
-                    variant={savedId != null ? "primary" : "outline"}
-                    size="sm"
-                    buttonProps={{
-                      onClick: toggleStar,
-                      disabled: isStarring || isUnstarring,
-                      title:
-                        savedId != null
-                          ? "حذف از تحلیل‌های ستاره‌دار"
-                          : "نگه‌داشتن این تحلیل در تحلیل‌های ستاره‌دار",
-                    }}
-                  >
-                    {isStarring || isUnstarring ? <Spinner /> : Glyphs.star}
-                    {savedId != null ? "ستاره‌دار شد" : "ستاره‌دار کردن"}
-                  </Button>
-                )}
-                {!NO_REPORT.has(mode) && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    buttonProps={{ onClick: downloadReport, disabled: isReporting }}
-                  >
-                    {isReporting ? <Spinner /> : Glyphs.download}
-                    گزارش PDF
-                  </Button>
+                  <>
+                    <Button
+                      variant={savedId != null ? "primary" : "outline"}
+                      size="sm"
+                      buttonProps={{
+                        onClick: toggleStar,
+                        disabled: isStarring || isUnstarring,
+                        title:
+                          savedId != null
+                            ? "حذف از تحلیل‌های ستاره‌دار"
+                            : "نگه‌داشتن این تحلیل در تحلیل‌های ستاره‌دار",
+                      }}
+                    >
+                      {isStarring || isUnstarring ? <Spinner /> : Glyphs.star}
+                      {savedId != null ? "ستاره‌دار شد" : "ستاره‌دار کردن"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      buttonProps={{ onClick: downloadReport, disabled: isReporting }}
+                    >
+                      {isReporting ? <Spinner /> : Glyphs.download}
+                      گزارش PDF
+                    </Button>
+                  </>
                 )}
               </div>
             </header>
@@ -515,7 +462,6 @@ export default function QuestionSearch() {
             )}
 
             {offered && !filed && !declined && editing && (
-              // The form takes the place of the boxes it edits, drawn as they were.
               <section>
                 <JobForm
                   key={`${runId}-edit`}
@@ -525,7 +471,6 @@ export default function QuestionSearch() {
                   submitLabel="ثبت پیشنهاد"
                   busy={isFiling}
                   owners={owners}
-                  allowPublic={allowPublic}
                   actions={
                     <Button
                       variant="outline"

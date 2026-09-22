@@ -6,13 +6,11 @@ export default function SubmitBar({
   busy = false,
   busyLabel = "در حال ثبت...",
   disabled,
-  icon,
   hint,
   actions,
-  className = "",
 }) {
   return (
-    <div className={`mt-6 pt-5 border-t border-slate-200 ${className}`}>
+    <div className="mt-6 pt-5 border-t border-slate-200">
       {hint && <p className="text-xs text-slate-400 leading-6 mb-3">{hint}</p>}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="flex-1 min-w-48 max-w-md">
@@ -28,10 +26,7 @@ export default function SubmitBar({
                 {busyLabel}
               </>
             ) : (
-              <>
-                {label}
-                {icon}
-              </>
+              label
             )}
           </Button>
         </div>

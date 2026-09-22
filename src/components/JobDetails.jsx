@@ -1,19 +1,17 @@
 import { useState } from "react";
-import { IconBadge, icon, themeOf } from "@components/fieldVisuals";
+import { IconBadge, themeOf } from "@components/fieldVisuals";
+import { icon } from "@components/ui/icon";
 import SectionHeading from "@components/ui/SectionHeading";
 import { fieldLabel } from "@constant/fieldLabels";
+import { faNumber } from "@utils/jalali";
 
 export const LIST_AS_LINES = new Set(["responsibilities"]);
 
-// The client shows these three as one «شایستگی‌های شغلی» card, placed where the first of them falls
-// in the backend's order. The backend still sends three fields; each keeps its own box and toggle.
-export const COMPETENCIES = ["skills", "knowledge", "abilities"];
+const COMPETENCIES = ["skills", "knowledge", "abilities"];
 const COMPETENCY_TITLE = "شایستگی‌های شغلی";
 const COMPETENCY_HINT = "مهارت‌ها، دانش و توانایی‌های لازم برای این شغل";
 const COMPETENCY_COLUMNS = { 1: "", 2: "@2xl:grid-cols-2", 3: "@2xl:grid-cols-3" };
 
-// Each field's colour and icon come from `fieldVisuals`. The field an answer used is not told apart
-// by colour but by a ring in its own colour and a «مرتبط با پرسش شما» label.
 const AwardGlyph = icon(
   <>
     <circle cx="12" cy="8" r="6" />
@@ -26,7 +24,7 @@ const SparkleGlyph = icon(
   "w-3 h-3 shrink-0",
 );
 
-export const CheckGlyph = icon(<path d="M5 12.5l4.5 4.5L19 7.5" />, "w-3 h-3");
+const CheckGlyph = icon(<path d="M5 12.5l4.5 4.5L19 7.5" />, "w-3 h-3");
 
 const SwapGlyph = icon(<path d="M7 7h13l-3-3M17 17H4l3 3" />, "w-3 h-3 shrink-0");
 
@@ -38,11 +36,6 @@ const ToggleChevron = ({ open }) =>
     `w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`,
   );
 
-function faCount(n) {
-  return n.toLocaleString("fa-IR");
-}
-
-// Each field opens on its own: the backend's `preview` is how many items show before it does.
 function useExpandable(field) {
   const [expanded, setExpanded] = useState(false);
   const limit = field.preview > 0 ? field.preview : field.items.length;
@@ -59,11 +52,11 @@ function useExpandable(field) {
 function countText(field, shown) {
   if (!field.items.length) return null;
   return shown.length < field.items.length
-    ? `${faCount(shown.length)} از ${faCount(field.items.length)} مورد`
-    : `${faCount(field.items.length)} مورد`;
+    ? `${faNumber(shown.length)} از ${faNumber(field.items.length)} مورد`
+    : `${faNumber(field.items.length)} مورد`;
 }
 
-export function RelevantPill({ theme }) {
+function RelevantPill({ theme }) {
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium leading-5 ${theme.pill}`}
@@ -74,10 +67,8 @@ export function RelevantPill({ theme }) {
   );
 }
 
-// A competency card can be narrower than the full label beside its title, so there the label shortens
-// once the card itself (not the viewport) is under 20rem; the full wording stays in `title`.
 function ExpandButton({ expanded, total, theme, onToggle, compact = false }) {
-  const full = expanded ? "نمایش خلاصه" : `مشاهده کامل (${faCount(total)})`;
+  const full = expanded ? "نمایش خلاصه" : `مشاهده کامل (${faNumber(total)})`;
   return (
     <button
       type="button"
@@ -90,7 +81,7 @@ function ExpandButton({ expanded, total, theme, onToggle, compact = false }) {
     >
       {compact ? (
         <>
-          <span className="@xs:hidden">{expanded ? "خلاصه" : `همه (${faCount(total)})`}</span>
+          <span className="@xs:hidden">{expanded ? "خلاصه" : `همه (${faNumber(total)})`}</span>
           <span className="hidden @xs:inline">{full}</span>
         </>
       ) : (
@@ -101,8 +92,6 @@ function ExpandButton({ expanded, total, theme, onToggle, compact = false }) {
   );
 }
 
-// `career_path_next` is a set of jobs this one can lead to, not a sequence — «پرستاران» lists
-// «بهیاران» beside «پرستاران بیهوشی» — so it is drawn as branches from the job, not as a staircase.
 export function CareerPath({ root, steps, theme, renderStep }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-0">
@@ -159,8 +148,6 @@ export function LineBullet({ theme }) {
 function FieldItems({ field, theme, shown, hidden, onExpand, jobTitle, onPickAlias }) {
   const asPath = shown.length > 0 && field.key === "career_path_next";
   const asChips = shown.length > 0 && !LIST_AS_LINES.has(field.key) && !asPath;
-  // A composed job's other names are offered as its title: a click opens the edit form with that
-  // name as the title and the old title kept among the other names.
   const pickable = asChips && field.key === "aliases" && Boolean(onPickAlias);
   const more = hidden > 0 && (
     <button
@@ -170,7 +157,7 @@ function FieldItems({ field, theme, shown, hidden, onExpand, jobTitle, onPickAli
                   transition-colors duration-200 focus:outline-none focus-visible:ring-2
                   focus-visible:ring-blue-500/40 ${theme.more}`}
     >
-      نمایش {faCount(hidden)} مورد دیگر
+      نمایش {faNumber(hidden)} مورد دیگر
     </button>
   );
 
@@ -223,8 +210,6 @@ function FieldItems({ field, theme, shown, hidden, onExpand, jobTitle, onPickAli
   );
 }
 
-// A field's box — its coloured header with icon, name and count, and the body under it. The job form
-// draws the same box around its inputs, so a job reads the same while it is being edited.
 export function FieldShell({ fieldKey, label, primary, count, aside, invalid, children }) {
   const theme = themeOf(fieldKey);
   return (
@@ -285,7 +270,6 @@ function FieldCard({ field, jobTitle, onPickAlias }) {
   );
 }
 
-// One competency's card inside the group, shared with the job form as FieldShell is.
 export function CompetencyItemShell({ fieldKey, label, primary, count, aside, invalid, children }) {
   const theme = themeOf(COMPETENCIES[0]);
   return (
@@ -344,7 +328,6 @@ function CompetencyCard({ field, theme }) {
   );
 }
 
-// The group's own box, which holds one card per competency in as many columns as there are.
 export function CompetencyShell({ size, children }) {
   const theme = themeOf(COMPETENCIES[0]);
 
@@ -376,8 +359,6 @@ function CompetencyGroup({ fields }) {
   );
 }
 
-// The fields in the backend's order, with the three competencies folded into one group where the
-// first of them appears.
 export function arrange(fields) {
   const members = COMPETENCIES.map((key) => fields.find((field) => field.key === key)).filter(
     Boolean,
@@ -407,7 +388,7 @@ export default function JobDetails({ details, title, onPickAlias, className = "m
           {named && (
             <div className="flex items-center gap-2 mb-3">
               <span className="w-6 h-6 rounded-full bg-slate-800 text-white text-xs font-bold flex items-center justify-center shrink-0">
-                {faCount(index + 1)}
+                {faNumber(index + 1)}
               </span>
               <h4 className="text-[15px] font-bold text-slate-800 m-0 leading-7">{job.job_title}</h4>
             </div>

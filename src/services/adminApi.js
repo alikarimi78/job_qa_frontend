@@ -1,15 +1,12 @@
 import { baseApi } from "./baseApi";
 
-export const adminApi = baseApi.injectEndpoints({
+const adminApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     suggestions: builder.query({
-      // organizationId names one organization, publicOnly the records that belong to
-      // none; neither is sent unless it was asked for, and an org_admin is scoped by
-      // the server whatever they send.
-      query: ({ jobStatus = "pending", organizationId, publicOnly } = {}) => ({
+      query: ({ organizationId, publicOnly }) => ({
         url: "/admin/suggestions",
         params: {
-          job_status: jobStatus,
+          job_status: "pending",
           organization_id: organizationId || undefined,
           public: publicOnly || undefined,
         },
@@ -28,12 +25,8 @@ export const adminApi = baseApi.injectEndpoints({
       query: (id) => ({ url: `/admin/suggestions/${id}/reject`, method: "POST" }),
       invalidatesTags: ["Suggestion", "MySuggestion", "Stats"],
     }),
-    createJob: builder.mutation({
-      query: (body) => ({ url: "/admin/jobs", method: "POST", body }),
-      invalidatesTags: ["Suggestion", "Job", "Stats", "Rebuild"],
-    }),
     jobs: builder.query({
-      query: ({ q = "", page = 1, pageSize = 20, organizationId, publicOnly } = {}) => ({
+      query: ({ q, page, pageSize, organizationId, publicOnly }) => ({
         url: "/admin/jobs",
         params: {
           q,
@@ -49,17 +42,12 @@ export const adminApi = baseApi.injectEndpoints({
       query: ({ id, ...body }) => ({ url: `/admin/jobs/${id}`, method: "PUT", body }),
       invalidatesTags: ["Job", "Rebuild", "Stats"],
     }),
-    // Deleting starts the same rebuild an edit does, so the status badge is refetched too.
     deleteJob: builder.mutation({
       query: (id) => ({ url: `/admin/jobs/${id}`, method: "DELETE" }),
       invalidatesTags: ["Job", "Rebuild", "Stats"],
     }),
     rebuild: builder.mutation({
-      query: (forceEmbeddings = false) => ({
-        url: "/admin/rebuild",
-        method: "POST",
-        params: { force_embeddings: forceEmbeddings },
-      }),
+      query: () => ({ url: "/admin/rebuild", method: "POST" }),
       invalidatesTags: ["Rebuild", "Stats"],
     }),
     rebuildStatus: builder.query({
@@ -74,7 +62,6 @@ export const {
   useUpdateSuggestionMutation,
   useApproveSuggestionMutation,
   useRejectSuggestionMutation,
-  useCreateJobMutation,
   useJobsQuery,
   useUpdateJobMutation,
   useDeleteJobMutation,

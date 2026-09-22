@@ -1,69 +1,28 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useController, useFormContext } from "react-hook-form";
 import { faNumber } from "@utils/jalali";
-// Suggestions are compared the way the backend compares profile items, so «روانشناسی»
-// still finds «روان‌شناسی».
 import { foldText as fold } from "@utils/text";
+import { icon } from "@components/ui/icon";
 
 const SEPARATORS = /[،,;؛|\n\t]+/;
 
 const SUGGESTION_LIMIT = 8;
 
-const PlusGlyph = (
-  <svg
-    className="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2.5}
-    strokeLinecap="round"
-    viewBox="0 0 24 24"
-  >
-    <path d="M12 5v14M5 12h14" />
-  </svg>
-);
+const PlusGlyph = icon(<path d="M12 5v14M5 12h14" />, "w-4 h-4", 2.5);
 
-export const PencilGlyph = (
-  <svg
-    className="w-3 h-3 shrink-0"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2.5}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    viewBox="0 0 24 24"
-  >
-    <path d="M4 20h4L18.5 9.5a2.12 2.12 0 00-3-3L5 17v3z" />
-  </svg>
-);
+export const PencilGlyph = icon(<path d="M4 20h4L18.5 9.5a2.12 2.12 0 00-3-3L5 17v3z" />, "w-3 h-3 shrink-0", 2.5);
 
-export const SwapGlyph = (
-  <svg
-    className="w-3 h-3 shrink-0"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2.5}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    viewBox="0 0 24 24"
-  >
-    <path d="M7 7h13l-3-3M17 17H4l3 3" />
-  </svg>
-);
+export const SwapGlyph = icon(<path d="M7 7h13l-3-3M17 17H4l3 3" />, "w-3 h-3 shrink-0", 2.5);
 
-export function splitItems(text) {
+function splitItems(text) {
   return String(text ?? "")
     .split(SEPARATORS)
     .map((part) => part.trim())
     .filter(Boolean);
 }
 
-// A stored cell is split where it was joined, on «|» alone, as the backend's `field_items` splits it.
-// The other separators are for typing: an item such as «رسیدگی به کمبود نیرو، تعارض‌ها و …» holds
-// a «،» of its own, and splitting there turned one stored item into three on the next save.
 const EMPTY_ITEMS = new Set(["-", "–", "—", "_"]);
 
-// What the job form takes as items: one per line or per «|», and a «،» left alone — a duty is a
-// sentence and may hold one. Typing into ItemsInput splits on every separator instead.
 export function splitLines(text) {
   return String(text ?? "")
     .split(/[|\n]+/)
@@ -82,8 +41,6 @@ export function cellFromItems(items) {
   return (items ?? []).join(" | ");
 }
 
-// The suggestions still worth offering, most common first as the backend sends them: every typed word
-// starts a word of the suggestion, or the whole query sits inside it once spaces are ignored.
 function suggest(suggestions, query, taken) {
   const words = fold(query).split(" ").filter(Boolean);
   const compact = words.join("");
@@ -102,8 +59,6 @@ function suggest(suggestions, query, taken) {
   return found;
 }
 
-// One list field of a form — its items and the three ways they change — shared by ItemsInput and
-// the job form, which draws the same items as the job's boxes do.
 export function useItemList(name, { required = false, min = 1, max = 20 } = {}) {
   const { control } = useFormContext();
   const {
@@ -137,8 +92,6 @@ export function useItemList(name, { required = false, min = 1, max = 20 } = {}) 
 
   const remove = (index) => onChange(value.filter((_, i) => i !== index));
 
-  // An edited item may come back as several, split where it is typed with a separator (`split`); an
-  // item emptied by the edit is kept as it was.
   const replace = (index, text, split = splitItems) => {
     const incoming = split(text);
     if (!incoming.length) return;
@@ -159,7 +112,6 @@ export function useItemList(name, { required = false, min = 1, max = 20 } = {}) 
   return { value, error, max, full: value.length >= max, append, remove, replace };
 }
 
-// Editing one item in place: Enter or leaving the field commits, Escape puts it back.
 export function useInlineEdit(onCommit) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
@@ -180,7 +132,6 @@ export function useInlineEdit(onCommit) {
   return {
     editing,
     draft,
-    // Leaves the edit without committing it, for a button beside the field that acts on the item.
     cancel: () => {
       cancelled.current = true;
       setEditing(false);
@@ -215,7 +166,6 @@ export function useInlineEdit(onCommit) {
   };
 }
 
-// The typing half of a list field: a box, its suggestions, and the button that adds what is typed.
 function ItemAdder({ list, label, placeholder, suggestions }) {
   const [draft, setDraft] = useState("");
   const [open, setOpen] = useState(false);
@@ -235,8 +185,6 @@ function ItemAdder({ list, label, placeholder, suggestions }) {
     setDraft("");
   };
 
-  // A suggestion is taken whole: a job title such as «متخصصان دندان‌پزشکی، سایر تخصص‌ها» holds the
-  // «،» that typing treats as a separator between items.
   const choose = (text) => {
     add([text]);
     setActive(-1);
@@ -368,29 +316,9 @@ function ItemAdder({ list, label, placeholder, suggestions }) {
   );
 }
 
-const CHIP_TONE = {
-  chip: "bg-blue-50 border-blue-200 text-blue-900",
-  text: "text-blue-900 hover:text-blue-700",
-  icon: "text-blue-400",
-  pick: "hover:bg-blue-600",
-};
+export const CrossGlyph = icon(<path d="M6 6l12 12M18 6L6 18" />, "w-3 h-3", 3);
 
-export const CrossGlyph = (
-  <svg
-    className="w-3 h-3"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={3}
-    strokeLinecap="round"
-    viewBox="0 0 24 24"
-  >
-    <path d="M6 6l12 12M18 6L6 18" />
-  </svg>
-);
-
-// One item as a chip: a click on it edits it in place, the cross removes it, and `onPick` adds a
-// button that acts on the item.
-function EditableChip({ item, index, list, tone = CHIP_TONE, onPick, pickLabel }) {
+function EditableChip({ item, index, list }) {
   const edit = useInlineEdit((text) => list.replace(index, text));
 
   if (edit.editing) {
@@ -409,38 +337,26 @@ function EditableChip({ item, index, list, tone = CHIP_TONE, onPick, pickLabel }
 
   return (
     <span
-      className={`inline-flex items-center gap-1 max-w-full border rounded-full ps-3 pe-1.5 py-1
-                  text-[13px] ${tone.chip}`}
+      className="inline-flex items-center gap-1 max-w-full border rounded-full ps-3 pe-1.5 py-1
+                 text-[13px] bg-blue-50 border-blue-200 text-blue-900"
     >
       <button
         type="button"
         onClick={() => edit.start(item)}
         title={`ویرایش ${item}`}
         aria-label={`ویرایش ${item}`}
-        className={`inline-flex items-center gap-1.5 min-w-0 cursor-text transition-colors duration-200 ${tone.text}`}
+        className="inline-flex items-center gap-1.5 min-w-0 cursor-text transition-colors duration-200 text-blue-900 hover:text-blue-700"
       >
         <span className="truncate">{item}</span>
-        <span className={tone.icon}>{PencilGlyph}</span>
+        <span className="text-blue-400">{PencilGlyph}</span>
       </button>
-      {onPick && (
-        <button
-          type="button"
-          onClick={() => onPick(item)}
-          title={pickLabel(item)}
-          aria-label={pickLabel(item)}
-          className={`shrink-0 w-5 h-5 rounded-full inline-flex items-center justify-center cursor-pointer
-                      hover:text-white transition-colors duration-200 ${tone.icon} ${tone.pick}`}
-        >
-          {SwapGlyph}
-        </button>
-      )}
       <button
         type="button"
         onClick={() => list.remove(index)}
         title={`حذف ${item}`}
         aria-label={`حذف ${item}`}
-        className={`shrink-0 w-5 h-5 rounded-full inline-flex items-center justify-center cursor-pointer
-                    hover:text-white hover:bg-red-500 transition-colors duration-200 ${tone.icon}`}
+        className="shrink-0 w-5 h-5 rounded-full inline-flex items-center justify-center cursor-pointer
+                   hover:text-white hover:bg-red-500 transition-colors duration-200 text-blue-400"
       >
         {CrossGlyph}
       </button>
@@ -455,18 +371,13 @@ export default function ItemsInput({
   hint,
   required = false,
   min = 1,
-  max = 20,
-  className = "",
-  onPick,
-  pickLabel = (item) => item,
   suggestions,
 }) {
-  const list = useItemList(name, { required, min, max });
-  // A required field still short of its minimum says so in red, before the form is ever submitted.
+  const list = useItemList(name, { required, min });
   const unmet = required && list.value.length < min;
 
   return (
-    <div className={`flex flex-col gap-1.5 ${className}`}>
+    <div className="flex flex-col gap-1.5">
       {label && (
         <span
           className={
@@ -487,14 +398,7 @@ export default function ItemsInput({
       {list.value.length > 0 && (
         <div className="flex flex-wrap gap-2 pt-1">
           {list.value.map((item, index) => (
-            <EditableChip
-              key={index}
-              item={item}
-              index={index}
-              list={list}
-              onPick={onPick}
-              pickLabel={pickLabel}
-            />
+            <EditableChip key={index} item={item} index={index} list={list} />
           ))}
         </div>
       )}

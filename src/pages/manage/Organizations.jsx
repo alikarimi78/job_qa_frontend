@@ -28,9 +28,10 @@ import { runAction } from "@utils/action";
 import { faDigits, faNumber } from "@utils/jalali";
 import { foldText, matchesQuery } from "@utils/text";
 
-const Cell = ({ children }) => (
-  <span className="text-sm text-slate-600 fa-nums">{children}</span>
-);
+const Cell = ({ children }) => <span className="text-sm text-slate-600 fa-nums">{children}</span>;
+
+const adminBadge = (admin) =>
+  admin ? <Badge tone="success">{admin.username}</Badge> : <Badge tone="warning">ادمین ندارد</Badge>;
 
 export default function Organizations() {
   const [dialog, setDialog] = useState(null);
@@ -39,8 +40,6 @@ export default function Organizations() {
   const is = (kind) => dialog?.kind === kind;
 
   const { data: orgs = [] } = useOrganizationsQuery();
-  // `GET /orgs` is not paged either, so the search is the client's own, as «مدیریت کاربران» does it:
-  // a name holding what was typed. Only the table narrows — the dialogs still read the whole list.
   const query = foldText(term);
   const listed = orgs.filter((org) => matchesQuery(org.name, query));
   const { data: accounts = [] } = useAccountsQuery();
@@ -56,7 +55,6 @@ export default function Organizations() {
     accounts.filter((a) => a.organization_id === id).length;
 
   const target = dialog?.org ?? null;
-  const targetAdmin = target ? adminOf(target.id) : null;
 
   const showsLogo = is("edit") || is("view");
   const { data: logoData } = useOrganizationLogoQuery(target?.id, {
@@ -83,21 +81,12 @@ export default function Organizations() {
     {
       key: "accounts",
       header: "تعداد کاربر",
-      cell: (org) => (
-        <span className="text-sm text-slate-600 fa-nums">{faNumber(accountCountOf(org.id))}</span>
-      ),
+      cell: (org) => <Cell>{faNumber(accountCountOf(org.id))}</Cell>,
     },
     {
       key: "admin",
       header: "ادمین سازمان",
-      cell: (org) => {
-        const admin = adminOf(org.id);
-        return admin ? (
-          <Badge tone="success">{admin.username}</Badge>
-        ) : (
-          <Badge tone="warning">ادمین ندارد</Badge>
-        );
-      },
+      cell: (org) => adminBadge(adminOf(org.id)),
     },
     {
       key: "actions",
@@ -232,19 +221,9 @@ export default function Organizations() {
                     "دارد"
                   ),
                 },
-                {
-                  label: "ادمین سازمان",
-                  value: targetAdmin ? (
-                    <Badge tone="success">{targetAdmin.username}</Badge>
-                  ) : (
-                    <Badge tone="warning">ادمین ندارد</Badge>
-                  ),
-                },
+                { label: "ادمین سازمان", value: adminBadge(adminOf(target.id)) },
                 { label: "تعداد کاربر", value: faNumber(accountCountOf(target.id)) },
-                {
-                  label: "شغل اختصاصی",
-                  value: faNumber(target.job_count ?? 0),
-                },
+                { label: "شغل اختصاصی", value: faNumber(target.job_count) },
               ]
             : []
         }

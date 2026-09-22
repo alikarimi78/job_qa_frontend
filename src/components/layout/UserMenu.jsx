@@ -40,8 +40,8 @@ export function AccountActions({ onChangeName, onChangePassword, onLogout }) {
   );
 }
 
-export const AvatarIcon = ({ className = "w-6 h-6" }) => (
-  <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+export const AvatarIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -50,8 +50,8 @@ export const AvatarIcon = ({ className = "w-6 h-6" }) => (
   </svg>
 );
 
-export const LogoutIcon = ({ className = "w-4 h-4" }) => (
-  <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+const LogoutIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -60,7 +60,7 @@ export const LogoutIcon = ({ className = "w-4 h-4" }) => (
   </svg>
 );
 
-export const ChevronIcon = ({ className = "w-4 h-4" }) => (
+export const ChevronIcon = ({ className }) => (
   <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
   </svg>

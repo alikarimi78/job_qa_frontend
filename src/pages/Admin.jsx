@@ -20,13 +20,10 @@ import {
 } from "@services/adminApi";
 import { errorMessage } from "@utils/errors";
 import { showMessage } from "@utils/toast";
-
+import { faNumber } from "@utils/jalali";
 
 const EDIT_FORM_ID = "suggestion-edit-form";
 
-// «همه» for a super_admin, «عمومی» for the records that belong to no organization, and
-// one entry per organization. An org_admin is handed their own organization's queue by
-// the server whatever they ask for, so they are shown no filter at all.
 const PUBLIC = "public";
 
 export default function Admin() {
@@ -39,7 +36,6 @@ export default function Admin() {
   const isSuper = me?.role === "super_admin";
 
   const { data: pending = [], isLoading } = useSuggestionsQuery({
-    jobStatus: "pending",
     organizationId: isSuper && scope && scope !== PUBLIC ? Number(scope) : undefined,
     publicOnly: isSuper && scope === PUBLIC,
   });
@@ -107,7 +103,7 @@ export default function Admin() {
         hint="پیشنهاد عمومی تاییدشده به پایگاه داده مشترک تمامی سازمان‌ها افزوده می‌شود و پیشنهاد اختصاصی تنها در نتایج تحلیل همان سازمان دیده می‌شود"
         actions={
           <Badge tone={pending.length ? "warning" : "neutral"}>
-            {pending.length.toLocaleString("fa-IR")} پیشنهاد در انتظار
+            {faNumber(pending.length)} پیشنهاد در انتظار
           </Badge>
         }
       >
@@ -171,7 +167,7 @@ export default function Admin() {
                   <strong className="text-sm text-slate-800">{it.job_title}</strong>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-xs text-slate-400">
-                      پیشنهاد #{it.id.toLocaleString("fa-IR")}
+                      پیشنهاد #{faNumber(it.id)}
                     </span>
                     <Badge tone={scopeOf(it)[1]}>{scopeOf(it)[0]}</Badge>
                   </div>

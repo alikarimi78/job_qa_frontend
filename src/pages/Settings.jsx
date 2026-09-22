@@ -1,23 +1,10 @@
 import { Navigate, Outlet, useLocation, useNavigate, useOutletContext } from "react-router-dom";
 import SegmentedSwitch from "@components/ui/SegmentedSwitch";
 import { ADMIN_ROLES, hasRole } from "@routes/roles";
+import { icon } from "@components/ui/icon";
 
 
-const glyph = (path) => (
-  <svg
-    className="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    viewBox="0 0 24 24"
-  >
-    {path}
-  </svg>
-);
-
-const Building = glyph(
+const Building = icon(
   <>
     <path d="M3 21h18" />
     <path d="M5 21V5a2 2 0 012-2h6a2 2 0 012 2v16" />
@@ -26,7 +13,7 @@ const Building = glyph(
   </>
 );
 
-const Users = glyph(
+const Users = icon(
   <>
     <path d="M17 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
     <circle cx="9.5" cy="7" r="4" />
@@ -34,8 +21,6 @@ const Users = glyph(
   </>
 );
 
-// The two the sidebar no longer lists on their own, each under the roles its page has always
-// required. An org_admin may reach only the second, and is shown no switch over a single tab.
 const TABS = [
   { path: "organizations", label: "مدیریت سازمان‌ها", icon: Building, roles: ["super_admin"] },
   { path: "accounts", label: "مدیریت کاربران", icon: Users, roles: ADMIN_ROLES },

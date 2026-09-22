@@ -9,8 +9,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { BAR, INK, SERIES } from "./theme";
+import { BAR, INK } from "./theme";
 import { ChartEmpty, ChartTooltip, HOVER_CURSOR } from "./parts";
+import { faNumber } from "@utils/jalali";
 
 function TipLabel(props) {
   const box = props.viewBox ?? props;
@@ -27,7 +28,7 @@ function TipLabel(props) {
       dominantBaseline="central"
       style={{ fill: INK.secondary, fontSize: 12, fontFamily: "Vazirmatn, sans-serif" }}
     >
-      {Number(props.value ?? 0).toLocaleString("fa-IR")}
+      {faNumber(props.value)}
     </text>
   );
 }
@@ -66,21 +67,11 @@ function makeCategoryTick(rows) {
   };
 }
 
-// The chart takes the `hue` of what it counts (one of theme's HUES), and a row may name its own where
-// the rows are states rather than kinds — active and blocked accounts. The tooltip is told the row's
-// colour, recharts giving it the bar's.
-export default function CategoryBars({
-  rows,
-  valueLabel = "تعداد",
-  hue = SERIES[0],
-  rowHeight = 38,
-  minHeight = 120,
-}) {
+export default function CategoryBars({ rows, valueLabel, hue }) {
   if (rows.length === 0) return <ChartEmpty>موردی برای نمایش وجود ندارد.</ChartEmpty>;
 
   const fillOf = (row) => (row?.hue ?? hue).bar;
-
-  const height = Math.max(minHeight, rows.length * rowHeight + 24);
+  const height = Math.max(120, rows.length * 38 + 24);
   const longest = Math.max(...rows.map((row) => row.value), 0);
 
   return (
@@ -116,7 +107,6 @@ export default function CategoryBars({
           <Bar
             dataKey="value"
             name={valueLabel}
-            fill={hue.bar}
             radius={BAR.rowRadius}
             maxBarSize={BAR.maxBarSize}
             isAnimationActive={false}

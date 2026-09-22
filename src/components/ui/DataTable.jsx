@@ -1,4 +1,4 @@
-export default function DataTable({ columns, rows, rowKey = (row) => row.id, empty }) {
+export default function DataTable({ columns, rows, empty }) {
   if (!rows.length) {
     return <p className="text-sm text-slate-500">{empty ?? "موردی برای نمایش وجود ندارد."}</p>;
   }
@@ -24,7 +24,7 @@ export default function DataTable({ columns, rows, rowKey = (row) => row.id, emp
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={rowKey(row)} className="hover:bg-slate-50/70 transition-colors duration-150">
+            <tr key={row.id} className="hover:bg-slate-50/70 transition-colors duration-150">
               {columns.map((column) => (
                 <td
                   key={column.key}

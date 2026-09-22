@@ -1,10 +1,5 @@
-// Colour and icon per job column, shared by the job details and advanced analysis's match cards so a
-// field looks the same wherever it appears. Every field is drawn in its group's colour: what the job
-// is (emerald), what it asks of a person (violet), where and with what it is done (sky), where it
-// leads (orange), what else it is called (slate). Blue and indigo stay the app's own accent, amber its
-// warning and red its danger, so no field borrows a colour that already means something. White text
-// sits on the -700 shade, the -600 of emerald, sky and orange falling short of 4.5:1 at 11px.
-// Tailwind reads class names from the source, so every theme spells its classes out in full.
+import { icon } from "@components/ui/icon";
+
 export const THEMES = {
   emerald: {
     badge: "from-emerald-500 to-teal-600 shadow-emerald-600/25",
@@ -93,22 +88,6 @@ const FIELD_THEME = {
 
 export const themeOf = (key) => THEMES[FIELD_THEME[key]] ?? THEMES.slate;
 
-export const icon = (path, className = "w-4 h-4") => (
-  <svg
-    aria-hidden="true"
-    className={className}
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    viewBox="0 0 24 24"
-  >
-    {path}
-  </svg>
-);
-
-// One icon per column; a column the client does not know yet gets the list icon rather than none.
 export const FIELD_ICONS = {
   job_title: icon(
     <>
@@ -165,7 +144,7 @@ export const FIELD_ICONS = {
   abilities: icon(<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />),
 };
 
-export const FALLBACK_ICON = icon(<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />);
+const FALLBACK_ICON = icon(<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />);
 
 const BADGE_SIZES = {
   tile: "w-14 h-14 rounded-2xl [&>svg]:size-7",
@@ -175,10 +154,6 @@ const BADGE_SIZES = {
   sm: "w-8 h-8 rounded-lg [&>svg]:size-4",
 };
 
-// A card's heading wears the solid gradient — `lg` a job field's card, `panel` a dashboard panel's; the
-// others take the soft tint, for cards and rows that sit inside another card. The dashboard's two are
-// its biggest, each as tall as the text beside it (a panel's title and hint, a tile's label, number and
-// hint), so they grow the icon without growing the row.
 const SOLID = new Set(["panel", "lg"]);
 
 export function IconBadge({ theme, fieldKey, glyph, size = "lg" }) {

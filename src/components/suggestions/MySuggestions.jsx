@@ -15,8 +15,6 @@ export default function MySuggestions() {
   const { data: items = [], isLoading, error } = useMySuggestionsQuery();
   const { data: me } = useCurrentUserQuery();
 
-  // The organization is named only when it is the suggester's own, which is the only
-  // one they could have chosen.
   const scopeOf = (item) => {
     if (item.organization_id == null) return ["عمومی", "neutral"];
     const mine = me?.organization?.id === item.organization_id;

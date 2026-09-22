@@ -3,10 +3,7 @@ import { faNumber } from "@utils/jalali";
 
 const SLOTS = 7;
 
-// The page numbers to draw, «…» standing for the ones between. Always `SLOTS` entries once
-// there are more pages than that — the first, the last, and a run around the current one — so
-// the row keeps its width as the reader pages through it instead of the buttons jumping.
-export function pageSlots(page, pages) {
+function pageSlots(page, pages) {
   if (pages <= SLOTS) return Array.from({ length: pages }, (_, i) => i + 1);
   const run = SLOTS - 2;
   if (page <= run - 1) return [...Array.from({ length: run }, (_, i) => i + 1), "end-gap", pages];

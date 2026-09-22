@@ -1,8 +1,6 @@
 import { relabelDetail } from "@constant/fieldLabels";
+import { safeFileName } from "./download";
 
-// What `POST /reports/search` is given: the answer the reader is looking at, with the client's own
-// field names, since the report is printed from what was posted back rather than re-run. The search
-// page and a starred analysis both print through this, so the two PDFs cannot drift apart.
 export function reportBody(question, result) {
   return {
     question,
@@ -15,8 +13,8 @@ export function reportBody(question, result) {
   };
 }
 
-// What the file is called: the job the answer was about, or the jobs a combination joined.
-export const reportSubject = (result) =>
+const reportSubject = (result) =>
   result.job ?? result.jobs?.join(" و ") ?? result.details?.[0]?.job_title;
 
-export default reportBody;
+export const reportFileName = (result) =>
+  `${safeFileName(`گزارش ${reportSubject(result) ?? ""}`, "گزارش تحلیل شغل")}.pdf`;

@@ -2,35 +2,11 @@ import { useSearchParams } from "react-router-dom";
 import SegmentedSwitch from "@components/ui/SegmentedSwitch";
 import NewSuggestion from "@components/suggestions/NewSuggestion";
 import MySuggestions from "@components/suggestions/MySuggestions";
+import { icon } from "@components/ui/icon";
 
+const Plus = icon(<path d="M12 5v14M5 12h14" />);
 
-const Plus = (
-  <svg
-    className="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    viewBox="0 0 24 24"
-  >
-    <path d="M12 5v14M5 12h14" />
-  </svg>
-);
-
-const List = (
-  <svg
-    className="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    viewBox="0 0 24 24"
-  >
-    <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
-  </svg>
-);
+const List = icon(<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />);
 
 const TABS = [
   ["new", "پیشنهاد شغل جدید", Plus],

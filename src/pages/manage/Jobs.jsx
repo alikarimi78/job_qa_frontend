@@ -23,7 +23,6 @@ import {
 import { runAction } from "@utils/action";
 import { faDate, faNumber } from "@utils/jalali";
 
-
 const PAGE_SIZE = 20;
 const SEARCH_DEBOUNCE_MS = 300;
 const EDIT_FORM_ID = "corpus-edit-form";
@@ -31,12 +30,8 @@ const EMPTY_PAGE = { items: [], total: 0, page: 1, page_size: PAGE_SIZE };
 
 const ALIAS_CHIPS = 2;
 
-// The records that belong to no organization — the corpus every organization searches.
 const PUBLIC = "public";
 
-// An org_admin lists what their organization's searches reach — the public corpus beside their
-// own records — and changes their own alone, as the server's `assert_can_admit_job` does; a row
-// they may not change gets «مشاهده» in place of the edit and delete buttons.
 function canEdit(me, job) {
   if (me.role === "super_admin") return true;
   return job.organization_id != null && job.organization_id === me.organization_id;
@@ -129,7 +124,6 @@ export default function Jobs() {
     );
     if (!done) return;
     setDeleting(null);
-    // The last row of a page past the first leaves that page empty, so step back a page.
     if (shown.items.length === 1 && page > 1) setPage(page - 1);
   }
 
@@ -219,37 +213,31 @@ export default function Jobs() {
             : "مشاغلی که در نتایج تحلیل سازمان شما دیده می‌شوند. مشاغل اختصاصی سازمان شما قابل ویرایش و حذف است و مشاغل عمومی تنها قابل مشاهده است؛ با ذخیره هر ویرایش یا حذف هر شغل، بازسازی امبدینگ‌ها بی‌درنگ آغاز می‌شود."
         }
       >
-        {!isSuper && (
-          <Select
-            value={scope}
-            onChange={(event) => {
-              setScope(event.target.value);
-              setPage(1);
-            }}
-            className="h-11 min-w-44"
-          >
-            <option value="">همه مشاغل</option>
-            <option value={me.organization_id}>مشاغل اختصاصی سازمان شما</option>
-          </Select>
-        )}
-        {isSuper && (
-          <Select
-            value={scope}
-            onChange={(event) => {
-              setScope(event.target.value);
-              setPage(1);
-            }}
-            className="h-11 min-w-44"
-          >
-            <option value="">همه دامنه‌ها</option>
-            <option value={PUBLIC}>عمومی</option>
-            {orgs.map((org) => (
-              <option key={org.id} value={org.id}>
-                {org.name}
-              </option>
-            ))}
-          </Select>
-        )}
+        <Select
+          value={scope}
+          onChange={(event) => {
+            setScope(event.target.value);
+            setPage(1);
+          }}
+          className="h-11 min-w-44"
+        >
+          {isSuper ? (
+            <>
+              <option value="">همه دامنه‌ها</option>
+              <option value={PUBLIC}>عمومی</option>
+              {orgs.map((org) => (
+                <option key={org.id} value={org.id}>
+                  {org.name}
+                </option>
+              ))}
+            </>
+          ) : (
+            <>
+              <option value="">همه مشاغل</option>
+              <option value={me.organization_id}>مشاغل اختصاصی سازمان شما</option>
+            </>
+          )}
+        </Select>
         <input
           value={term}
           onChange={(event) => setTerm(event.target.value)}

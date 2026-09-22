@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 
-
 const SIZES = {
   sm: "max-w-md",
   md: "max-w-2xl",

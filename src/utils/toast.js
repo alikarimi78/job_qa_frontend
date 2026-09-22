@@ -20,5 +20,3 @@ export const showMessage = {
   error: (text) => toast.error(text, { ...base, duration: 6000 }),
   info: (text) => toast(text, base),
 };
-
-export default showMessage;
