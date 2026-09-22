@@ -61,12 +61,25 @@ const PERSIAN_DATE = new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
   timeZone: "Asia/Tehran",
 });
 
-export function faDate(value) {
+const PERSIAN_DATE_TIME = new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+  timeZone: "Asia/Tehran",
+});
+
+const formatWith = (format) => (value) => {
   if (!value) return "—";
   const raw = String(value);
   const date = new Date(/(?:Z|[+-]\d{2}:?\d{2})$/.test(raw) ? raw : `${raw}Z`);
-  return Number.isNaN(date.getTime()) ? "—" : PERSIAN_DATE.format(date);
-}
+  return Number.isNaN(date.getTime()) ? "—" : format.format(date);
+};
+
+export const faDate = formatWith(PERSIAN_DATE);
+export const faDateTime = formatWith(PERSIAN_DATE_TIME);
 
 export const faNumber = (value) => Number(value ?? 0).toLocaleString("fa-IR");
 

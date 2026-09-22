@@ -22,6 +22,7 @@ import {
   SelfPasswordDialog,
 } from "@components/manage/Forms";
 import { ROLE_LABELS } from "@routes/roles";
+import { faDateTime } from "@utils/jalali";
 
 function canManage(me, target) {
   if (!me || me.id === target.id) return false;
@@ -38,6 +39,9 @@ const roleBadge = (role) => <Badge tone={ROLE_TONE[role] ?? "neutral"}>{ROLE_LAB
 
 const statusBadge = (active) =>
   active ? <Badge tone="success">فعال</Badge> : <Badge tone="danger">مسدود</Badge>;
+
+const personOf = (account) =>
+  account ? (account.full_name ? `${account.full_name} (${account.username})` : account.username) : "—";
 
 export default function AccountsTable({
   accounts,
@@ -114,6 +118,12 @@ export default function AccountsTable({
       key: "status",
       header: "وضعیت",
       cell: (row) => statusBadge(row.is_active),
+    },
+    {
+      key: "last_login",
+      header: "آخرین ورود",
+      className: "text-xs text-slate-500 whitespace-nowrap fa-nums",
+      cell: (row) => faDateTime(row.last_login),
     },
     {
       key: "actions",
@@ -202,6 +212,13 @@ export default function AccountsTable({
                 { label: "نقش", value: roleBadge(account.role) },
                 { label: "جایگاه", value: where(account) },
                 { label: "وضعیت", value: statusBadge(account.is_active) },
+                { label: "ایجادکننده", value: personOf(account.creator) },
+                { label: "تاریخ ایجاد", value: faDateTime(account.created_at) },
+                { label: "آخرین ویرایش", value: faDateTime(account.updated_at) },
+                {
+                  label: "آخرین ورود",
+                  value: account.last_login ? faDateTime(account.last_login) : "تاکنون وارد نشده است",
+                },
               ]
             : []
         }
