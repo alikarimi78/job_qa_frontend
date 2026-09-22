@@ -17,7 +17,6 @@ import {
   CompetencyShell,
   FieldShell,
   LINES_CLASS,
-  LIST_AS_LINES,
   LineBullet,
   arrange,
 } from "@components/JobDetails";
@@ -87,58 +86,6 @@ function ItemButton({ title, onClick, danger = false, children }) {
 const commitItem = (list, index) => (text) =>
   text.trim() ? list.replace(index, text, splitLines) : list.remove(index);
 
-function ItemChip({ item, index, list, theme, onPromote }) {
-  const edit = useInlineEdit(commitItem(list, index));
-
-  if (edit.editing) {
-    return (
-      <span className="inline-flex items-center gap-1 max-w-full">
-        <input
-          type="text"
-          {...edit.inputProps}
-          aria-label={`ویرایش ${item}`}
-          style={fitWidth(edit.draft)}
-          className={`${EDIT_INPUT} rounded-full`}
-        />
-        {onPromote && (
-          <ItemButton
-            title={`جایگزینی عنوان شغل با «${item}»`}
-            onClick={() => {
-              edit.cancel();
-              onPromote(item);
-            }}
-          >
-            {SwapGlyph}
-          </ItemButton>
-        )}
-        <ItemButton
-          danger
-          title={`حذف «${item}»`}
-          onClick={() => {
-            edit.cancel();
-            list.remove(index);
-          }}
-        >
-          {CrossGlyph}
-        </ItemButton>
-      </span>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={() => edit.start(item)}
-      title={`ویرایش «${item}»`}
-      className={`rounded-full px-3 py-1 text-[13px] leading-6 border text-start cursor-text ${theme.chip}
-                  transition-shadow duration-200 hover:ring-2 ${theme.ring}
-                  focus:outline-none focus-visible:ring-2`}
-    >
-      {item}
-    </button>
-  );
-}
-
 function AddChip({ list, theme, wide = false }) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState("");
@@ -199,11 +146,11 @@ function AddChip({ list, theme, wide = false }) {
   );
 }
 
-function ItemLine({ item, index, list, theme }) {
+function ItemLine({ item, index, list, theme, onPromote, as: Tag = "li" }) {
   const edit = useInlineEdit(commitItem(list, index));
 
   return (
-    <li className="flex items-start gap-2.5 leading-7">
+    <Tag className="flex flex-1 min-w-0 items-start gap-2.5 leading-7">
       <LineBullet theme={theme} />
       {edit.editing ? (
         <span className="flex flex-1 min-w-0 items-center gap-1">
@@ -213,6 +160,17 @@ function ItemLine({ item, index, list, theme }) {
             aria-label={`ویرایش ${item}`}
             className={`${EDIT_INPUT} flex-1 min-w-0 rounded-lg`}
           />
+          {onPromote && (
+            <ItemButton
+              title={`جایگزینی عنوان شغل با «${item}»`}
+              onClick={() => {
+                edit.cancel();
+                onPromote(item);
+              }}
+            >
+              {SwapGlyph}
+            </ItemButton>
+          )}
           <ItemButton
             danger
             title={`حذف «${item}»`}
@@ -236,56 +194,40 @@ function ItemLine({ item, index, list, theme }) {
           {item}
         </button>
       )}
-    </li>
+    </Tag>
   );
 }
+
+const ADD_STEP = {};
 
 function ListBody({ fieldKey, list, onPromote }) {
   const theme = themeOf(fieldKey);
   const jobTitle = useWatch({ name: "job_title" });
   const items = list.value;
   const promote = fieldKey === "aliases" ? onPromote : undefined;
-
-  const chip = (item, index) => (
-    <ItemChip key={index} item={item} index={index} list={list} theme={theme} onPromote={promote} />
+  const line = (item, index, as) => (
+    <ItemLine key={index} item={item} index={index} list={list} theme={theme} onPromote={promote} as={as} />
   );
-
-  let body;
-  if (LIST_AS_LINES.has(fieldKey)) {
-    body = (
-      <ul className={LINES_CLASS}>
-        {items.map((item, index) => (
-          <ItemLine key={index} item={item} index={index} list={list} theme={theme} />
-        ))}
-        <li className="flex items-start leading-7">
-          <AddChip list={list} theme={theme} wide />
-        </li>
-      </ul>
-    );
-  } else if (fieldKey === "career_path_next") {
-    const ADD = {};
-    body = (
-      <CareerPath
-        root={jobTitle?.trim() || COLUMN_LABELS.job_title}
-        steps={[...items, ADD]}
-        theme={theme}
-        renderStep={(step, index) =>
-          step === ADD ? <AddChip list={list} theme={theme} /> : chip(step, index)
-        }
-      />
-    );
-  } else {
-    body = (
-      <div className="flex flex-wrap gap-2">
-        {items.map(chip)}
-        <AddChip list={list} theme={theme} />
-      </div>
-    );
-  }
 
   return (
     <>
-      {body}
+      {fieldKey === "career_path_next" ? (
+        <CareerPath
+          root={jobTitle?.trim() || COLUMN_LABELS.job_title}
+          steps={[...items, ADD_STEP]}
+          theme={theme}
+          renderStep={(step, index) =>
+            step === ADD_STEP ? <AddChip list={list} theme={theme} /> : line(step, index, "div")
+          }
+        />
+      ) : (
+        <ul className={LINES_CLASS}>
+          {items.map((item, index) => line(item, index))}
+          <li className="flex items-start leading-7">
+            <AddChip list={list} theme={theme} wide />
+          </li>
+        </ul>
+      )}
       {promote && items.length > 0 && (
         <p className="text-[11px] text-slate-500 mt-2.5 mb-0 leading-5">
           برای جایگزینی عنوان شغل با یکی از نام‌های دیگر، روی آن نام کلیک و دکمه جابه‌جایی را انتخاب

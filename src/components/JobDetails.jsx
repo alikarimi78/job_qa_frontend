@@ -5,8 +5,6 @@ import SectionHeading from "@components/ui/SectionHeading";
 import { fieldLabel } from "@constant/fieldLabels";
 import { faNumber } from "@utils/jalali";
 
-export const LIST_AS_LINES = new Set(["responsibilities"]);
-
 const COMPETENCIES = ["skills", "knowledge", "abilities"];
 const COMPETENCY_TITLE = "شایستگی‌های شغلی";
 const COMPETENCY_HINT = "مهارت‌ها، دانش و توانایی‌های لازم برای این شغل";
@@ -27,8 +25,6 @@ const SparkleGlyph = icon(
 const CheckGlyph = icon(<path d="M5 12.5l4.5 4.5L19 7.5" />, "w-3 h-3");
 
 const SwapGlyph = icon(<path d="M7 7h13l-3-3M17 17H4l3 3" />, "w-3 h-3 shrink-0");
-
-const PathChevron = ({ className }) => icon(<path d="M15 18l-6-6 6-6" />, `w-3 h-3 shrink-0 ${className}`);
 
 const ToggleChevron = ({ open }) =>
   icon(
@@ -115,13 +111,13 @@ export function CareerPath({ root, steps, theme, renderStep }) {
                 i === steps.length - 1 ? "invisible" : ""
               }`}
             />
-            <span className={`absolute start-0 top-1/2 -translate-y-1/2 w-4 h-0.5 ${theme.line}`} />
-            <PathChevron className={`-ms-1.5 ${theme.arrow}`} />
+            <span className={`absolute start-0 top-1/2 -translate-y-1/2 w-5 h-0.5 ${theme.line}`} />
             {renderStep ? (
               renderStep(step, i)
             ) : (
-              <span className={`rounded-full px-3 py-1 text-[13px] leading-6 border ${theme.chip}`}>
-                {step}
+              <span className="flex items-start gap-2.5 leading-7">
+                <LineBullet theme={theme} />
+                <span>{step}</span>
               </span>
             )}
           </li>
@@ -146,66 +142,55 @@ export function LineBullet({ theme }) {
 }
 
 function FieldItems({ field, theme, shown, hidden, onExpand, jobTitle, onPickAlias }) {
-  const asPath = shown.length > 0 && field.key === "career_path_next";
-  const asChips = shown.length > 0 && !LIST_AS_LINES.has(field.key) && !asPath;
-  const pickable = asChips && field.key === "aliases" && Boolean(onPickAlias);
-  const more = hidden > 0 && (
-    <button
-      type="button"
-      onClick={onExpand}
-      className={`rounded-full px-3 py-1 text-[12px] leading-6 border border-dashed bg-white/70 cursor-pointer
-                  transition-colors duration-200 focus:outline-none focus-visible:ring-2
-                  focus-visible:ring-blue-500/40 ${theme.more}`}
-    >
-      نمایش {faNumber(hidden)} مورد دیگر
-    </button>
-  );
+  if (!field.items.length) return <p className="leading-8 m-0 text-slate-700">{field.value}</p>;
+  const pickable = field.key === "aliases" && Boolean(onPickAlias);
 
   return (
     <>
-      {asPath && <CareerPath root={jobTitle} steps={shown} theme={theme} />}
-      {asChips && (
-        <div className="flex flex-wrap gap-2">
-          {shown.map((item, i) =>
-            pickable ? (
-              <button
-                key={i}
-                type="button"
-                onClick={() => onPickAlias(item)}
-                title={`جایگزینی عنوان شغل با «${item}»`}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] leading-6 border
-                            cursor-pointer transition-colors duration-200 ${theme.chip} ${theme.pick}
-                            focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40`}
-              >
-                {SwapGlyph}
-                {item}
-              </button>
-            ) : (
-              <span key={i} className={`rounded-full px-3 py-1 text-[13px] leading-6 border ${theme.chip}`}>
-                {item}
-              </span>
-            ),
-          )}
-          {more}
-        </div>
+      {field.key === "career_path_next" ? (
+        <CareerPath root={jobTitle} steps={shown} theme={theme} />
+      ) : (
+        <ul className={LINES_CLASS}>
+          {shown.map((item, i) => (
+            <li key={i} className="flex items-start gap-2.5 leading-7">
+              <LineBullet theme={theme} />
+              {pickable ? (
+                <button
+                  type="button"
+                  onClick={() => onPickAlias(item)}
+                  title={`جایگزینی عنوان شغل با «${item}»`}
+                  className="group inline-flex items-start gap-1.5 text-start cursor-pointer rounded-md -mx-1 px-1
+                             transition-colors duration-200 hover:bg-slate-100 focus:outline-none
+                             focus-visible:ring-2 focus-visible:ring-blue-500/40"
+                >
+                  {item}
+                  <span className="mt-2 text-slate-400 group-hover:text-slate-600">{SwapGlyph}</span>
+                </button>
+              ) : (
+                <span>{item}</span>
+              )}
+            </li>
+          ))}
+        </ul>
       )}
       {pickable && (
         <p className="text-[11px] text-slate-500 mt-2.5 mb-0 leading-5">
           برای جایگزینی عنوان شغل با هر یک از نام‌های دیگر، روی آن کلیک نمایید.
         </p>
       )}
-      {!asChips && !asPath && shown.length > 0 && (
-        <ul className={LINES_CLASS}>
-          {shown.map((item, i) => (
-            <li key={i} className="flex items-start gap-2.5 leading-7">
-              <LineBullet theme={theme} />
-              <span>{item}</span>
-            </li>
-          ))}
-        </ul>
+      {hidden > 0 && (
+        <div className="mt-3">
+          <button
+            type="button"
+            onClick={onExpand}
+            className={`rounded-full px-3 py-1 text-[12px] leading-6 border border-dashed bg-white/70 cursor-pointer
+                        transition-colors duration-200 focus:outline-none focus-visible:ring-2
+                        focus-visible:ring-blue-500/40 ${theme.more}`}
+          >
+            نمایش {faNumber(hidden)} مورد دیگر
+          </button>
+        </div>
       )}
-      {!asChips && more && <div className="mt-3">{more}</div>}
-      {field.items.length === 0 && <p className="leading-8 m-0 text-slate-700">{field.value}</p>}
     </>
   );
 }
