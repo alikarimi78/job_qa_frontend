@@ -124,234 +124,240 @@ const heading = (theme, glyph) => ({
   tint: theme.header,
 });
 
+function StatsCard({ orgs, actions, children, ...card }) {
+  const [org, setOrg] = useState("");
+  const { data: stats, error, isFetching } = useStatsQuery(org ? Number(org) : undefined);
+  const select = orgs && (
+    <Select value={org} onChange={(event) => setOrg(event.target.value)} className="min-w-44">
+      <option value="">همه سازمان‌ها</option>
+      {orgs.map((item) => (
+        <option key={item.id} value={item.id}>
+          {item.name}
+        </option>
+      ))}
+    </Select>
+  );
+
+  return (
+    <Card {...card} actions={(actions || select) && <>{actions}{select}</>}>
+      {error ? (
+        <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
+          {errorMessage(error)}
+        </div>
+      ) : !stats ? (
+        <Loader />
+      ) : (
+        <div className={isFetching ? "opacity-60 transition-opacity duration-150" : undefined}>
+          {children(stats)}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function GrowthChart({ stats, months }) {
+  const series = useMemo(() => {
+    const all = [
+      { key: "accounts", label: "کاربران جدید", series: stats.accounts_series, hue: HUES.violet },
+      { key: "organizations", label: "سازمان‌های جدید", series: stats.organizations_series, hue: HUES.sky },
+    ];
+    const shown = stats.scope === "global" ? all : all.slice(0, 1);
+    return shown.map(({ series, ...item }) => ({ ...item, values: bucketByMonth(series, months) }));
+  }, [stats, months]);
+  return <MonthlyBars months={months} series={series} />;
+}
+
+function SuggestionsChart({ stats, months }) {
+  const series = useMemo(
+    () => [{
+      key: "suggestions",
+      label: "پیشنهادهای شغلی",
+      hue: HUES.emerald,
+      values: bucketByMonth(stats.suggestions_series, months),
+    }],
+    [stats, months]
+  );
+  return <MonthlyBars months={months} series={series} height={220} />;
+}
+
+function OrganizationJobs() {
+  const { data: stats } = useStatsQuery(undefined);
+  const rows = (stats?.jobs_by_organization ?? []).map((row) => ({ name: row.name, value: row.count }));
+  if (!rows.length) return null;
+  return (
+    <Card
+      title="مشاغل اختصاصی به تفکیک سازمان"
+      hint="رکوردهای تاییدشده‌ای که تنها در نتایج تحلیل همان سازمان دیده می‌شوند"
+      {...heading(THEMES.sky, Glyphs.building)}
+    >
+      <CategoryBars rows={rows} valueLabel="شغل" hue={HUES.sky} />
+    </Card>
+  );
+}
+
+const roleRows = (stats, isSuper) => {
+  const countable = !isSuper ? ["user"] : stats.scope === "global" ? ["super_admin", "org_admin", "user"] : ["org_admin", "user"];
+  return stats.accounts_by_role
+    .filter((row) => countable.includes(row.role))
+    .map((row) => ({ name: ROLE_LABELS[row.role] ?? row.role, value: row.count }));
+};
+
 export default function Dashboard() {
   const me = useOutletContext();
   const isSuper = me.role === "super_admin";
 
   const [range, setRange] = useState(12);
-  const [orgFilter, setOrgFilter] = useState("");
-  const { data: orgs = [] } = useOrganizationsQuery();
-  const { data: stats, isLoading, error } = useStatsQuery(
-    orgFilter ? Number(orgFilter) : undefined
-  );
-
+  const { data: orgs = [] } = useOrganizationsQuery(undefined, { skip: !isSuper });
   const months = useMemo(() => lastPersianMonths(range), [range]);
-
-  const growth = useMemo(() => {
-    if (!stats) return [];
-    const all = [
-      { key: "accounts", label: "کاربران جدید", series: stats.accounts_series, hue: HUES.violet },
-      {
-        key: "organizations",
-        label: "سازمان‌های جدید",
-        series: stats.organizations_series,
-        hue: HUES.sky,
-      },
-    ];
-    const shown = isSuper && !orgFilter ? all : all.slice(0, 1);
-    return shown.map(({ series, ...item }) => ({ ...item, values: bucketByMonth(series, months) }));
-  }, [stats, months, isSuper, orgFilter]);
-
-  const suggestions = useMemo(() => {
-    if (!stats) return [];
-    return [
-      {
-        key: "suggestions",
-        label: "پیشنهادهای شغلی",
-        hue: HUES.emerald,
-        values: bucketByMonth(stats.suggestions_series, months),
-      },
-    ];
-  }, [stats, months]);
-
-  if (isLoading) return <Loader />;
-  if (error) {
-    return (
-      <Card>
-        <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
-          {errorMessage(error)}
-        </div>
-      </Card>
-    );
-  }
-
-  const countableRoles = isSuper ? ["super_admin", "org_admin", "user"] : ["user"];
-  const roleRows = stats.accounts_by_role
-    .filter((row) => countableRoles.includes(row.role))
-    .map((row) => ({ name: ROLE_LABELS[row.role] ?? row.role, value: row.count }));
-
-  const scopeNote = stats.scope === "global" ? "همه سازمان‌ها" : null;
-
-  const orgRows = stats.jobs_by_organization.map((row) => ({
-    name: row.name,
-    value: row.count,
-  }));
+  const filter = isSuper ? orgs : null;
 
   return (
     <>
-      <PageToolbar title="پیشخوان مدیریت" hint={scopeNote}>
-        {isSuper && (
-          <Select
-            value={orgFilter}
-            onChange={(event) => setOrgFilter(event.target.value)}
-            className="h-11 min-w-44"
-          >
-            <option value="">همه سازمان‌ها</option>
-            {orgs.map((org) => (
-              <option key={org.id} value={org.id}>
-                {org.name}
-              </option>
-            ))}
-          </Select>
-        )}
-      </PageToolbar>
+      <PageToolbar title="پیشخوان مدیریت" />
 
-      <Card title="نمای کلی" {...heading(BRAND, Glyphs.overview)}>
-        <Tiles>
-          {isSuper && !orgFilter && (
+      <StatsCard title="نمای کلی" orgs={filter} {...heading(BRAND, Glyphs.overview)}>
+        {(stats) => (
+          <Tiles>
+            {stats.scope === "global" && (
+              <StatTile
+                label="سازمان‌ها"
+                value={stats.organizations}
+                glyph={Glyphs.building}
+                theme={THEMES.sky}
+              />
+            )}
             <StatTile
-              label="سازمان‌ها"
-              value={stats.organizations}
-              glyph={Glyphs.building}
-              theme={THEMES.sky}
+              label="کاربران"
+              value={stats.accounts}
+              glyph={Glyphs.users}
+              theme={THEMES.violet}
+              hint={
+                stats.accounts_blocked > 0
+                  ? `${faNumber(stats.accounts_blocked)} کاربر مسدود`
+                  : "همه فعال"
+              }
             />
-          )}
-          <StatTile
-            label="کاربران"
-            value={stats.accounts}
-            glyph={Glyphs.users}
-            theme={THEMES.violet}
-            hint={
-              stats.accounts_blocked > 0
-                ? `${faNumber(stats.accounts_blocked)} کاربر مسدود`
-                : "همه فعال"
-            }
-          />
-          <StatTile
-            label="مشاغل پایگاه داده"
-            value={stats.jobs.corpus_records}
-            glyph={Glyphs.briefcase}
-            theme={THEMES.emerald}
-            hint="رکوردهای تاییدشده‌ای که تحلیل بر اساس آن‌ها انجام می‌شود"
-          />
-          <StatTile
-            label="در انتظار بررسی"
-            value={stats.jobs.pending}
-            glyph={Glyphs.clock}
-            tone={stats.jobs.pending > 0 ? "warning" : "muted"}
-            hint={isSuper ? "صف بررسی شما" : "از کاربران زیرمجموعه شما"}
-          />
-        </Tiles>
-      </Card>
+            <StatTile
+              label="مشاغل پایگاه داده"
+              value={stats.jobs.corpus_records}
+              glyph={Glyphs.briefcase}
+              theme={THEMES.emerald}
+              hint="رکوردهای تاییدشده‌ای که تحلیل بر اساس آن‌ها انجام می‌شود"
+            />
+            <StatTile
+              label="در انتظار بررسی"
+              value={stats.jobs.pending}
+              glyph={Glyphs.clock}
+              tone={stats.jobs.pending > 0 ? "warning" : "muted"}
+              hint={isSuper ? "صف بررسی شما" : "از کاربران زیرمجموعه شما"}
+            />
+          </Tiles>
+        )}
+      </StatsCard>
 
-      <Card
+      <StatsCard
         title="رشد ماهانه"
         hint="تعداد رکوردهای جدید در هر ماه"
+        orgs={filter}
         {...heading(BRAND, Glyphs.growth)}
-        actions={
-          <div className="flex items-center gap-2">
-            {[6, 12].map((count) => (
-              <Button
-                key={count}
-                variant={range === count ? "primary" : "outline"}
-                size="sm"
-                buttonProps={{ onClick: () => setRange(count) }}
-              >
-                {faNumber(count)} ماه
-              </Button>
-            ))}
-          </div>
-        }
+        actions={[6, 12].map((count) => (
+          <Button
+            key={count}
+            variant={range === count ? "primary" : "outline"}
+            size="sm"
+            buttonProps={{ onClick: () => setRange(count) }}
+          >
+            {faNumber(count)} ماه
+          </Button>
+        ))}
       >
-        <MonthlyBars months={months} series={growth} />
-      </Card>
+        {(stats) => <GrowthChart stats={stats} months={months} />}
+      </StatsCard>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <Card
-          title="کاربران به تفکیک نقش"
-          hint={scopeNote}
-          {...heading(THEMES.violet, Glyphs.users)}
-        >
-          <CategoryBars rows={roleRows} valueLabel="کاربر" hue={HUES.violet} />
-        </Card>
+        <StatsCard title="کاربران به تفکیک نقش" orgs={filter} {...heading(THEMES.violet, Glyphs.users)}>
+          {(stats) => <CategoryBars rows={roleRows(stats, isSuper)} valueLabel="کاربر" hue={HUES.violet} />}
+        </StatsCard>
 
-        <Card
-          title="وضعیت کاربران"
-          hint={scopeNote}
-          {...heading(THEMES.violet, Glyphs.userCheck)}
-        >
-          <CategoryBars
-            rows={[
-              { name: "فعال", value: stats.accounts_active, hue: HUES.emerald },
-              { name: "مسدود", value: stats.accounts_blocked, hue: HUES.rose },
-            ]}
-            valueLabel="کاربر"
-          />
-        </Card>
+        <StatsCard title="وضعیت کاربران" orgs={filter} {...heading(THEMES.violet, Glyphs.userCheck)}>
+          {(stats) => (
+            <CategoryBars
+              rows={[
+                { name: "فعال", value: stats.accounts_active, hue: HUES.emerald },
+                { name: "مسدود", value: stats.accounts_blocked, hue: HUES.rose },
+              ]}
+              valueLabel="کاربر"
+            />
+          )}
+        </StatsCard>
       </div>
 
-      <Card
+      <StatsCard
         title="پایگاه داده مشاغل"
         hint="پیشنهادهای زیر متعلق به دامنه شماست؛ مشاغل عمومی میان تمامی سازمان‌ها مشترک است و مشاغل اختصاصی تنها در نتایج تحلیل سازمان خودشان دیده می‌شود"
+        orgs={filter}
         {...heading(THEMES.emerald, Glyphs.database)}
       >
-        <Tiles className="mb-6">
-          <StatTile
-            label="تایید شده"
-            value={stats.jobs.approved}
-            glyph={Glyphs.check}
-            theme={THEMES.emerald}
-          />
-          <StatTile label="در انتظار" value={stats.jobs.pending} tone="warning" glyph={Glyphs.clock} />
-          <StatTile label="رد شده" value={stats.jobs.rejected} tone="muted" glyph={Glyphs.cross} />
-          <StatTile
-            label="مشاغل عمومی"
-            value={stats.jobs.public_records}
-            glyph={Glyphs.globe}
-            theme={THEMES.emerald}
-            hint="در دسترس تمامی سازمان‌ها"
-          />
-          <StatTile
-            label="مشاغل اختصاصی"
-            value={stats.jobs.organization_records}
-            glyph={Glyphs.building}
-            theme={THEMES.sky}
-            hint={stats.scope === "global" ? "مجموع همه سازمان‌ها" : "ویژه سازمان شما"}
-          />
-        </Tiles>
+        {(stats) => (
+          <>
+            <Tiles className="mb-6">
+              <StatTile
+                label="تایید شده"
+                value={stats.jobs.approved}
+                glyph={Glyphs.check}
+                theme={THEMES.emerald}
+              />
+              <StatTile label="در انتظار" value={stats.jobs.pending} tone="warning" glyph={Glyphs.clock} />
+              <StatTile label="رد شده" value={stats.jobs.rejected} tone="muted" glyph={Glyphs.cross} />
+              <StatTile
+                label="مشاغل عمومی"
+                value={stats.jobs.public_records}
+                glyph={Glyphs.globe}
+                theme={THEMES.emerald}
+                hint="در دسترس تمامی سازمان‌ها"
+              />
+              <StatTile
+                label="مشاغل اختصاصی"
+                value={stats.jobs.organization_records}
+                glyph={Glyphs.building}
+                theme={THEMES.sky}
+                hint={
+                  stats.scope === "global"
+                    ? "مجموع همه سازمان‌ها"
+                    : isSuper
+                      ? `ویژه ${stats.scope_name}`
+                      : "ویژه سازمان شما"
+                }
+              />
+            </Tiles>
 
-        {stats.jobs.engine_records == null ? (
-          <p className="text-sm text-slate-500 leading-7">
-            موتور تحلیل هنوز بارگذاری نشده است، بنابراین تعداد رکوردهای آموزش‌دیده در دسترس نیست.
-          </p>
-        ) : (
-          <Meter
-            label="رکوردهای واردشده در موتور تحلیل"
-            value={stats.jobs.engine_records}
-            total={stats.jobs.corpus_records}
-            hue={HUES.emerald}
-            note="موتور تحلیل با تمامی رکوردهای تاییدشده ساخته شده است."
-          />
+            {stats.jobs.engine_records == null ? (
+              <p className="text-sm text-slate-500 leading-7">
+                موتور تحلیل هنوز بارگذاری نشده است، بنابراین تعداد رکوردهای آموزش‌دیده در دسترس نیست.
+              </p>
+            ) : (
+              <Meter
+                label="رکوردهای واردشده در موتور تحلیل"
+                value={stats.jobs.engine_records}
+                total={stats.jobs.corpus_records}
+                hue={HUES.emerald}
+                note="موتور تحلیل با تمامی رکوردهای تاییدشده ساخته شده است."
+              />
+            )}
+          </>
         )}
-      </Card>
+      </StatsCard>
 
-      {orgRows.length > 0 && (
-        <Card
-          title="مشاغل اختصاصی به تفکیک سازمان"
-          hint="رکوردهای تاییدشده‌ای که تنها در نتایج تحلیل همان سازمان دیده می‌شوند"
-          {...heading(THEMES.sky, Glyphs.building)}
-        >
-          <CategoryBars rows={orgRows} valueLabel="شغل" hue={HUES.sky} />
-        </Card>
-      )}
+      <OrganizationJobs />
 
-      <Card
+      <StatsCard
         title="پیشنهادهای شغلی در هر ماه"
         hint="بر پایه تاریخ ثبت پیشنهاد"
+        orgs={filter}
         {...heading(THEMES.emerald, Glyphs.idea)}
       >
-        <MonthlyBars months={months} series={suggestions} height={220} />
-      </Card>
+        {(stats) => <SuggestionsChart stats={stats} months={months} />}
+      </StatsCard>
     </>
   );
 }
