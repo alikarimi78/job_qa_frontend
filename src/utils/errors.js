@@ -1,23 +1,16 @@
-import { FIELD_LABELS } from "@constant/fieldLabels";
-import { ROLE_LABELS } from "@routes/roles";
-import { faNumber } from "@utils/jalali";
+/** Turns an RTK Query error into one formal Persian sentence: known backend details are translated exactly or by pattern, anything else falls back to a generic message. */
+import { COLUMN_LABELS } from "@constants/jobFields";
+import { roleLabel } from "@constants/roles";
+import { suggestionStatusLabel } from "@constants/suggestionStatus";
+import { faNumber } from "./numbers";
 
-const GENERIC = "خطایی رخ داده است؛ لطفاً مجدداً تلاش نمایید.";
+const GENERIC_ERROR = "خطایی رخ داده است؛ لطفاً مجدداً تلاش نمایید.";
 const SESSION_ENDED = "اعتبار ورود شما به پایان رسیده است؛ لطفاً مجدداً وارد شوید.";
-const ENGINE_COLD = "سرویس تحلیل هنوز آماده نیست؛ لطفاً دقایقی بعد مجدداً تلاش نمایید.";
+const ENGINE_NOT_READY = "سرویس تحلیل هنوز آماده نیست؛ لطفاً دقایقی بعد مجدداً تلاش نمایید.";
+const NETWORK_ERROR = "ارتباط با سرور برقرار نشد.";
+const UNREADABLE_RESPONSE = "پاسخ سرور قابل خواندن نبود.";
 
-const PROFILE_LABELS = {
-  ...FIELD_LABELS,
-  responsibilities: "وظایف و مسئولیت‌ها",
-};
-
-const STATUS_LABELS = {
-  pending: "در انتظار بررسی",
-  approved: "تایید شده",
-  rejected: "رد شده",
-};
-
-const EXACT = {
+const EXACT_MESSAGES = {
   "Invalid credentials": "نام کاربری یا رمز عبور اشتباه است.",
   "Current password is incorrect": "رمز عبور فعلی اشتباه است.",
   "Invalid or expired token": SESSION_ENDED,
@@ -37,7 +30,7 @@ const EXACT = {
   "Organization name already taken": "این نام سازمان پیش‌تر ثبت شده است.",
   "Organization name cannot be cleared": "نام سازمان نمی‌تواند خالی بماند.",
   "A rebuild is already running": "بازسازی پایگاه داده هم‌اکنون در جریان است؛ لطفاً تا پایان آن صبر نمایید.",
-  "Engine is not ready": ENGINE_COLD,
+  "Engine is not ready": ENGINE_NOT_READY,
 
   "Logo must be a base64 data URI, e.g. data:image/png;base64,...":
     "نشان سازمان باید یک فایل تصویری معتبر باشد.",
@@ -54,15 +47,15 @@ const EXACT = {
   "Field required": "تکمیل این فیلد الزامی است.",
 };
 
-const PATTERNS = [
+const PATTERN_MESSAGES = [
   [/^Record is already (\w+)$/,
-    ([, status]) => `این رکورد پیش‌تر بررسی شده است؛ وضعیت فعلی آن «${STATUS_LABELS[status] ?? status}» است.`],
+    ([, status]) => `این رکورد پیش‌تر بررسی شده است؛ وضعیت فعلی آن «${suggestionStatusLabel(status)}» است.`],
   [/^Record is (\w+); a suggestion is edited through/,
-    ([, status]) => `این رکورد یک پیشنهاد «${STATUS_LABELS[status] ?? status}» است و از بخش پیشنهادها ویرایش می‌شود.`],
+    ([, status]) => `این رکورد یک پیشنهاد «${suggestionStatusLabel(status)}» است و از بخش پیشنهادها ویرایش می‌شود.`],
   [/^Organization still has (\d+) account\(s\)/,
     ([, count]) => `این سازمان هنوز ${faNumber(count)} حساب کاربری دارد؛ ابتدا آن‌ها را حذف نمایید.`],
   [/^A (\w+) does not belong to an organization$/,
-    ([, role]) => `نقش «${ROLE_LABELS[role] ?? role}» به سازمان تعلق نمی‌گیرد.`],
+    ([, role]) => `نقش «${roleLabel(role)}» به سازمان تعلق نمی‌گیرد.`],
   [/^Organization already has an admin \((.+)\)$/,
     ([, username]) => `این سازمان هم‌اکنون ادمین دارد: «${username}».`],
   [/^Unsupported logo type (.+); use (.+)$/,
@@ -78,7 +71,7 @@ const PATTERNS = [
     ([, limit]) => `برای هر فیلد حداکثر ${faNumber(limit)} مورد می‌توانید وارد نمایید.`],
   [/^(\w+): at least (\d+) items are required$/,
     ([, field, min]) =>
-      `برای تحلیل پیشرفته، «${PROFILE_LABELS[field] ?? field}» باید دست‌کم ${faNumber(min)} مورد داشته باشد.`],
+      `برای تحلیل پیشرفته، «${COLUMN_LABELS[field] ?? field}» باید دست‌کم ${faNumber(min)} مورد داشته باشد.`],
 
   [/^String should have at least (\d+) characters?$/,
     ([, min]) => `این فیلد باید دست‌کم ${faNumber(min)} نویسه داشته باشد.`],
@@ -93,33 +86,33 @@ const PATTERNS = [
   [/^Input should be /, () => "مقدار واردشده مجاز نیست."],
 ];
 
-const stripPrefix = (text) => text.replace(/^Value error, /, "");
+const stripValueErrorPrefix = (text) => text.replace(/^Value error, /, "");
 
-function translate(text) {
+function translateDetail(text) {
   if (typeof text !== "string") return null;
-  const detail = stripPrefix(text);
-  if (EXACT[detail]) return EXACT[detail];
-  for (const [pattern, render] of PATTERNS) {
-    const found = detail.match(pattern);
-    if (found) return render(found);
+  const detail = stripValueErrorPrefix(text);
+  if (EXACT_MESSAGES[detail]) return EXACT_MESSAGES[detail];
+  for (const [pattern, render] of PATTERN_MESSAGES) {
+    const match = detail.match(pattern);
+    if (match) return render(match);
   }
   return null;
 }
 
-export function errorMessage(err) {
-  if (!err) return GENERIC;
+export function errorMessage(error) {
+  if (!error) return GENERIC_ERROR;
 
-  if (err.status === "FETCH_ERROR") return "ارتباط با سرور برقرار نشد.";
-  if (err.status === "PARSING_ERROR") return "پاسخ سرور قابل خواندن نبود.";
-  if (err.status === 503) return ENGINE_COLD;
+  if (error.status === "FETCH_ERROR") return NETWORK_ERROR;
+  if (error.status === "PARSING_ERROR") return UNREADABLE_RESPONSE;
+  if (error.status === 503) return ENGINE_NOT_READY;
 
-  const detail = err.data?.detail;
-  if (err.status === 401) return translate(detail) ?? SESSION_ENDED;
-  if (typeof detail === "string") return translate(detail) ?? detail;
+  const detail = error.data?.detail;
+  if (error.status === 401) return translateDetail(detail) ?? SESSION_ENDED;
+  if (typeof detail === "string") return translateDetail(detail) ?? detail;
   if (Array.isArray(detail)) {
-    const seen = detail.map((item) => translate(item.msg) ?? item.msg);
-    return [...new Set(seen)].join(" ");
+    const messages = detail.map((item) => translateDetail(item.msg) ?? item.msg);
+    return [...new Set(messages)].join(" ");
   }
 
-  return GENERIC;
+  return GENERIC_ERROR;
 }

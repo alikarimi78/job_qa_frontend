@@ -1,3 +1,4 @@
+/** Entry point: mounts the app inside the Redux store, the persisted-session gate and the router, and loads the global stylesheet. */
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";

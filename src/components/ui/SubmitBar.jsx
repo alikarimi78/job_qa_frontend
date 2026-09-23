@@ -1,5 +1,6 @@
+/** Footer of an inline form: an optional hint, the full-width submit button (with busy state) and any extra actions beside it. */
 import Button from "./Button";
-import { Spinner } from "./Loader";
+import BusyLabel from "./BusyLabel";
 
 export default function SubmitBar({
   label,
@@ -18,16 +19,12 @@ export default function SubmitBar({
             variant="submit"
             size="lg"
             className="w-full"
-            buttonProps={{ type: "submit", disabled: disabled ?? busy }}
+            type="submit"
+            disabled={disabled ?? busy}
           >
-            {busy ? (
-              <>
-                <Spinner />
-                {busyLabel}
-              </>
-            ) : (
-              label
-            )}
+            <BusyLabel isBusy={busy} busyText={busyLabel}>
+              {label}
+            </BusyLabel>
           </Button>
         </div>
         {actions}

@@ -1,3 +1,4 @@
+/** Endpoints for managing accounts (create by role, block, reset password, rename, move, delete) and organizations (list, create, edit, logo, delete). */
 import { baseApi } from "./baseApi";
 
 const accountsApi = baseApi.injectEndpoints({

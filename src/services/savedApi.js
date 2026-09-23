@@ -1,3 +1,4 @@
+/** Endpoints for starred analyses: list them page by page, open one, star an answer, and remove a star. */
 import { baseApi } from "./baseApi";
 
 const savedApi = baseApi.injectEndpoints({

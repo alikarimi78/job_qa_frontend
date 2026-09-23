@@ -1,3 +1,4 @@
+/** Endpoint for the dashboard statistics, optionally limited to one organization. */
 import { baseApi } from "./baseApi";
 
 const statsApi = baseApi.injectEndpoints({

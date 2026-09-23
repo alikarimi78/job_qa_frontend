@@ -1,3 +1,4 @@
+/** The app's button in its colour variants and sizes; any other prop (onClick, disabled, type, form, title…) goes straight to the <button>. */
 const VARIANTS = {
   primary:
     "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 border border-blue-600",
@@ -29,11 +30,13 @@ export default function Button({
   children,
   variant = "primary",
   size = "md",
+  type = "button",
   className = "",
-  buttonProps = {},
+  ...buttonProps
 }) {
   return (
     <button
+      type={type}
       {...buttonProps}
       className={`
         inline-flex items-center justify-center gap-2 rounded-xl

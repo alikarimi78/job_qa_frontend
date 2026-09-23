@@ -1,3 +1,4 @@
+/** Small rounded label for statuses, roles and counts, coloured by `tone`. */
 const TONES = {
   accent: "bg-blue-50 text-blue-700 border-blue-200",
   success: "bg-emerald-50 text-emerald-700 border-emerald-200",

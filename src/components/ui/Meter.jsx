@@ -1,7 +1,10 @@
-import { faNumber } from "@utils/jalali";
+/** Compact labelled percentage bar (e.g. how much of a profile a job covers). */
+import { faNumber } from "@utils/numbers";
+
+const toPercent = (ratio) => Math.max(0, Math.min(100, Math.round((ratio ?? 0) * 100)));
 
 export default function Meter({ label, ratio, title }) {
-  const percent = Math.max(0, Math.min(100, Math.round((ratio ?? 0) * 100)));
+  const percent = toPercent(ratio);
   return (
     <div className="flex flex-col items-end gap-1.5" title={title}>
       <span className="text-[11px] text-slate-500 leading-4 whitespace-nowrap">

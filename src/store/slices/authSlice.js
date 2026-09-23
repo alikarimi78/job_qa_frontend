@@ -1,3 +1,4 @@
+/** Redux slice for the signed-in session: the access token, role and username from login, and the profile fetched afterwards; `logoutUser` clears it all. */
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
@@ -24,6 +25,10 @@ const authSlice = createSlice({
     },
   },
 });
+
+export const selectAuth = (state) => state.auth;
+export const selectToken = (state) => state.auth.token;
+export const selectRole = (state) => state.auth.role;
 
 export const { setAuthToken, setUserInfo, logoutUser } = authSlice.actions;
 export default authSlice.reducer;

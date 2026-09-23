@@ -1,4 +1,5 @@
-import { relabelDetail } from "@constant/fieldLabels";
+/** Builds the request body and file name of a search's PDF report from the question and the search result it answered. */
+import { relabelDetail } from "@constants/fieldLabels";
 import { safeFileName } from "./download";
 
 export function reportBody(question, result) {

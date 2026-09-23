@@ -1,3 +1,4 @@
+/** Creates the Redux store: the persisted auth slice (kept in localStorage) and the RTK Query API cache, plus the persistor that restores the session on reload. */
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import {
   FLUSH,

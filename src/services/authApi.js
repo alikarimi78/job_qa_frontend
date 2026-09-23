@@ -1,3 +1,4 @@
+/** Endpoints for the signed-in user: log in, read the current profile, and change one's own password and name. */
 import { baseApi } from "./baseApi";
 
 const authApi = baseApi.injectEndpoints({

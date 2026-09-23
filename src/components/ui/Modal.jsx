@@ -1,5 +1,7 @@
-import { useEffect } from "react";
+/** Dialog rendered into <body> over a dimmed backdrop; closes on Escape or a backdrop click (when `onClose` is given) and locks page scrolling while open. */
 import { createPortal } from "react-dom";
+import { XIcon } from "@components/icons";
+import useModalBehaviour from "./useModalBehaviour";
 
 const SIZES = {
   sm: "max-w-md",
@@ -17,24 +19,12 @@ export default function Modal({
   size = "md",
   tone = "default",
 }) {
-  useEffect(() => {
-    if (!open) return undefined;
-    const onKey = (event) => {
-      if (event.key === "Escape") onClose?.();
-    };
-    document.addEventListener("keydown", onKey);
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previous;
-    };
-  }, [open, onClose]);
+  useModalBehaviour(open, onClose);
 
   if (!open) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[99999990] flex items-start justify-center overflow-y-auto p-4 md:p-8">
+    <div className="fixed inset-0 z-modal flex items-start justify-center overflow-y-auto p-4 md:p-8">
       <div
         className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm"
         onClick={onClose}
@@ -49,7 +39,7 @@ export default function Modal({
           relative w-full ${SIZES[size] ?? SIZES.md} my-auto
           bg-white rounded-2xl shadow-2xl shadow-slate-900/25
           border border-white/60 overflow-hidden
-          animate-[modal-in_180ms_ease-out]
+          animate-modal-in
         `}
       >
         <header className="flex items-start justify-between gap-4 px-6 py-4 border-b border-slate-200">
@@ -72,16 +62,7 @@ export default function Modal({
                        bg-red-500 hover:bg-red-600 text-white cursor-pointer
                        transition-colors duration-200"
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2.5}
-              strokeLinecap="round"
-              viewBox="0 0 24 24"
-            >
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
+            <XIcon strokeWidth={2.5} />
           </button>
         </header>
 

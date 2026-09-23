@@ -1,6 +1,7 @@
+/** Toast notifications in the app's style (dark, right-to-left, Vazirmatn); errors stay on screen longer than successes. */
 import toast from "react-hot-toast";
 
-const base = {
+const BASE_TOAST_OPTIONS = {
   duration: 4000,
   style: {
     direction: "rtl",
@@ -15,8 +16,10 @@ const base = {
   },
 };
 
+const ERROR_DURATION_MS = 6000;
+
 export const showMessage = {
-  success: (text) => toast.success(text, base),
-  error: (text) => toast.error(text, { ...base, duration: 6000 }),
-  info: (text) => toast(text, base),
+  success: (text) => toast.success(text, BASE_TOAST_OPTIONS),
+  error: (text) => toast.error(text, { ...BASE_TOAST_OPTIONS, duration: ERROR_DURATION_MS }),
+  info: (text) => toast(text, BASE_TOAST_OPTIONS),
 };

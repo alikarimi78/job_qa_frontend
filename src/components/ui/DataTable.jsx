@@ -1,3 +1,6 @@
+/** Simple table driven by a column list (`header`, `cell(row)`, optional `align` and `className`); shows the `empty` text when there are no rows. */
+const alignmentClass = (column) => (column.align === "end" ? "text-end" : "text-start");
+
 export default function DataTable({ columns, rows, empty }) {
   if (!rows.length) {
     return <p className="text-sm text-slate-500">{empty ?? "موردی برای نمایش وجود ندارد."}</p>;
@@ -14,7 +17,7 @@ export default function DataTable({ columns, rows, empty }) {
                 className={`
                   text-xs font-medium text-slate-500 px-3 py-3 whitespace-nowrap
                   border-b border-slate-200
-                  ${column.align === "end" ? "text-end" : "text-start"}
+                  ${alignmentClass(column)}
                 `}
               >
                 {column.header}
@@ -30,7 +33,7 @@ export default function DataTable({ columns, rows, empty }) {
                   key={column.key}
                   className={`
                     px-3 py-3 border-b border-slate-200 align-middle
-                    ${column.align === "end" ? "text-end" : "text-start"}
+                    ${alignmentClass(column)}
                     ${column.className ?? ""}
                   `}
                 >
@@ -43,8 +46,4 @@ export default function DataTable({ columns, rows, empty }) {
       </table>
     </div>
   );
-}
-
-export function RowActions({ children }) {
-  return <div className="flex items-center justify-end gap-2">{children}</div>;
 }

@@ -1,11 +1,13 @@
-const UNSAFE = /[\\/:*?"<>|\n\r\t]+/g;
+/** Browser download helpers: cleans a title into a safe file name and saves a Blob (such as a PDF report) to disk. */
+const UNSAFE_FILENAME_CHARACTERS = /[\\/:*?"<>|\n\r\t]+/g;
+const MAX_FILENAME_LENGTH = 80;
 
 export function safeFileName(name, fallback) {
   const cleaned = String(name ?? "")
-    .replace(UNSAFE, " ")
+    .replace(UNSAFE_FILENAME_CHARACTERS, " ")
     .replace(/\s+/g, " ")
     .trim()
-    .slice(0, 80);
+    .slice(0, MAX_FILENAME_LENGTH);
   return cleaned || fallback;
 }
 

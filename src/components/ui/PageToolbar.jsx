@@ -1,5 +1,6 @@
+/** Top bar of an admin page: title with a status badge, a hint, filter controls, and an optional green "add" button. */
+import { PlusCircleIcon } from "@components/icons";
 import Button from "./Button";
-import { PlusGlyph } from "./IconButton";
 
 export default function PageToolbar({ title, hint, status, action, children }) {
   return (
@@ -15,13 +16,9 @@ export default function PageToolbar({ title, hint, status, action, children }) {
       <div className="flex items-center gap-2 flex-wrap">
         {children}
         {action && (
-          <Button
-            variant="submit"
-            size="lg"
-            buttonProps={{ onClick: action.onClick, disabled: action.disabled }}
-          >
+          <Button variant="submit" size="lg" onClick={action.onClick} disabled={action.disabled}>
             {action.label}
-            {PlusGlyph}
+            <PlusCircleIcon />
           </Button>
         )}
       </div>

@@ -1,4 +1,5 @@
-export default function Select({ value, onChange, children, className = "", selectProps = {} }) {
+/** Styled native <select>; any other prop (required, aria-label…) goes straight to the element. */
+export default function Select({ value, onChange, children, className = "", ...selectProps }) {
   return (
     <select
       value={value}

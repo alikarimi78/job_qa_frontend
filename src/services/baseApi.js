@@ -1,3 +1,4 @@
+/** The RTK Query client every API file extends: sends the access token, and signs the user out when the server answers 401 to anything but a password check. */
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { logoutUser } from "@store/slices/authSlice";
 

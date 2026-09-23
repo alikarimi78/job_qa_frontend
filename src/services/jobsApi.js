@@ -1,3 +1,4 @@
+/** Endpoints of the analysis features: question search, advanced profile search and its vocabulary, the PDF report, and filing and listing one's own job suggestions. */
 import { baseApi } from "./baseApi";
 
 const jobsApi = baseApi.injectEndpoints({

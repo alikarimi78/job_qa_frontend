@@ -1,4 +1,7 @@
+/** Labelled text input registered with the surrounding react-hook-form form; shows the field's validation error or a hint underneath. */
 import { useFormContext } from "react-hook-form";
+
+const DEFAULT_ERROR = "تکمیل این فیلد الزامی است";
 
 export default function Input({
   name,
@@ -8,7 +11,7 @@ export default function Input({
   className = "",
   hint,
   suffix,
-  registerProps = {},
+  rules = {},
   inputProps = {},
 }) {
   const {
@@ -31,7 +34,7 @@ export default function Input({
           type={type}
           placeholder={placeholder}
           {...inputProps}
-          {...register(name, registerProps)}
+          {...register(name, rules)}
           className={`
             w-full h-11 px-4 rounded-xl bg-white text-sm text-slate-800
             border transition-all duration-200 outline-none
@@ -50,7 +53,7 @@ export default function Input({
         )}
       </div>
       {error ? (
-        <span className="text-xs text-red-600">{error.message || "تکمیل این فیلد الزامی است"}</span>
+        <span className="text-xs text-red-600">{error.message || DEFAULT_ERROR}</span>
       ) : (
         hint && <span className="text-xs text-slate-400">{hint}</span>
       )}

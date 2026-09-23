@@ -1,3 +1,4 @@
+/** Vite build and dev-server setup: React and Tailwind plugins, the "@…" import aliases for the src folders, and the /api proxy to the local backend. */
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
@@ -10,11 +11,11 @@ export default defineConfig({
   resolve: {
     alias: {
       "@components": src("components"),
-      "@constant": src("constant"),
+      "@constants": src("constants"),
       "@services": src("services"),
       "@store": src("store"),
       "@assets": src("assets"),
-      "@hook": src("hook"),
+      "@hooks": src("hooks"),
       "@utils": src("utils"),
       "@routes": src("routes"),
       "@pages": src("pages"),

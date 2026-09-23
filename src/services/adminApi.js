@@ -1,3 +1,4 @@
+/** Admin endpoints: the review queue of job suggestions (edit, approve, reject), the stored job list (edit, delete), and the embedding rebuild with its status. */
 import { baseApi } from "./baseApi";
 
 const adminApi = baseApi.injectEndpoints({
